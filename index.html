@@ -1786,8 +1786,7 @@ const S = {
     const thead=document.getElementById('s-thead');
     let hdr = `<tr><th class="rl">แผนก</th>`;
     days.forEach((day,di)=>{
-      const tc=day.isToday?'background:rgba(6,182,212,.2);color:#22d3ee;border-bottom:2px solid #06b6d4':'';
-      hdr+=`<th colspan="3" class="day-th" style="${tc}">${day.th}<br><span style="font-size:8px;opacity:.6">${day.date}</span></th>`;
+      hdr+=`<th colspan="3" class="day-th" style="">${day.th}<br><span style="font-size:8px;opacity:.6">${day.date}</span></th>`;
     });
     hdr+='</tr><tr><th class="rl"></th>';
     days.forEach((day,di)=>{
@@ -1827,7 +1826,7 @@ const S = {
           }).join('');
           cells+=`<button class="addbtn" onclick="S.openAddWorker('${dept.replace(/'/g,"\\'")}',${di},'${sh}')">＋</button>`;
           const borderStyle = sh==='night' ? 'border-right:3px solid #000' : 'border-right:1px dashed rgba(0,0,0,.4)';
-          rows+=`<td class="cell ${cls}" style="${day.isToday?'outline:2px solid rgba(6,182,212,.3);outline-offset:-2px':''};${borderStyle}">${cells}</td>`;
+          rows+=`<td class="cell ${cls}" style=";${borderStyle}">${cells}</td>`;
         });
       });
       rows+='</tr>';
@@ -2576,8 +2575,7 @@ const S = {
     const thead = document.getElementById('s-thead');
     let hdr = `<tr><th class="rl" style="min-width:90px">Line / แผนก</th>`;
     days.forEach(day=>{
-      const tc = day.isToday?'background:rgba(6,182,212,.15);color:var(--teal)':'';
-      hdr += `<th colspan="3" class="day-th" style="${tc}">${day.th}<br><span style="font-size:8px;opacity:.6">${day.date}</span></th>`;
+      hdr += `<th colspan="3" class="day-th" style="">${day.th}<br><span style="font-size:8px;opacity:.6">${day.date}</span></th>`;
     });
     hdr += '</tr><tr><th class="rl"></th>';
     days.forEach(()=>{
@@ -2627,7 +2625,7 @@ const S = {
               </div>`;
             }).join('');
             cells += `<button class="addbtn" onclick="S.openAddWorkerAll(${li},'${dept.replace(/'/g,"\'")}',${di},'${sh}')">＋</button>`;
-            rows += `<td class="cell ${cls}" style="${day.isToday?'outline:2px solid rgba(6,182,212,.3);outline-offset:-2px':''}">${cells}</td>`;
+            rows += `<td class="cell ${cls}" style="">${cells}</td>`;
           });
         });
         rows += '</tr>';
@@ -3147,32 +3145,38 @@ const S = {
     const teams = this.getTeams(li);
     const members = teams[team]||[];
     if(!members.length){ toast('❌ ทีม '+team+' ไม่มีสมาชิก'); return; }
-    const emps = this.getEmps();
+    // ดึงพนักงานจากทั้ง proc และ fill
+    const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+    const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+    const empMap = new Map();
+    [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
     const depts = this.getDepts();
     const raw = JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+li)||'{}');
     if(!raw[this.curWKey]) raw[this.curWKey] = {};
     const wk = raw[this.curWKey];
-    // ล้างแล้วใส่ใหม่
-    members.forEach((name, idx) => {
-      const emp = emps.find(e=>e.name===name);
+    let loaded = 0;
+    members.forEach(name => {
+      const emp = empMap.get(name);
       if(!emp) return;
+      // ใช้แผนกของพนักงานที่ตั้งไว้ตอนเพิ่ม
       const dept = emp.dept || depts[0];
       if(!wk[dept]) wk[dept] = {};
-      for(let di=0;di<7;di++) {
+      // โหลดลงทุกวัน จ-ส (6 วัน) กะเช้าเป็น default
+      for(let di=0;di<6;di++) {
         if(!wk[dept][di]) wk[dept][di] = {morning:[],afternoon:[],night:[]};
-        // กะเช้าเป็น default
         if(!wk[dept][di].morning.find(w=>w.name===name)) {
           wk[dept][di].morning.push({name, ot:false, otHrs:4, av:emp.av||0});
+          loaded++;
         }
       }
     });
     localStorage.setItem('fac_sched_'+this.sys+'_'+li, JSON.stringify(raw));
-    if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk);
+    try { if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk); } catch(e){}
     const prevLine = this.curLine;
     this.curLine = li;
-    syncOT(this.sys, li, wk);
+    try { syncOT(this.sys, li, wk); } catch(e){}
     this.curLine = prevLine;
-    toast('✅ โหลดทีม '+team+' ลงสัปดาห์นี้แล้ว ('+members.length+' คน)');
+    toast('✅ โหลดทีม '+team+' ลงสัปดาห์นี้แล้ว ('+members.length+' คน กะเช้า)');
     this.openTeamTab();
   },
 
