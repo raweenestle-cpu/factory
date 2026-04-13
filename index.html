@@ -1659,8 +1659,33 @@ const H = {
         const hasOT = Object.values(shiftData).some(arr=>arr.length>0);
         if(!hasOT) return;
 
+        // คำนวณ OT% ของ Line นี้
+        let lineTotal=0, lineOT=0;
+        wKeys.forEach(wk2 => {
+          const wk2data = raw[wk2]||{};
+          depts.forEach(d => {
+            for(let di=0;di<6;di++){
+              ['morning','afternoon','night'].forEach(sh2 => {
+                const day2 = wk2data[d]?.[di]||wk2data[d]?.[String(di)];
+                (day2?.[sh2]||[]).forEach(w2 => {
+                  const hrs = w2.ot?(w2.otHrs||4):0;
+                  lineTotal += 8+hrs; lineOT += hrs;
+                });
+              });
+            }
+          });
+        });
+        const linePct = lineTotal>0?Math.round(lineOT/lineTotal*100):0;
+        const lineOver = linePct > tgt;
         html += `<div class="pr-section">
-          <div class="pr-sec-title">⚙️ ${sysName} — ${lineName}</div>`;
+          <div class="pr-sec-title">⚙️ ${sysName} — ${lineName}</div>
+          <div class="pr-summary">
+            <strong>สรุปภาพรวม:</strong> &nbsp;
+            OT รวม ${lineOT} ชม. จาก ${lineTotal} ชม. &nbsp;|&nbsp;
+            OT% = <strong style="color:${lineOver?'#dc2626':'#16a34a'}">${linePct}%</strong> &nbsp;|&nbsp;
+            Target = ${tgt}% &nbsp;|&nbsp;
+            ${lineOver?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
+          </div>`;
 
         ['morning','afternoon','night'].forEach(sh => {
           const workers = shiftData[sh];
