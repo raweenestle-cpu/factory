@@ -402,6 +402,7 @@ tr.dept-row td{border-top:3px solid #000!important}
 .sc-fill .sc-glow-tl{background:radial-gradient(circle,rgba(34,197,94,.6),transparent 70%)}
 .sc-total .sc-glow-tl{background:radial-gradient(circle,rgba(139,92,246,.6),transparent 70%)}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -574,6 +575,7 @@ tr.dept-row td{border-top:3px solid #000!important}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button onclick="S.triggerSave()" style="flex:1;padding:10px;background:rgba(37,99,235,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">💾 บันทึก</button>
+        <button onclick="S.confirmOTSign()" id="btn-ot-sign" style="flex:1;padding:10px;background:rgba(16,185,129,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit;display:none">✍️ เซ็น OT</button>
         <button onclick="S.clearWeek()" style="flex:1;padding:10px;background:rgba(239,68,68,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🗑️ ลบทั้งสัปดาห์</button>
         <button onclick="S.openPrintSched()" style="flex:1;padding:10px;background:rgba(15,52,96,.9);color:#fff;border:1.5px solid rgba(6,182,212,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ตาราง</button>
         <button onclick="S.printOT()" style="flex:1;padding:10px;background:rgba(0,0,0,.3);color:#fff;border:1.5px solid rgba(245,158,11,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ OT</button>
@@ -1581,6 +1583,8 @@ const S = {
 
   open(sys) {
     this.sys = sys;
+    // แสดงปุ่มเซ็น OT ถ้า login เป็นพนักงาน
+    setTimeout(()=>{ this.updateSignBtn(); },100);
     this.curLine = 0;
     this.curWeekStart = this.getWeekStart(new Date());
     this.curWKey = this.weekKey(this.curWeekStart);
@@ -1588,6 +1592,7 @@ const S = {
     this.renderLineTabs();
     this.renderWeekHeader();
     this.renderSched();
+    setTimeout(()=>this.updateSignBtn(),50);
     this.updateOTCards();
     this.renderEmp();
     this.renderLog();
@@ -2308,7 +2313,10 @@ const S = {
             <td>${w.dept}</td>
             <td style="text-align:center">${w.totalOTHrs} ชม.</td>
             <td style="text-align:center">${w.days} วัน</td>
-            <td></td>
+            <td style="text-align:center;font-family:cursive;font-size:18px;color:#1e293b">${(()=>{
+              const s=localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name);
+              return s?JSON.parse(s).name:'';
+            })()}</td>
           </tr>`).join('')}
           <tr style="font-weight:700;background:#f0f0f0">
             <td colspan="3" style="text-align:right">รวม</td>
@@ -2864,6 +2872,100 @@ const S = {
         </div>`;
       }).join(''):
       '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">ยังไม่มีข้อมูลสัปดาห์นี้</div>';
+  },
+
+
+
+  updateSignBtn() {
+    const btn = document.getElementById('btn-ot-sign');
+    if(!btn) return;
+    if(!curUser || curUser.role==='admin') {
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = 'flex';
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+curUser.name;
+    const signed = localStorage.getItem(signKey);
+    if(signed) {
+      btn.style.background = 'rgba(5,150,105,.9)';
+      btn.textContent = '✅ เซ็นแล้ว';
+      btn.style.cursor = 'default';
+    } else {
+      btn.style.background = 'rgba(16,185,129,.8)';
+      btn.textContent = '✍️ เซ็น OT';
+      btn.style.cursor = 'pointer';
+    }
+  },
+
+  confirmOTSign() {
+    if(!curUser) { toast('❌ ต้อง Login ก่อน'); return; }
+    if(curUser.role==='admin') { toast('❌ Admin ไม่สามารถเซ็นแทนพนักงานได้'); return; }
+    const name = curUser.name;
+    // เช็คว่า login เป็นชื่อพนักงานจริงๆ ไม่ใช่คนอื่น
+    const emps = this.getEmps();
+    const emp = emps.find(e=>e.name===name);
+    if(!emp) { toast('❌ ไม่พบข้อมูลพนักงาน'); return; }
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name;
+    const existing = localStorage.getItem(signKey);
+    if(existing) {
+      const s = JSON.parse(existing);
+      const d = new Date(s.signedAt);
+      toast('✅ เซ็นแล้วเมื่อ '+d.toLocaleString('th-TH'));
+      return;
+    }
+
+    // ตรวจสอบว่ามี OT ไหม
+    const sched = this.getSched(this.curLine);
+    const depts = this.getDepts();
+    let hasOT = false;
+    depts.forEach(dept=>{
+      for(let di=0;di<6;di++){
+        ['morning','afternoon','night'].forEach(sh=>{
+          const w=(sched[dept]?.[di]?.[sh]||[]).find(x=>x.name===name);
+          if(w&&w.ot) hasOT=true;
+        });
+      }
+    });
+    if(!hasOT) { toast('❌ ไม่มี OT สัปดาห์นี้'); return; }
+
+    // popup ยืนยัน
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    const box=document.createElement('div');
+    box.style.cssText='background:#fff;border-radius:16px;padding:24px;margin:16px;text-align:center;max-width:320px;width:100%';
+
+    // แสดง preview ลายเซ็น
+    box.innerHTML='<div style="font-size:13px;color:#64748b;margin-bottom:8px">ลายเซ็นของคุณ</div>'+
+      '<div style="font-family:cursive;font-size:36px;color:#1e293b;padding:16px;border-bottom:2px solid #1e293b;margin-bottom:16px;min-height:60px">'+name+'</div>'+
+      '<div style="font-size:12px;color:#64748b;margin-bottom:20px">กดยืนยันเพื่อเซ็นรับทราบ OT สัปดาห์นี้</div>';
+
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:10px';
+    const btnNo=document.createElement('button');
+    btnNo.textContent='ยกเลิก';
+    btnNo.style.cssText='flex:1;padding:12px;background:#f1f5f9;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    btnNo.onclick=()=>overlay.remove();
+    const btnYes=document.createElement('button');
+    btnYes.textContent='✅ ยืนยันเซ็น OT';
+    btnYes.style.cssText='flex:1;padding:12px;background:#10b981;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    btnYes.onclick=()=>{
+      const signData={name,signedAt:Date.now(),wkey:this.curWKey,sys:this.sys,li:this.curLine};
+      localStorage.setItem(signKey,JSON.stringify(signData));
+      try{if(fbDb)fbDb.ref('factory/'+this.sys+'/signs/'+this.curLine+'/'+this.curWKey+'/'+name).set(signData);}catch(e){}
+      overlay.remove();
+      S.updateSignBtn();
+      toast('✅ เซ็น OT สำเร็จ');
+    };
+    row.appendChild(btnNo);row.appendChild(btnYes);
+    box.appendChild(row);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  },
+
+  getSign(name) {
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name;
+    const s = localStorage.getItem(signKey);
+    return s ? JSON.parse(s) : null;
   },
 
   showOTDetail(name) {
