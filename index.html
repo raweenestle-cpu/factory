@@ -3202,8 +3202,7 @@ const S = {
     const team = this.getCurrentTeam(li);
     const teams = this.getTeams(li);
     const members = teams[team]||[];
-    toast('Debug: sys='+this.sys+' li='+li+' team='+team+' members='+members.length);
-    if(!members.length){ toast('❌ ทีม '+team+' ไม่มีสมาชิก'); return; }
+    if(!members.length){ toast('❌ ทีม '+team+' ไม่มีสมาชิก (sys='+this.sys+' li='+li+')'); return; }
 
     // ดึงพนักงานจากทั้ง proc และ fill
     const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
@@ -3405,7 +3404,7 @@ const S = {
     toast('✅ โหลดทีม '+teamName+' → '+SHIFT_TH[shift]);
   },
   autoLoad() {
-    const li = this.teamEditLine;
+    const li = this.curLine;
     const cfg = this.getTeamCfg(li);
     const wn = this.getWN(this.curWeekStart);
     const rot = Math.floor(Math.max(0,wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
