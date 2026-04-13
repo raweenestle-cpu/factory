@@ -401,8 +401,9 @@ tr.dept-row td{border-top:3px solid #000!important}
 .sc-proc .sc-glow-tl{background:radial-gradient(circle,rgba(6,182,212,.6),transparent 70%)}
 .sc-fill .sc-glow-tl{background:radial-gradient(circle,rgba(34,197,94,.6),transparent 70%)}
 .sc-total .sc-glow-tl{background:radial-gradient(circle,rgba(139,92,246,.6),transparent 70%)}
+.signature{font-family:'Brush Script MT','Comic Sans MS',cursive;font-size:28px;color:#1e3a5f;letter-spacing:2px;font-style:italic;transform:rotate(-3deg);display:inline-block}
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+
 </head>
 <body>
 
@@ -2322,11 +2323,11 @@ const S = {
             <td>${w.dept}</td>
             <td style="text-align:center">${w.totalOTHrs} ชม.</td>
             <td style="text-align:center">${w.days} วัน</td>
-            <td style="text-align:center;font-family:cursive;font-size:18px;color:#1e293b">${(()=>{
+            <td style="text-align:center"><span class="signature" style="font-size:22px">${(()=>{
               const prefix='fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+w.name+'_';
               const key=Object.keys(localStorage).find(k=>k.startsWith(prefix));
               return key?JSON.parse(localStorage.getItem(key)).name:'';
-            }).call(this)}</td>
+            }).call(this)}</span></td>
           </tr>`).join('')}
           <tr style="font-weight:700;background:#f0f0f0">
             <td colspan="3" style="text-align:right">รวม</td>
@@ -2928,7 +2929,7 @@ const S = {
     const preview = document.createElement('div');
     preview.innerHTML = 
       '<div style="font-size:13px;color:#64748b;margin-bottom:4px">ข้าพเจ้า ยินยอมทำ OT</div>'+
-      '<div style="font-family:cursive;font-size:32px;color:#1e293b;padding:12px 0;border-bottom:2px solid #1e293b;margin-bottom:8px">'+name+'</div>'+
+      '<div style="padding:12px 0;border-bottom:2px solid #1e3a5f;margin-bottom:8px;text-align:center"><span class="signature">'+name+'</span></div>'+
       '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px">'+['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'][di]+' · กะ'+{morning:'เช้า',afternoon:'บ่าย',night:'ดึก'}[sh]+'</div>';
     box.appendChild(preview);
 
