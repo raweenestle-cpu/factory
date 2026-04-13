@@ -2439,16 +2439,36 @@ const S = {
   },
 
   clearWeek() {
-    if(!confirm('ลบตารางกะทั้งสัปดาห์นี้ใช่ไหมครับ?')) return;
-    const storeKey = 'fac_sched_'+this.sys+'_'+this.curLine;
-    const allSched = JSON.parse(localStorage.getItem(storeKey)||'{}');
-    delete allSched[this.curWKey];
-    localStorage.setItem(storeKey, JSON.stringify(allSched));
-    try { if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+this.curLine+'/'+this.curWKey).remove(); } catch(e){}
-    this.renderSched();
-    this.updateOTCards();
-    toast('✅ ลบตารางสัปดาห์นี้แล้ว');
+    const d=document.createElement('div');
+    d.id='cwm';
+    d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    const box=document.createElement('div');
+    box.style.cssText='background:#fff;border-radius:16px;padding:24px;margin:16px;text-align:center;max-width:300px';
+    box.innerHTML='<div style="font-size:36px">🗑️</div><div style="font-size:16px;font-weight:800;color:#1e293b;margin:8px 0">ลบตารางสัปดาห์นี้?</div><div style="font-size:13px;color:#64748b;margin-bottom:20px">จะลบข้อมูลทั้งหมดในสัปดาห์นี้</div>';
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:10px';
+    const btnNo=document.createElement('button');
+    btnNo.textContent='ยกเลิก';
+    btnNo.style.cssText='flex:1;padding:12px;background:#f1f5f9;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    btnNo.onclick=()=>d.remove();
+    const btnYes=document.createElement('button');
+    btnYes.textContent='ลบเลย';
+    btnYes.style.cssText='flex:1;padding:12px;background:#ef4444;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    btnYes.onclick=()=>{
+      d.remove();
+      const k='fac_sched_'+S.sys+'_'+S.curLine;
+      const a=JSON.parse(localStorage.getItem(k)||'{}');
+      delete a[S.curWKey];
+      localStorage.setItem(k,JSON.stringify(a));
+      try{if(fbDb)fbDb.ref('factory/'+S.sys+'/sched/'+S.curLine+'/'+S.curWKey).remove();}catch(e){}
+      S.renderSched();S.updateOTCards();
+      toast('✅ ลบตารางสัปดาห์นี้แล้ว');
+    };
+    row.appendChild(btnNo);row.appendChild(btnYes);
+    box.appendChild(row);d.appendChild(box);
+    document.body.appendChild(d);
   },
+
 
   triggerSave() {
     const sched = this.getSched(this.curLine);
@@ -3176,10 +3196,9 @@ const S = {
     members.forEach(name => {
       const emp = empMap.get(name);
       if(!emp) return;
+      // ใช้แผนกของพนักงานตรงๆ ไม่ต้องเช็ค
       const empDept = (emp.dept||'').trim();
-      // เช็คจากทั้ง depts ปัจจุบัน และ allDepts
-      const dept = depts.includes(empDept) ? empDept : 
-                   allDepts.includes(empDept) ? empDept : depts[0];
+      const dept = empDept || depts[0];
       if(!wk[dept]) wk[dept] = {};
       for(let di=0;di<6;di++) {
         if(!wk[dept][di]) wk[dept][di] = {morning:[],afternoon:[],night:[]};
