@@ -506,6 +506,7 @@ tr.dept-row td{border-top:3px solid #000!important}
 
 
 
+
   <!-- PWA Install Button -->
   <div id="pwa-install-btn" style="display:none;margin:0 14px 12px;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(37,99,235,.3),rgba(6,182,212,.2));border:1.5px solid rgba(6,182,212,.4);border-radius:14px;padding:12px 16px;cursor:pointer" onclick="installPWA()">
     <div style="font-size:28px">📲</div>
@@ -2643,6 +2644,10 @@ const S = {
       }
     });
 
+    // ดึง comment
+    const weekMi2 = this.curWeekStart.getMonth();
+    const weekYr2 = this.curWeekStart.getFullYear()+543;
+    let cmt2 = load('fac_gcmt_'+this.sys+'_'+this.curLine+'_'+weekYr2+'_'+weekMi2,'');
     // สร้าง HTML
     let html = `
     <div class="pr-header">
@@ -2655,6 +2660,7 @@ const S = {
       OT% = <strong style="color:${pct>tgt?'#dc2626':'#16a34a'}">${pct}%</strong> &nbsp;|&nbsp;
       Target = ${tgt}% &nbsp;|&nbsp;
       ${pct>tgt?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
+      ${cmt2?`&nbsp;|&nbsp;<strong>💬 เหตุผล: ${cmt2}</strong>`:''}
     </div>
     <div class="pr-section">
       <div class="pr-sec-title">⚙️ ${sysName} — ${lineName}</div>`;
@@ -2714,10 +2720,9 @@ const S = {
   _printSchedDay: 0,
 
   openPrintSched() {
-    // default วันนี้
-    const todayDi = new Date().getDay()===0?6:new Date().getDay()-1;
-    this._printSchedType = 'day';
-    this._printSchedDay = todayDi;
+    // default รายสัปดาห์
+    this._printSchedType = 'week';
+    this._printSchedDay = 0;
     this.updatePrintSchedUI();
     openMo('mo-print-sched', null);
   },
