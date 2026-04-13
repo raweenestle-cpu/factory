@@ -1525,24 +1525,39 @@ const H = {
 
 
   initPrintOptions() {
-    // สัปดาห์ย้อนหลัง 12 สัปดาห์
     const weekSel = document.getElementById('h-print-week');
     if(weekSel) {
       weekSel.innerHTML = '';
-      for(let i=0;i<12;i++) {
-        const d = new Date(); d.setDate(d.getDate() - i*7);
-        const _d2 = new Date(d);
-      const _day = _d2.getDay();
-      const _diff = _d2.getDate() - (_day===0?6:_day-1);
-      const ws = new Date(_d2.setDate(_diff));
-        const wk = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
+      // ดึง week keys จาก localStorage ที่มีข้อมูลจริงๆ
+      const allWKeys = new Set();
+      ['proc','fill'].forEach(sys => {
+        for(let li=0;li<14;li++) {
+          const raw = JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}');
+          Object.keys(raw).forEach(k=>{ if(k&&k.match(/^\d{4}-\d{2}-\d{2}$/)) allWKeys.add(k); });
+        }
+      });
+      // เรียงจากใหม่ไปเก่า
+      const sorted = [...allWKeys].sort((a,b)=>b.localeCompare(a));
+      if(sorted.length === 0) {
+        // fallback ใช้ 12 สัปดาห์ย้อนหลัง
+        for(let i=0;i<12;i++) {
+          const d = new Date(); d.setDate(d.getDate() - i*7);
+          const day = d.getDay();
+          const diff = d.getDate() - (day===0?6:day-1);
+          const ws = new Date(d); ws.setDate(diff);
+          const wk = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
+          sorted.push(wk);
+        }
+      }
+      sorted.forEach(wk => {
+        const ws = new Date(wk);
         const wn = S.getWN(ws);
         const we = new Date(ws); we.setDate(we.getDate()+5);
         const label = 'สัปดาห์ที่ '+wn+' ('+ws.getDate()+'/'+(ws.getMonth()+1)+' - '+we.getDate()+'/'+(we.getMonth()+1)+')';
         const opt = document.createElement('option');
         opt.value = wk; opt.textContent = label;
         weekSel.appendChild(opt);
-      }
+      });
     }
     // เดือน
     const monthSel = document.getElementById('h-print-month');
