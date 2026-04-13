@@ -4260,6 +4260,41 @@ function updateEmpCount() {
   const te = document.getElementById('h-total-emp-count');
   if(te) te.textContent = proc.length + fill.length;
 }
+
+function migrateWeekKeys() {
+  // แปลง UTC week keys (อาทิตย์) เป็น local week keys (จันทร์)
+  ['proc','fill'].forEach(sys => {
+    for(let li=0;li<14;li++) {
+      const storeKey = 'fac_sched_'+sys+'_'+li;
+      const raw = JSON.parse(localStorage.getItem(storeKey)||'{}');
+      const newRaw = {};
+      let changed = false;
+      Object.entries(raw).forEach(([wk, data]) => {
+        // แปลง key ให้เป็น local date ที่เป็นวันจันทร์จริงๆ
+        const parts = wk.split('-');
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+        const day = d.getDay();
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - (day===0?6:day-1));
+        const newKey = monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
+        if(newKey !== wk) { changed = true; }
+        // ถ้ามี key ใหม่อยู่แล้ว ให้ merge
+        if(newRaw[newKey]) {
+          // merge data
+          Object.entries(data||{}).forEach(([dept, days]) => {
+            if(!newRaw[newKey][dept]) newRaw[newKey][dept] = days;
+          });
+        } else {
+          newRaw[newKey] = data;
+        }
+      });
+      if(changed) {
+        localStorage.setItem(storeKey, JSON.stringify(newRaw));
+      }
+    }
+  });
+}
+
 function startApp() {
   try { document.getElementById('h-yr-lbl').textContent = H.yr+' (พ.ศ.)'; } catch(e){}
   try { initFB(); } catch(e) { console.log('FB:', e); }
@@ -4270,9 +4305,9 @@ function startApp() {
   setTimeout(()=>{ try{fbSync('proc');}catch(e){} try{fbSync('fill');}catch(e){} }, 2000);
 }
 if(document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startApp);
+  document.addEventListener('DOMContentLoaded', ()=>{ migrateWeekKeys(); startApp(); });
 } else {
-  startApp();
+  migrateWeekKeys(); startApp();
 }
 </script>
 
