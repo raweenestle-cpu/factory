@@ -1085,7 +1085,9 @@ const H = {
   },
 
   makeChart(elId, pctElId, ids) {
-    const tgt = 15;
+    // ดึง target จากทุก sys ที่เกี่ยวข้อง
+    const sys = ids[0]?ids[0].split('_')[0]:'proc';
+    const tgt = parseInt(localStorage.getItem('fac_target_'+sys)||'15')||15;
     const data = Array.from({length:12},(_,mi)=>this.getMonthAvg(ids,this.yr,mi));
     const latest = [...data].reverse().find(v=>v!==null);
     const hasData = data.some(v=>v!==null);
