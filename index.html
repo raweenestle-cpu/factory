@@ -650,6 +650,11 @@ tr.dept-row td{border-top:3px solid #000!important}
           const e=JSON.parse(localStorage.getItem('fac_emps_'+S.sys)||'[]');
           const txt='Depts: '+JSON.stringify(d)+'\nEmps: '+e.slice(0,5).map(x=>x.name+':'+x.dept).join(', ');
           document.getElementById('debug-out').textContent=txt;
+          // แสดง sched ด้วย
+          const s=JSON.parse(localStorage.getItem('fac_sched_'+S.sys+'_'+S.curLine)||'{}');
+          const wk=s[S.curWKey]||{};
+          const depts2=Object.keys(wk);
+          document.getElementById('debug-out').textContent=txt+'\n\nSched depts: '+JSON.stringify(depts2)+'\nMixing mon: '+JSON.stringify((wk['Mixing']||{})[0]);
         " style="width:100%;padding:10px;background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">🔍 ดูข้อมูล Dept</button>
         <div id="debug-out" style="margin-top:8px;padding:10px;background:#f8faff;border-radius:8px;font-size:11px;color:#1e293b;word-break:break-all;border:1px solid #e2e8f0;min-height:40px;user-select:text"></div>
       </div>
