@@ -671,6 +671,14 @@ tr.dept-row td{border-top:3px solid #000!important}
         <div id="debug-out" style="margin-top:8px;padding:10px;background:#f8faff;border-radius:8px;font-size:11px;color:#1e293b;word-break:break-all;border:1px solid #e2e8f0;min-height:40px;user-select:text"></div>
       </div>
       <div class="setting-card">
+        <div class="setting-title">📅 จำกัด OT สูงสุดต่อสัปดาห์/คน</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="number" id="s-max-ot-days" min="1" max="7" value="3" style="width:70px;padding:8px;border:2px solid #2563eb;border-radius:10px;background:#fff;color:#1e3a5f;font-size:16px;font-weight:800;text-align:center">
+          <span style="font-size:14px;font-weight:700;color:#475569">วัน/สัปดาห์</span>
+          <button onclick="S.saveMaxOTDays()" style="padding:8px 16px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700">บันทึก</button>
+        </div>
+      </div>
+      <div class="setting-card">
         <div class="setting-title">🎯 Target OT%</div>
         <div style="display:flex;align-items:center;gap:10px">
           <input type="number" id="s-target-inp" min="0" max="100" value="15" style="width:80px;padding:8px;border:2px solid #2563eb;border-radius:10px;background:#fff;color:#1e3a5f;font-size:16px;font-weight:800;text-align:center">
@@ -1661,6 +1669,33 @@ const S = {
     this.addLog('save','บันทึกตาราง');
   },
   getTarget() { return parseInt(load(`fac_target_${this.sys}`,15))||15; },
+
+  getMaxOTDays() {
+    return parseInt(localStorage.getItem('fac_max_ot_days')||'3')||3;
+  },
+
+  saveMaxOTDays() {
+    const v = parseInt(document.getElementById('s-max-ot-days')?.value)||3;
+    localStorage.setItem('fac_max_ot_days', v);
+    toast('✅ บันทึก จำกัด OT สูงสุด '+v+' วัน/สัปดาห์');
+  },
+
+  countOTDays(name) {
+    // นับจำนวนวันที่ทำ OT ในสัปดาห์นี้
+    const sched = this.getSched(this.curLine);
+    const depts = this.getDepts();
+    const otDays = new Set();
+    depts.forEach(dept => {
+      for(let di=0;di<6;di++) {
+        ['morning','afternoon','night'].forEach(sh => {
+          const w = (sched[dept]?.[di]?.[sh]||[]).find(w=>w.name===name);
+          if(w && w.ot) otDays.add(di);
+        });
+      }
+    });
+    return otDays.size;
+  },
+
   saveTarget(v) {
     const val = v !== undefined ? v : parseInt(document.getElementById('s-target-inp')?.value)||15;
     save(`fac_target_${this.sys}`, val);
@@ -2023,6 +2058,25 @@ const S = {
 
   // ── NOTE / OT ──
 
+
+  showOTLimitPopup(name, maxDays) {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;margin:16px;text-align:center;max-width:300px';
+    box.innerHTML = '<div style="font-size:40px;margin-bottom:12px">🚫</div>'+
+      '<div style="font-size:16px;font-weight:900;color:#dc2626;margin-bottom:8px">OT เต็มแล้ว!</div>'+
+      '<div style="font-size:13px;color:#475569;margin-bottom:6px"><strong>'+name+'</strong></div>'+
+      '<div style="font-size:13px;color:#475569;margin-bottom:20px">หมดสิทธิ์ทำ OT สัปดาห์นี้แล้ว<br>ครบ '+maxDays+' วัน/สัปดาห์ที่กำหนดไว้</div>';
+    const btn = document.createElement('button');
+    btn.textContent = 'รับทราบ';
+    btn.style.cssText = 'width:100%;padding:12px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer';
+    btn.onclick = () => d.remove();
+    box.appendChild(btn);
+    d.appendChild(box);
+    document.body.appendChild(d);
+  },
+
   workerMenu(event, dept, di, sh, wi) {
     // ลบ popup เก่า
     document.getElementById('worker-menu-popup')?.remove();
@@ -2067,6 +2121,15 @@ const S = {
     document.getElementById('worker-menu-popup')?.remove();
     const sched=this.getSched(this.curLine);
     const w=sched[dept]?.[di]?.[sh]?.[wi]; if(!w) return;
+    // ถ้าจะเปิด OT ให้เช็คก่อนว่าเกิน max OT days ไหม
+    if(!w.ot) {
+      const maxDays = this.getMaxOTDays();
+      const otDays = this.countOTDays(w.name);
+      if(otDays >= maxDays) {
+        this.showOTLimitPopup(w.name, maxDays);
+        return;
+      }
+    }
     w.ot=!w.ot;
     if(w.ot) w.otHrs=w.otHrs||4;
     this.saveSched(this.curLine,sched);
@@ -2976,6 +3039,7 @@ const S = {
   // ── SETTINGS ──
   renderSettings() {
     document.getElementById('s-target-inp').value=this.getTarget();
+    document.getElementById('s-max-ot-days').value=this.getMaxOTDays();
     // Line list
     const lines=this.getLines();
     document.getElementById('s-line-list').innerHTML=lines.map((name,i)=>
