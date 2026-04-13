@@ -2147,12 +2147,8 @@ const S = {
     const usedShift=new Set((getDay(dept,di)[sh]||[]).map(w=>w.name));
     const usedDay=new Set();
     depts.forEach(d=>{ ['morning','afternoon','night'].forEach(s=>{ (getDay(d,di)[s]||[]).forEach(w=>usedDay.add(w.name)); }); });
-    // ดึงพนักงานจากทั้ง proc และ fill
-    const _ep2 = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
-    const _ef2 = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
-    const _em2 = new Map();
-    [..._ep2,..._ef2].forEach(e=>{ if(e&&e.name) _em2.set(e.name,e); });
-    const emps = [..._em2.values()];
+    // ดึงเฉพาะพนักงานของ sys นี้
+    const emps = JSON.parse(localStorage.getItem('fac_emps_'+this.sys)||'[]');
     document.getElementById('add-worker-title').textContent=`เพิ่มพนักงาน → กะ${SHIFT_TH[sh]}`;
     document.getElementById('add-worker-list').innerHTML=emps.map(e=>{
       const inShift=usedShift.has(e.name);
