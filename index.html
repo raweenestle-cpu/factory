@@ -1551,10 +1551,14 @@ const H = {
         }
       }
       sorted.forEach(wk => {
-        const ws = new Date(wk);
-        const wn = S.getWN(ws);
-        const we = new Date(ws); we.setDate(we.getDate()+5);
-        const label = 'สัปดาห์ที่ '+wn+' ('+ws.getDate()+'/'+(ws.getMonth()+1)+' - '+we.getDate()+'/'+(we.getMonth()+1)+')';
+        // parse วันที่จาก key ตรงๆ ไม่ใช้ UTC
+        const parts = wk.split('-');
+        const ws = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+        // หาวันจันทร์จริงๆ ของสัปดาห์นี้
+        const wsReal = S.getWeekStart(ws);
+        const wn = S.getWN(wsReal);
+        const we = new Date(wsReal); we.setDate(we.getDate()+5);
+        const label = 'สัปดาห์ที่ '+wn+' ('+wsReal.getDate()+'/'+(wsReal.getMonth()+1)+' - '+we.getDate()+'/'+(we.getMonth()+1)+')';
         const opt = document.createElement('option');
         opt.value = wk; opt.textContent = label;
         weekSel.appendChild(opt);
