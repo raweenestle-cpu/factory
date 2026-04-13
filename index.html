@@ -500,9 +500,13 @@ tr.dept-row td{border-top:3px solid #000!important}
   </div>
 
   <!-- Print All OT Button -->
-  <div style="margin:0 14px 12px">
-    <button onclick="H.printAllOT()" style="width:100%;padding:12px;background:rgba(245,158,11,.2);border:1.5px solid rgba(245,158,11,.5);border-radius:14px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
-      🖨️ พิมพ์ OT รวมทุกระบบ
+  <div style="margin:0 14px 12px;display:flex;gap:8px;align-items:center">
+    <select id="h-print-mode" style="flex:1;padding:10px;background:rgba(255,255,255,.1);border:1.5px solid rgba(245,158,11,.5);border-radius:12px;color:#fff;font-size:13px;font-weight:700;font-family:inherit">
+      <option value="week" style="color:#1e293b">📅 รายสัปดาห์ (ปัจจุบัน)</option>
+      <option value="month" style="color:#1e293b">📆 รายเดือน (เดือนนี้)</option>
+    </select>
+    <button onclick="H.printAllOT()" style="padding:10px 16px;background:rgba(245,158,11,.3);border:1.5px solid rgba(245,158,11,.5);border-radius:12px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap">
+      🖨️ พิมพ์ OT
     </button>
   </div>
 
@@ -1512,10 +1516,31 @@ const H = {
   printAllOT() {
     const now = new Date();
     const dateStr = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-    // ดึงข้อมูลจากทั้ง proc และ fill ทุก line
+    const mode = document.getElementById('h-print-mode')?.value || 'week';
+    const isMonth = mode === 'month';
+    // คำนวณ week keys ที่จะดึง
+    let wKeys = [];
+    let titleSub = '';
+    if(isMonth) {
+      // ดึงทุกสัปดาห์ในเดือนนี้
+      const yr = now.getFullYear();
+      const mi = now.getMonth();
+      const firstDay = new Date(yr, mi, 1);
+      const lastDay = new Date(yr, mi+1, 0);
+      let d = S.getWeekStart(firstDay);
+      while(d <= lastDay) {
+        wKeys.push(S.weekKey(d));
+        d = new Date(d); d.setDate(d.getDate()+7);
+      }
+      titleSub = now.toLocaleDateString('th-TH',{year:'numeric',month:'long'}) + ' · วันที่พิมพ์: '+dateStr;
+    } else {
+      const weekStart = S.getWeekStart(new Date());
+      wKeys = [S.weekKey(weekStart)];
+      titleSub = 'สัปดาห์ที่ '+S.getWN(weekStart)+' · วันที่พิมพ์: '+dateStr;
+    }
     let html = `<div class="pr-header">
-      <div class="pr-title">📋 บิล OT รวมทุกระบบ</div>
-      <div class="pr-sub">วันที่พิมพ์: ${dateStr}</div>
+      <div class="pr-title">📋 บิล OT รวมทุกระบบ${isMonth?' (รายเดือน)':''}</div>
+      <div class="pr-sub">${titleSub}</div>
     </div>`;
 
     ['proc','fill'].forEach(sys => {
@@ -1524,26 +1549,26 @@ const H = {
                     (sys==='proc'?['Process 1','Process 2','Process 3','Process 4','Process 5']:['Polo 12A','Polo 12B','Comet','Mach','Sandwich','Hoyer','Extrud 3','Glacé','Scooping']);
       const depts = JSON.parse(localStorage.getItem('fac_depts_'+sys)||'["แผนก 1"]');
       const tgt = parseInt(localStorage.getItem('fac_target_'+sys)||'15');
-      const curWKey = S.curWKey;
-      const wn = S.getWN(S.curWeekStart);
 
       lines.forEach((lineName, li) => {
         const raw = JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}');
-        const wk = raw[curWKey] || {};
-        // รวบรวมพนักงาน OT
+        // รวบรวมพนักงาน OT จากทุก wKey
         const shiftData = {morning:[], afternoon:[], night:[]};
-        depts.forEach(dept => {
-          for(let di=0;di<6;di++) {
-            ['morning','afternoon','night'].forEach(sh => {
-              const day = wk[dept]?.[di] || wk[dept]?.[String(di)];
-              (day?.[sh]||[]).forEach(w => {
-                if(!w.ot) return;
-                const existing = shiftData[sh].find(x=>x.name===w.name&&x.dept===dept);
-                if(existing){ existing.days++; existing.totalOTHrs+=w.otHrs||4; }
-                else shiftData[sh].push({name:w.name, dept, days:1, totalOTHrs:w.otHrs||4});
+        wKeys.forEach(curWKey => {
+          const wk = raw[curWKey] || {};
+          depts.forEach(dept => {
+            for(let di=0;di<6;di++) {
+              ['morning','afternoon','night'].forEach(sh => {
+                const day = wk[dept]?.[di] || wk[dept]?.[String(di)];
+                (day?.[sh]||[]).forEach(w => {
+                  if(!w.ot) return;
+                  const existing = shiftData[sh].find(x=>x.name===w.name&&x.dept===dept);
+                  if(existing){ existing.days++; existing.totalOTHrs+=w.otHrs||4; }
+                  else shiftData[sh].push({name:w.name, dept, days:1, totalOTHrs:w.otHrs||4});
+                });
               });
-            });
-          }
+            }
+          });
         });
         const hasOT = Object.values(shiftData).some(arr=>arr.length>0);
         if(!hasOT) return;
@@ -1567,8 +1592,8 @@ const H = {
             </tr></thead>
             <tbody>
               ${workers.map((w,i)=>{
-                const prefix='fac_sign_'+sys+'_'+li+'_'+curWKey+'_'+w.name+'_';
-                const key=Object.keys(localStorage).find(k=>k.startsWith(prefix));
+                const prefix='fac_sign_'+sys+'_'+li+'_';
+                const key=Object.keys(localStorage).find(k=>k.startsWith(prefix+wKeys[0]+'_'+w.name+'_')||k.startsWith(prefix+wKeys[wKeys.length-1]+'_'+w.name+'_'));
                 const sig=key?JSON.parse(localStorage.getItem(key)).name:'';
                 return `<tr>
                   <td style="text-align:center">${i+1}</td>
