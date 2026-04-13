@@ -673,6 +673,15 @@ tr.dept-row td{border-top:3px solid #000!important}
         <div id="debug-out" style="margin-top:8px;padding:10px;background:#f8faff;border-radius:8px;font-size:11px;color:#1e293b;word-break:break-all;border:1px solid #e2e8f0;min-height:40px;user-select:text"></div>
       </div>
       <div class="setting-card">
+        <div class="setting-title">👑 จัดการ Admin</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="s-admin-name" placeholder="ชื่อ Admin" style="flex:1;padding:8px;border:2px solid #2563eb;border-radius:10px;font-size:13px;font-family:inherit">
+          <input type="password" id="s-admin-pin" placeholder="PIN" maxlength="4" style="width:80px;padding:8px;border:2px solid #2563eb;border-radius:10px;font-size:13px;font-family:inherit;text-align:center">
+          <button onclick="S.addAdmin()" style="padding:8px 14px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ เพิ่ม</button>
+        </div>
+        <div id="s-admin-list"></div>
+      </div>
+      <div class="setting-card">
         <div class="setting-title">📅 จำกัด OT สูงสุดต่อสัปดาห์/คน</div>
         <div style="display:flex;align-items:center;gap:10px">
           <input type="number" id="s-max-ot-days" min="1" max="7" value="3" style="width:70px;padding:8px;border:2px solid #2563eb;border-radius:10px;background:#fff;color:#1e3a5f;font-size:16px;font-weight:800;text-align:center">
@@ -1547,7 +1556,14 @@ const PIN = {
 
     // เช็ค Admin ก่อน
     if(this.p === adminPin) {
-      matchedUser = {id:0, name:'Admin', dept:'ผู้จัดการ', av:0, isAdmin:true};
+      // เช็ค admins เพิ่มเติมก่อน
+      const extraAdmins = JSON.parse(localStorage.getItem('fac_admins')||'[]');
+      const extraAdmin = extraAdmins.find(a=>a.pin===this.p);
+      if(extraAdmin) {
+        matchedUser = {id:0, name:extraAdmin.name, dept:'ผู้จัดการ', av:0, isAdmin:true};
+      } else {
+        matchedUser = {id:0, name:'Admin', dept:'ผู้จัดการ', av:0, isAdmin:true};
+      }
     } else {
       // เช็คพนักงานทุกคน
       const emp = emps.find(e => e.pin === this.p);
@@ -1674,6 +1690,56 @@ const S = {
     this.addLog('save','บันทึกตาราง');
   },
   getTarget() { return parseInt(load(`fac_target_${this.sys}`,15))||15; },
+
+
+  getAdmins() {
+    return JSON.parse(localStorage.getItem('fac_admins')||'[]');
+  },
+
+  saveAdmins(admins) {
+    localStorage.setItem('fac_admins', JSON.stringify(admins));
+    try{if(fbDb) fbDb.ref('factory/admins').set(admins);}catch(e){}
+  },
+
+  addAdmin() {
+    const name = document.getElementById('s-admin-name').value.trim();
+    const pin = document.getElementById('s-admin-pin').value.trim();
+    if(!name){ toast('❌ ใส่ชื่อ Admin ก่อน'); return; }
+    if(pin.length < 4){ toast('❌ PIN ต้อง 4 หลัก'); return; }
+    const admins = this.getAdmins();
+    if(admins.find(a=>a.pin===pin)){ toast('❌ PIN นี้มีอยู่แล้ว'); return; }
+    admins.push({name, pin});
+    this.saveAdmins(admins);
+    document.getElementById('s-admin-name').value='';
+    document.getElementById('s-admin-pin').value='';
+    this.renderAdminList();
+    toast('✅ เพิ่ม Admin '+name+' แล้ว');
+  },
+
+  removeAdmin(idx) {
+    const admins = this.getAdmins();
+    admins.splice(idx, 1);
+    this.saveAdmins(admins);
+    this.renderAdminList();
+    toast('✅ ลบ Admin แล้ว');
+  },
+
+  renderAdminList() {
+    const el = document.getElementById('s-admin-list');
+    if(!el) return;
+    const admins = this.getAdmins();
+    if(!admins.length){
+      el.innerHTML = '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:8px">ยังไม่มี Admin เพิ่มเติม<br>(ใช้ PIN หลักได้เลย)</div>';
+      return;
+    }
+    el.innerHTML = admins.map((a,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#f8faff;border-radius:8px;margin-bottom:6px;border:1.5px solid #e2e8f0">
+        <div style="font-size:13px;font-weight:800;color:#1e293b;flex:1">👑 ${a.name}</div>
+        <div style="font-size:11px;color:#94a3b8">PIN: ****</div>
+        <button onclick="S.removeAdmin(${i})" style="width:28px;height:28px;border-radius:50%;border:none;background:#fee2e2;color:#ef4444;font-size:12px;cursor:pointer">✕</button>
+      </div>
+    `).join('');
+  },
 
   getMaxOTDays() {
     return parseInt(localStorage.getItem('fac_max_ot_days')||'3')||3;
@@ -3268,6 +3334,7 @@ const S = {
   renderSettings() {
     document.getElementById('s-target-inp').value=this.getTarget();
     document.getElementById('s-max-ot-days').value=this.getMaxOTDays();
+    this.renderAdminList();
     // Line list
     const lines=this.getLines();
     document.getElementById('s-line-list').innerHTML=lines.map((name,i)=>
