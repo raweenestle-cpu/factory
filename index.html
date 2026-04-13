@@ -674,9 +674,11 @@ tr.dept-row td{border-top:3px solid #000!important}
       </div>
       <div class="setting-card">
         <div class="setting-title">👑 จัดการ Admin</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <input type="text" id="s-admin-name" placeholder="ชื่อ Admin" style="flex:1;padding:8px;border:2px solid #2563eb;border-radius:10px;font-size:13px;font-family:inherit">
-          <input type="password" id="s-admin-pin" placeholder="PIN" maxlength="4" style="width:80px;padding:8px;border:2px solid #2563eb;border-radius:10px;font-size:13px;font-family:inherit;text-align:center">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+          <select id="s-admin-emp" style="flex:1;padding:8px;border:2px solid #2563eb;border-radius:10px;font-size:13px;font-family:inherit;background:#fff">
+            <option value="">-- เลือกพนักงาน --</option>
+          </select>
+          <input type="password" id="s-admin-pin" placeholder="PIN" maxlength="4" style="width:70px;padding:8px;border:2px solid #2563eb;border-radius:10px;font-size:13px;font-family:inherit;text-align:center">
           <button onclick="S.addAdmin()" style="padding:8px 14px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ เพิ่ม</button>
         </div>
         <div id="s-admin-list"></div>
@@ -1560,7 +1562,7 @@ const PIN = {
       const extraAdmins = JSON.parse(localStorage.getItem('fac_admins')||'[]');
       const extraAdmin = extraAdmins.find(a=>a.pin===this.p);
       if(extraAdmin) {
-        matchedUser = {id:0, name:extraAdmin.name, dept:'ผู้จัดการ', av:0, isAdmin:true};
+        matchedUser = {id:0, name:extraAdmin.name, dept:extraAdmin.dept||'ผู้จัดการ', av:extraAdmin.av||0, photo:extraAdmin.photo||'', isAdmin:true};
       } else {
         matchedUser = {id:0, name:'Admin', dept:'ผู้จัดการ', av:0, isAdmin:true};
       }
@@ -1702,18 +1704,23 @@ const S = {
   },
 
   addAdmin() {
-    const name = document.getElementById('s-admin-name').value.trim();
+    const sel = document.getElementById('s-admin-emp');
+    const empName = sel.value;
     const pin = document.getElementById('s-admin-pin').value.trim();
-    if(!name){ toast('❌ ใส่ชื่อ Admin ก่อน'); return; }
+    if(!empName){ toast('❌ เลือกพนักงานก่อน'); return; }
     if(pin.length < 4){ toast('❌ PIN ต้อง 4 หลัก'); return; }
     const admins = this.getAdmins();
+    if(admins.find(a=>a.name===empName)){ toast('❌ '+empName+' เป็น Admin อยู่แล้ว'); return; }
     if(admins.find(a=>a.pin===pin)){ toast('❌ PIN นี้มีอยู่แล้ว'); return; }
-    admins.push({name, pin});
+    // ดึงข้อมูลพนักงานรวมถึงรูป
+    const emps = [...JSON.parse(localStorage.getItem('fac_emps_proc')||'[]'),...JSON.parse(localStorage.getItem('fac_emps_fill')||'[]')];
+    const emp = emps.find(e=>e.name===empName);
+    admins.push({name:empName, pin, photo:emp?.photo||'', av:emp?.av||0, dept:emp?.dept||''});
     this.saveAdmins(admins);
-    document.getElementById('s-admin-name').value='';
+    sel.value='';
     document.getElementById('s-admin-pin').value='';
     this.renderAdminList();
-    toast('✅ เพิ่ม Admin '+name+' แล้ว');
+    toast('✅ เพิ่ม Admin '+empName+' แล้ว');
   },
 
   removeAdmin(idx) {
@@ -1729,16 +1736,30 @@ const S = {
     if(!el) return;
     const admins = this.getAdmins();
     if(!admins.length){
-      el.innerHTML = '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:8px">ยังไม่มี Admin เพิ่มเติม<br>(ใช้ PIN หลักได้เลย)</div>';
-      return;
+      el.innerHTML = '<div style="font-size:12px;color:#94a3b8;text-align:center;padding:8px">ยังไม่มี Admin เพิ่มเติม</div>';
+    } else {
+      el.innerHTML = admins.map((a,i)=>{
+        const avatarHtml = a.photo
+          ? `<img src="${a.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #2563eb">`
+          : `<div class="${AV_COLS[(a.av||0)%8]}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;border:2px solid #2563eb">${a.name.charAt(0)}</div>`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8faff;border-radius:10px;margin-bottom:6px;border:1.5px solid #e2e8f0">
+          ${avatarHtml}
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:#1e293b">👑 ${a.name}</div>
+            <div style="font-size:11px;color:#64748b">${a.dept||''} · PIN: ****</div>
+          </div>
+          <button onclick="S.removeAdmin(${i})" style="width:28px;height:28px;border-radius:50%;border:none;background:#fee2e2;color:#ef4444;font-size:12px;cursor:pointer">✕</button>
+        </div>`;
+      }).join('');
     }
-    el.innerHTML = admins.map((a,i)=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#f8faff;border-radius:8px;margin-bottom:6px;border:1.5px solid #e2e8f0">
-        <div style="font-size:13px;font-weight:800;color:#1e293b;flex:1">👑 ${a.name}</div>
-        <div style="font-size:11px;color:#94a3b8">PIN: ****</div>
-        <button onclick="S.removeAdmin(${i})" style="width:28px;height:28px;border-radius:50%;border:none;background:#fee2e2;color:#ef4444;font-size:12px;cursor:pointer">✕</button>
-      </div>
-    `).join('');
+    // โหลด dropdown พนักงาน
+    const empSel = document.getElementById('s-admin-emp');
+    if(empSel) {
+      const emps = [...JSON.parse(localStorage.getItem('fac_emps_proc')||'[]'),...JSON.parse(localStorage.getItem('fac_emps_fill')||'[]')];
+      const adminNames = new Set(admins.map(a=>a.name));
+      empSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' +
+        emps.filter(e=>!adminNames.has(e.name)).map(e=>`<option value="${e.name}">${e.name} (${e.dept})</option>`).join('');
+    }
   },
 
   getMaxOTDays() {
