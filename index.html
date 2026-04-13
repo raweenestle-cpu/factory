@@ -1589,13 +1589,21 @@ const H = {
     let wKeys = [];
     let titleSub = '';
     if(isMonth) {
-      const mi = parseInt(document.getElementById('h-print-month')?.value||new Date().getMonth());
-      const yr = parseInt(document.getElementById('h-print-year')?.value||new Date().getFullYear());
+      const mi = parseInt(document.getElementById('h-print-month')?.value??new Date().getMonth());
+      const yr = parseInt(document.getElementById('h-print-year')?.value??new Date().getFullYear());
       const thMonths=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-      const firstDay = new Date(yr, mi, 1);
-      const lastDay = new Date(yr, mi+1, 0);
-      let d = S.getWeekStart(firstDay);
-      while(d <= lastDay) { wKeys.push(S.weekKey(d)); d = new Date(d); d.setDate(d.getDate()+7); }
+      // ดึง wKeys ทั้งหมดที่มีข้อมูล แล้วกรองเอาที่ตกในเดือนนี้
+      const allWK = new Set();
+      ['proc','fill'].forEach(sys=>{ for(let li=0;li<14;li++){ const raw=JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}'); Object.keys(raw).forEach(k=>allWK.add(k)); } });
+      wKeys = [...allWK].filter(wk=>{
+        const d = new Date(wk);
+        // เช็คว่าสัปดาห์นี้มีวันที่อยู่ในเดือนและปีที่เลือก
+        for(let i=0;i<6;i++){
+          const dd = new Date(d); dd.setDate(dd.getDate()+i);
+          if(dd.getMonth()===mi && dd.getFullYear()===yr) return true;
+        }
+        return false;
+      });
       titleSub = thMonths[mi]+' '+(yr+543)+' · วันที่พิมพ์: '+dateStr;
     } else {
       const selWk = document.getElementById('h-print-week')?.value;
