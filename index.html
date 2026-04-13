@@ -499,6 +499,12 @@ tr.dept-row td{border-top:3px solid #000!important}
     </div>
   </div>
 
+  <!-- Debug Button (ชั่วคราว) -->
+  <div style="margin:0 14px 6px">
+    <button onclick="(()=>{const keys=[];['proc','fill'].forEach(s=>{for(let i=0;i<3;i++){const r=JSON.parse(localStorage.getItem('fac_sched_'+s+'_'+i)||'{}');Object.keys(r).forEach(k=>keys.push(s+'_'+i+':'+k));}});alert(keys.join('\n')||'ไม่มีข้อมูล');})()" style="width:100%;padding:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:10px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">
+      🔍 ดู Week Keys จริงๆ
+    </button>
+  </div>
   <!-- Print All OT Button -->
   <div style="margin:0 14px 12px;background:rgba(255,255,255,.08);border:1.5px solid rgba(245,158,11,.4);border-radius:14px;padding:12px">
     <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:8px">🖨️ พิมพ์ OT รวมทุกระบบ</div>
