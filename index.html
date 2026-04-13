@@ -654,7 +654,11 @@ tr.dept-row td{border-top:3px solid #000!important}
           const allKeys = Object.keys(localStorage).filter(k=>k.startsWith('fac_teams'));
           const teamData = {};
           allKeys.forEach(k=>{ try{teamData[k]=JSON.parse(localStorage.getItem(k));}catch(e){} });
-          document.getElementById('debug-out').textContent += '\n\nTeam keys: '+JSON.stringify(allKeys)+'\n'+JSON.stringify(teamData);
+          const teamStr = allKeys.map(k=>{
+            const v = JSON.parse(localStorage.getItem(k)||'{}');
+            return k+': A='+((v.A||[]).length)+' B='+((v.B||[]).length)+' C='+((v.C||[]).length);
+          }).join('\n');
+          document.getElementById('debug-out').textContent += '\n\nTeam keys:\n'+teamStr;
           // แสดง sched ด้วย
           const s=JSON.parse(localStorage.getItem('fac_sched_'+S.sys+'_'+S.curLine)||'{}');
           const wk=s[S.curWKey]||{};
