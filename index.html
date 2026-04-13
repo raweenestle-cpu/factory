@@ -441,7 +441,7 @@ tr.dept-row td{border-top:3px solid #000!important}
           <div class="sc-ico">⚙️</div>
           <div>
             <div class="sc-name">Process</div>
-            <div class="sc-sub2">5 Lines · แตะเพื่อเข้าระบบ</div>
+            <div class="sc-sub2">5 Lines · <span id="h-proc-emp-count">-</span> คน</div>
           </div>
         </div>
         <div>
@@ -459,7 +459,7 @@ tr.dept-row td{border-top:3px solid #000!important}
           <div class="sc-ico">🏭</div>
           <div>
             <div class="sc-name">Filling</div>
-            <div class="sc-sub2">9 Lines · แตะเพื่อเข้าระบบ</div>
+            <div class="sc-sub2">9 Lines · <span id="h-fill-emp-count">-</span> คน</div>
           </div>
         </div>
         <div>
@@ -2365,10 +2365,10 @@ const S = {
         </colgroup>
         <thead>
           <tr>
-            <th style="width:22%;border-right:3px solid #000">แผนก</th>
-            <th style="background:#dcfce7;color:#166534;width:26%;border-right:3px solid #000">กะเช้า</th>
-            <th style="background:#fef9c3;color:#92400e;width:26%;border-right:3px solid #000">กะบ่าย</th>
-            <th style="background:#dbeafe;color:#1e40af;width:26%">กะดึก</th>
+            <th style="width:20%;border-right:3px solid #000">แผนก</th>
+            <th style="background:#dcfce7;color:#166534;width:26.6%;border-right:3px solid #000">กะเช้า</th>
+            <th style="background:#fef9c3;color:#92400e;width:26.6%;border-right:3px solid #000">กะบ่าย</th>
+            <th style="background:#dbeafe;color:#1e40af;width:26.6%">กะดึก</th>
           </tr>
         </thead>
         <tbody>
@@ -3581,10 +3581,19 @@ document.addEventListener('visibilitychange',()=>{
 // ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
+function updateEmpCount() {
+  const proc = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+  const fill = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+  const pe = document.getElementById('h-proc-emp-count');
+  const fe = document.getElementById('h-fill-emp-count');
+  if(pe) pe.textContent = proc.length;
+  if(fe) fe.textContent = fill.length;
+}
 function startApp() {
   try { document.getElementById('h-yr-lbl').textContent = H.yr+' (พ.ศ.)'; } catch(e){}
   try { initFB(); } catch(e) { console.log('FB:', e); }
   try { H.renderCharts(); } catch(e) { console.log('charts:', e); }
+  try { updateEmpCount(); } catch(e) {}
   try { H.loadMascot(); } catch(e) { console.log('mascot:', e); }
   setTimeout(()=>{ try{fbSync('proc');}catch(e){} try{fbSync('fill');}catch(e){} }, 2000);
 }
