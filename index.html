@@ -537,19 +537,16 @@ tr.dept-row td{border-top:3px solid #000!important}
       <button class="nav-tab" data-tab="log" onclick="S.goTab(this)">📋 ประวัติ</button>
       <button class="nav-tab" data-tab="team" onclick="S.goTab(this)">👥 ทีม</button>
       <button class="nav-tab" data-tab="settings" onclick="S.goTab(this)">⚙️ ตั้งค่า</button>
-      <div id="nav-user-badge" style="display:none;align-items:center;gap:6px;padding:4px 8px;background:rgba(255,255,255,.1);border-radius:20px;flex-shrink:0;max-width:120px">
-        <div id="nav-user-photo" style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,.4)"></div>
-        <span id="nav-user-name" style="font-size:11px;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      </div>
-      <div id="nav-user-badge" style="display:none;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px;flex-shrink:0;cursor:default">
-        <div id="nav-user-photo" style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.4);flex-shrink:0"></div>
-        <span id="nav-user-name" style="font-size:11px;font-weight:800;color:#fff;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      </div>
+
       <button onclick="S.goHome()" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:52px" title="กลับหน้าหลัก">🏠<span style="font-size:9px;font-weight:800;line-height:1">HOME</span></button>
     </div>
     <!-- Line tabs -->
     <div style="display:flex;align-items:center;background:#e8f0ff">
       <div class="line-tabs" id="s-line-tabs" style="flex:1"></div>
+      <div id="nav-user-badge" style="display:none;align-items:center;gap:6px;padding:4px 10px;flex-shrink:0">
+        <div id="nav-user-photo" style="width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid #2563eb;flex-shrink:0"></div>
+        <span id="nav-user-name" style="font-size:11px;font-weight:800;color:#1e3a5f;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      </div>
       <button id="s-view-toggle" onclick="S.toggleView()" 
         style="padding:6px 10px;background:rgba(255,255,255,.08);border:none;border-left:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;height:100%">
         📋 รวม
