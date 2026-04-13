@@ -3193,6 +3193,7 @@ const S = {
     const team = this.getCurrentTeam(li);
     const teams = this.getTeams(li);
     const members = teams[team]||[];
+    toast('Debug: sys='+this.sys+' li='+li+' team='+team+' members='+members.length);
     if(!members.length){ toast('❌ ทีม '+team+' ไม่มีสมาชิก'); return; }
 
     // ดึงพนักงานจากทั้ง proc และ fill
@@ -3208,11 +3209,12 @@ const S = {
     if(!raw[this.curWKey]) raw[this.curWKey] = {};
     const wk = raw[this.curWKey];
 
-    // เตรียม dept ทุกอันให้พร้อม
+    // เตรียม dept ทุกอันให้พร้อม (ใช้ String key)
     depts.forEach(d=>{
       if(!wk[d]) wk[d]={};
       for(let di=0;di<6;di++){
-        if(!wk[d][di]) wk[d][di]={morning:[],afternoon:[],night:[]};
+        const dk=String(di);
+        if(!wk[d][dk]) wk[d][dk]={morning:[],afternoon:[],night:[]};
       }
     });
 
