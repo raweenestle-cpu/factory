@@ -503,7 +503,7 @@ tr.dept-row td{border-top:3px solid #000!important}
   <div style="margin:0 14px 12px;background:rgba(255,255,255,.08);border:1.5px solid rgba(245,158,11,.4);border-radius:14px;padding:12px">
     <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:8px">🖨️ พิมพ์ OT รวมทุกระบบ</div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <select id="h-print-mode" onchange="H.updatePrintOptions()" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit">
+      <select id="h-print-mode" onchange="H.initPrintOptions();H.updatePrintOptions()" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit">
         <option value="week">📅 รายสัปดาห์</option>
         <option value="month">📆 รายเดือน</option>
       </select>
@@ -515,9 +515,10 @@ tr.dept-row td{border-top:3px solid #000!important}
       <select id="h-print-month" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
       <select id="h-print-year" style="width:100px;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
     </div>
-    <button onclick="H.printAllOT()" style="width:100%;padding:10px;background:#f59e0b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
+    <button onclick="H.initPrintOptions();H.printAllOT()" style="width:100%;padding:10px;background:#f59e0b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
       🖨️ พิมพ์เลย
     </button>
+
   </div>
 
   <!-- PWA Install Button -->
@@ -1607,21 +1608,22 @@ const H = {
       titleSub = thMonths[mi]+' '+(yr+543)+' · วันที่พิมพ์: '+dateStr;
     } else {
       const selWk = document.getElementById('h-print-week')?.value;
-      if(selWk) {
+      if(selWk && selWk.match(/^\d{4}-\d{2}-\d{2}$/)) {
         wKeys = [selWk];
         const ws2 = new Date(selWk);
         titleSub = 'สัปดาห์ที่ '+S.getWN(ws2)+' · วันที่พิมพ์: '+dateStr;
       } else {
-        // fallback คำนวณเอง
+        // ใช้สัปดาห์ปัจจุบัน
         const d = new Date();
         const day = d.getDay();
         const diff = d.getDate() - (day===0?6:day-1);
-        const ws = new Date(d.setDate(diff));
+        const ws = new Date(d); ws.setDate(diff);
         const wk = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
         wKeys = [wk];
-        titleSub = 'วันที่พิมพ์: '+dateStr;
+        titleSub = 'สัปดาห์ที่ '+S.getWN(ws)+' · วันที่พิมพ์: '+dateStr;
       }
     }
+    if(!wKeys.length) { toast('❌ ไม่พบข้อมูลในช่วงเวลานี้'); return; }
     let html = `<div class="pr-header">
       <div class="pr-title">📋 บิล OT รวมทุกระบบ${isMonth?' (รายเดือน)':''}</div>
       <div class="pr-sub">${titleSub}</div>
