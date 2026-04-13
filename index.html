@@ -491,6 +491,7 @@ tr.dept-row td{border-top:3px solid #000!important}
         </div>
       </div>
       <div class="mini-wrap" id="h-total-chart" onclick="event.stopPropagation()"></div>
+      <button onclick="(()=>{let t='';['proc','fill'].forEach(s=>{const r=JSON.parse(localStorage.getItem('fac_sched_'+s+'_0')||'{}');Object.keys(r).forEach(k=>{t+=s+':'+k+'\n';});});alert(t||'ไม่มีข้อมูล');})()" style="width:100%;margin-top:8px;padding:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:11px;font-family:inherit;cursor:pointer">🔍 ดู Keys</button>
       <div class="legend" style="margin-top:8px">
         <div class="leg-item"><div class="leg-dot bar-ok"></div>ไม่เกิน Target</div>
         <div class="leg-item"><div class="leg-dot bar-over"></div>เกิน Target</div>
