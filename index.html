@@ -2111,10 +2111,11 @@ const S = {
         style="display:block;width:100%;padding:8px;background:${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'rgba(16,185,129,.2)':'rgba(245,158,11,.2)'};color:${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'#10b981':'#f59e0b'};border:1px solid ${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'rgba(16,185,129,.4)':'rgba(245,158,11,.4)'};border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:6px">
         ${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'✅ ยินยอม OT แล้ว':'✍️ ยินยอม OT'}
       </button>` : ''}
+      ${(!curUser||curUser.role==='admin') ? `
       <button onclick="S.removeWorkerMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})"
         style="display:block;width:100%;padding:8px;background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4);border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left">
         🗑️ ลบออกจากกะ
-      </button>
+      </button>` : ''}
       <button onclick="document.getElementById('worker-menu-popup').remove()"
         style="display:block;width:100%;padding:6px;background:transparent;color:rgba(255,255,255,.4);border:none;font-size:11px;font-family:inherit;cursor:pointer;margin-top:4px">ปิด</button>
     `;
