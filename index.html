@@ -1284,9 +1284,9 @@ const H = {
   uploadMascot(e){ this.uploadMascots(e); },
   saveMascot(){ this.saveMascotSettings(); },
   openPrintSelect() {
-    this.printSys = 'proc';
-    this.printShift = 'morning';
-    this.printDay = 'today';
+    this.printSys = 'all';
+    this.printShift = 'all';
+    this.printDay = 'week';
     this.updatePrintBtns();
     openMo('mo-print-select', null);
   },
@@ -1366,9 +1366,33 @@ const H = {
     };
     const wn = getWN(ws);
 
+    // คำนวณ OT% รวม
+    let totalHrsAll=0, otHrsAll=0;
+    sysArr.forEach(sys=>{
+      const lines2=load(sys==='proc'?'fac_proc_lines':'fac_fill_lines',sys==='proc'?[...DEFAULT_PROC_LINES]:[...DEFAULT_FILL_LINES]);
+      const depts2=load('fac_depts_'+sys,[...DEFAULT_DEPTS]);
+      const tgt2=parseInt(load('fac_target_'+sys,15))||15;
+      lines2.forEach((_,lineIdx)=>{
+        const allSched2=load('fac_sched_'+sys+'_'+lineIdx,{});
+        const sched2=allSched2[wKey]||{};
+        depts2.forEach(d=>{ for(let di=0;di<6;di++){ const day2=sched2[d]?.[di]||sched2[d]?.[String(di)]; ['morning','afternoon','night'].forEach(sh=>{ (day2?.[sh]||[]).forEach(w=>{ const hrs=w.ot?(w.otHrs||4):0; totalHrsAll+=8+hrs; otHrsAll+=hrs; }); }); } });
+      });
+    });
+    const pctAll = totalHrsAll>0?Math.round(otHrsAll/totalHrsAll*100):0;
+    const tgtAll = parseInt(load('fac_target_proc',15))||15;
+    const isOverAll = pctAll > tgtAll;
+    // ดึง comment
+    const cmtAll = load('fac_gcmt_proc_0_'+(ws.getFullYear()+543)+'_'+ws.getMonth(),'') ||
+                   load('fac_gcmt_fill_0_'+(ws.getFullYear()+543)+'_'+ws.getMonth(),'');
     let html = `<div class="pr-header">
       <div class="pr-title">📋 บิล OT รายชื่อพนักงาน</div>
-      <div class="pr-sub">สัปดาห์ที่ ${wn} · ${weekRange} · พิมพ์: ${dateStr}</div>
+      <div class="pr-sub">สัปดาห์ที่ ${wn} &nbsp;|&nbsp; ${weekRange} &nbsp;|&nbsp; พิมพ์: ${dateStr}</div>
+    </div>
+    <div class="pr-summary">
+      OT% รวม: <strong style="color:${isOverAll?'#dc2626':'#16a34a'};font-size:15px">${pctAll}%</strong>
+      &nbsp;|&nbsp; Target: ${tgtAll}%
+      &nbsp;|&nbsp; ${isOverAll?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
+      ${cmtAll?`&nbsp;|&nbsp; <strong>💬 ${cmtAll}</strong>`:''}
     </div>`;
 
     sysArr.forEach(sys => {
@@ -1389,7 +1413,8 @@ const H = {
           const workers = [];
           depts.forEach(dept => {
             diRange.forEach(di => {
-              (sched[dept]?.[di]?.[sh]||[]).forEach(w => {
+              const dayData = sched[dept]?.[di] || sched[dept]?.[String(di)];
+              (dayData?.[sh]||[]).forEach(w => {
                 if(!w.ot) return;
                 hasOT = true;
                 const ex = workers.find(x=>x.name===w.name&&x.dept===dept);
