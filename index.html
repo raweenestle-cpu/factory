@@ -1681,7 +1681,7 @@ const S = {
     const s={};
     this.getDepts().forEach(d=>{
       s[d]={};
-      for(let i=0;i<6;i++) { s[d][i]={morning:[],afternoon:[],night:[]}; }
+      for(let i=0;i<6;i++) { s[d][String(i)]={morning:[],afternoon:[],night:[]}; }
     });
     return s;
   },
@@ -3230,9 +3230,10 @@ const S = {
       }
       if(!wk[dept]) wk[dept]={};
       for(let di=0;di<6;di++){
-        if(!wk[dept][di]) wk[dept][di]={morning:[],afternoon:[],night:[]};
-        if(!wk[dept][di].morning.find(w=>w.name===name)){
-          wk[dept][di].morning.push({name, ot:false, otHrs:4, av:emp.av||0});
+        const diKey=String(di);
+        if(!wk[dept][diKey]) wk[dept][diKey]={morning:[],afternoon:[],night:[]};
+        if(!wk[dept][diKey].morning.find(w=>w.name===name)){
+          wk[dept][diKey].morning.push({name, ot:false, otHrs:4, av:emp.av||0});
           loaded++;
         }
       }
