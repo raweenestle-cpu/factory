@@ -650,6 +650,11 @@ tr.dept-row td{border-top:3px solid #000!important}
           const e=JSON.parse(localStorage.getItem('fac_emps_'+S.sys)||'[]');
           const txt='Depts: '+JSON.stringify(d)+'\nEmps: '+e.slice(0,5).map(x=>x.name+':'+x.dept).join(', ');
           document.getElementById('debug-out').textContent=txt;
+          // แสดง team keys ทั้งหมด
+          const allKeys = Object.keys(localStorage).filter(k=>k.startsWith('fac_teams'));
+          const teamData = {};
+          allKeys.forEach(k=>{ try{teamData[k]=JSON.parse(localStorage.getItem(k));}catch(e){} });
+          document.getElementById('debug-out').textContent += '\n\nTeam keys: '+JSON.stringify(allKeys)+'\n'+JSON.stringify(teamData);
           // แสดง sched ด้วย
           const s=JSON.parse(localStorage.getItem('fac_sched_'+S.sys+'_'+S.curLine)||'{}');
           const wk=s[S.curWKey]||{};
@@ -3427,6 +3432,9 @@ const S = {
       }
     });
 
+    // Debug
+    const debugTeams = this.getTeams(li);
+    toast('Teams A:'+( debugTeams.A||[]).length+' B:'+(debugTeams.B||[]).length+' C:'+(debugTeams.C||[]).length);
     let total=0;
     ['morning','afternoon','night'].forEach(sh=>{
       const team = shiftTeams[sh];
