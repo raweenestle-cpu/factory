@@ -3093,7 +3093,7 @@ const S = {
               style="padding:5px 12px;background:#dbeafe;border:1.5px solid #2563eb;border-radius:8px;font-size:11px;font-weight:800;color:#1d4ed8;font-family:inherit;cursor:pointer">✏️ แก้ไข</button>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;background:#f8faff;border-radius:8px;padding:6px">
-            ${members.length ? members.map(m=>`<span style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">${m}</span>`).join('') 
+            ${members.length ? members.map(m=>`<span style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">${m}${(()=>{const e=[...JSON.parse(localStorage.getItem('fac_emps_proc')||'[]'),...JSON.parse(localStorage.getItem('fac_emps_fill')||'[]')].find(x=>x.name===m);return e?' ('+e.dept+')':''})()}</span>`).join('') 
             : '<span style="color:#94a3b8;font-size:11px">ยังไม่มีสมาชิก</span>'}
           </div>
         </div>`;
@@ -3158,10 +3158,10 @@ const S = {
     members.forEach(name => {
       const emp = empMap.get(name);
       if(!emp) return;
-      // ใช้แผนกของพนักงานที่ตั้งไว้ตอนเพิ่ม
-      const dept = emp.dept || depts[0];
+      // ใช้แผนกของพนักงาน ถ้าไม่มีในตารางให้ใช้แผนกแรก
+      const empDept = emp.dept||'';
+      const dept = depts.includes(empDept) ? empDept : depts[0];
       if(!wk[dept]) wk[dept] = {};
-      // โหลดลงทุกวัน จ-ส (6 วัน) กะเช้าเป็น default
       for(let di=0;di<6;di++) {
         if(!wk[dept][di]) wk[dept][di] = {morning:[],afternoon:[],night:[]};
         if(!wk[dept][di].morning.find(w=>w.name===name)) {
