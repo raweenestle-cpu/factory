@@ -1103,8 +1103,9 @@ const H = {
       return;
     }
     const yr = this.yr;
-    const maxV = Math.max(...data.filter(v=>v!==null), tgt, 1);
-    const tTopPx = Math.round((1 - tgt/maxV) * 72) + 20;
+    const maxV = Math.max(...data.filter(v=>v!==null), tgt*1.2, 1);
+    const chartH = 72;
+    const tTopPx = Math.round((1 - tgt/maxV) * chartH) + 20;
     const bars = data.map((v,mi) => {
       const cmts = H.getHomeCmts(ids, yr, mi);
       const hasCmt = cmts.length > 0;
