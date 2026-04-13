@@ -575,7 +575,6 @@ tr.dept-row td{border-top:3px solid #000!important}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button onclick="S.triggerSave()" style="flex:1;padding:10px;background:rgba(37,99,235,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">💾 บันทึก</button>
-        <button onclick="S.confirmOTSign()" id="btn-ot-sign" style="flex:1;padding:10px;background:rgba(16,185,129,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit;display:none">✍️ เซ็น OT</button>
         <button onclick="S.clearWeek()" style="flex:1;padding:10px;background:rgba(239,68,68,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🗑️ ลบทั้งสัปดาห์</button>
         <button onclick="S.openPrintSched()" style="flex:1;padding:10px;background:rgba(15,52,96,.9);color:#fff;border:1.5px solid rgba(6,182,212,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ตาราง</button>
         <button onclick="S.printOT()" style="flex:1;padding:10px;background:rgba(0,0,0,.3);color:#fff;border:1.5px solid rgba(245,158,11,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ OT</button>
@@ -1884,7 +1883,7 @@ const S = {
             const shBg = sh==='morning'?'#dcfce7':sh==='afternoon'?'#fef9c3':'#dbeafe';
             const otBg = sh==='morning'?'#16a34a':sh==='afternoon'?'#d97706':'#2563eb';
             const rowBg = w.ot ? shBg : '#fff';
-            const signKey = 'fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name;
+            const signKey = 'fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh;
             const isSigned = !!localStorage.getItem(signKey);
             const signIcon = w.ot
               ? `<span style="font-size:11px;margin-left:3px;flex-shrink:0">${isSigned?'✅':'✍️'}</span>`
@@ -2319,7 +2318,7 @@ const S = {
             <td style="text-align:center">${w.totalOTHrs} ชม.</td>
             <td style="text-align:center">${w.days} วัน</td>
             <td style="text-align:center;font-family:cursive;font-size:18px;color:#1e293b">${(()=>{
-              const s=localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name);
+              const s=localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh);
               return s?JSON.parse(s).name:'';
             })()}</td>
           </tr>`).join('')}
@@ -2911,7 +2910,7 @@ const S = {
       toast('❌ คุณไม่สามารถเซ็นแทน '+name+' ได้');
       return; 
     }
-    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name;
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name+'_'+dept+'_'+di+'_'+sh;
     if(localStorage.getItem(signKey)) { toast('✅ เซ็นแล้ว'); return; }
 
     const overlay = document.createElement('div');
@@ -2959,7 +2958,7 @@ const S = {
     const emps = this.getEmps();
     const emp = emps.find(e=>e.name===name);
     if(!emp) { toast('❌ ไม่พบข้อมูลพนักงาน'); return; }
-    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name;
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name+'_'+dept+'_'+di+'_'+sh;
     const existing = localStorage.getItem(signKey);
     if(existing) {
       const s = JSON.parse(existing);
@@ -3017,7 +3016,7 @@ const S = {
   },
 
   getSign(name) {
-    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name;
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name+'_'+dept+'_'+di+'_'+sh;
     const s = localStorage.getItem(signKey);
     return s ? JSON.parse(s) : null;
   },
