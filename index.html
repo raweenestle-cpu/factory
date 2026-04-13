@@ -2097,14 +2097,19 @@ const S = {
     popup.style.cssText = `position:fixed;z-index:9999;background:#1e293b;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:10px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.5)`;
     popup.innerHTML = `
       <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.15)">${w.name}</div>
+      ${(!curUser||curUser.role==='admin') ? `
       <button onclick="S.toggleOTMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})" 
         style="display:block;width:100%;padding:8px;background:${w.ot?'#fef3c7':'rgba(255,255,255,.08)'};color:${w.ot?'#92400e':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:6px">
-        ${w.ot?'🟡 OT '+( w.otHrs||4)+' ชม. (กดปิด)':'+ เพิ่ม OT'}
+        ${w.ot?'🟡 OT '+(w.otHrs||4)+' ชม. (กดปิด)':'+ เพิ่ม OT'}
       </button>
       ${w.ot?`<div style="display:flex;gap:4px;margin-bottom:6px">
         ${[2,3,4].map(h=>`<button onclick="S.setOTHrsMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi},${h})"
           style="flex:1;padding:5px;background:${(w.otHrs||4)===h?'#f59e0b':'rgba(255,255,255,.1)'};color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer">${h}ชม.</button>`).join('')}
-      </div>`:''}
+      </div>`:''}` : ''}
+      ${w.ot ? `<button onclick="S.signOT('${w.name.replace(/'/g,"\'")}','${dept.replace(/'/g,"\'")}',${di},'${sh}')" 
+        style="display:block;width:100%;padding:8px;background:${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'rgba(16,185,129,.2)':'rgba(245,158,11,.2)'};color:${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'#10b981':'#f59e0b'};border:1px solid ${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'rgba(16,185,129,.4)':'rgba(245,158,11,.4)'};border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:6px">
+        ${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'✅ ยินยอม OT แล้ว':'✍️ ยินยอม OT'}
+      </button>` : ''}
       <button onclick="S.removeWorkerMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})"
         style="display:block;width:100%;padding:8px;background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4);border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left">
         🗑️ ลบออกจากกะ
