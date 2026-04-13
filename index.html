@@ -2828,14 +2828,16 @@ const S = {
   renderOTPeople() {
     const sched=this.getSched(this.curLine);
     const map={};
+    const otDaysMap={}; // เก็บวันที่ทำ OT ของแต่ละคน
     this.getDepts().forEach(d=>{
-      for(let di=0;di<7;di++) {
+      for(let di=0;di<6;di++) {
         SHIFTS.forEach(sh=>{
           (sched[d]?.[di]?.[sh]||[]).forEach(w=>{
-            if(!map[w.name]) map[w.name]={totalHrs:0,otHrs:0};
+            if(!map[w.name]) { map[w.name]={totalHrs:0,otHrs:0}; otDaysMap[w.name]=[]; }
             const hrs=w.ot?(w.otHrs||4):0;
             map[w.name].totalHrs+=NORMAL_HRS+hrs;
             map[w.name].otHrs+=hrs;
+            if(w.ot) otDaysMap[w.name].push({di,sh,hrs:w.otHrs||4,dept:d});
           });
         });
       }
@@ -2847,16 +2849,79 @@ const S = {
         const pct=totalHrs>0?Math.round(otHrs/totalHrs*100):0;
         const emp=emps.find(e=>e.name===name);
         const avCls=emp?AV_COLS[emp.av%8]:'av0';
-        return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#e8f0ff;border-radius:10px;margin-bottom:8px">
+        const otDays=otDaysMap[name]||[];
+        const nameEsc=name.replace(/'/g,"\'");
+        return `<div onclick="S.showOTDetail('${nameEsc}')" style="display:flex;align-items:center;gap:10px;padding:10px;background:#e8f0ff;border-radius:10px;margin-bottom:8px;cursor:pointer;active:opacity:.8">
           <div class="wav ${avCls}" style="width:36px;height:36px;font-size:14px">${name.charAt(0)}</div>
           <div style="flex:1">
             <div style="font-size:13px;font-weight:800;color:#1e293b">${name}</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px">${otHrs} ชม. OT จาก ${totalHrs} ชม. รวม</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">${otHrs} ชม. OT · ${otDays.length} วัน</div>
           </div>
-          <div style="font-size:20px;font-weight:900;color:${pct>this.getTarget()?'var(--red)':'var(--green)'}">${pct}%</div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:900;color:${pct>this.getTarget()?'var(--red)':'var(--green)'}">${pct}%</div>
+            <div style="font-size:9px;color:#94a3b8">แตะดูรายละเอียด</div>
+          </div>
         </div>`;
       }).join(''):
       '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">ยังไม่มีข้อมูลสัปดาห์นี้</div>';
+  },
+
+  showOTDetail(name) {
+    const sched=this.getSched(this.curLine);
+    const days=[];
+    this.getDepts().forEach(d=>{
+      for(let di=0;di<6;di++){
+        SHIFTS.forEach(sh=>{
+          const w=(sched[d]?.[di]?.[sh]||[]).find(x=>x.name===name);
+          if(w&&w.ot) days.push({di,sh,hrs:w.otHrs||4,dept:d});
+        });
+      }
+    });
+    const DAYS=['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    const SHTH={morning:'เช้า',afternoon:'บ่าย',night:'ดึก'};
+    const maxDays = this.getMaxOTDays();
+    const otDaysCount = new Set(days.map(x=>x.di)).size;
+    const isOver = otDaysCount >= maxDays;
+
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end';
+
+    const box=document.createElement('div');
+    box.style.cssText='background:#fff;width:100%;max-height:75vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column';
+
+    // header
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1.5px solid #e2e8f0;flex-shrink:0';
+    hdr.innerHTML='<div>'+
+      '<div style="font-size:16px;font-weight:900;color:#1e293b">'+name+'</div>'+
+      '<div style="font-size:12px;color:'+(isOver?'#dc2626':'#64748b')+'">OT '+days.length+' วัน · '+days.reduce((a,x)=>a+x.hrs,0)+' ชม. รวม'+(isOver?' 🚫 เต็มแล้ว':'')+'</div>'+
+    '</div>';
+    const closeBtn=document.createElement('button');
+    closeBtn.textContent='✕';
+    closeBtn.style.cssText='background:none;border:none;font-size:20px;cursor:pointer;padding:4px';
+    closeBtn.onclick=()=>overlay.remove();
+    hdr.appendChild(closeBtn);
+    box.appendChild(hdr);
+
+    // body
+    const body=document.createElement('div');
+    body.style.cssText='overflow-y:auto;flex:1;padding:8px 0';
+    if(!days.length){
+      body.innerHTML='<div style="text-align:center;padding:24px;color:#94a3b8">ยังไม่มี OT สัปดาห์นี้</div>';
+    } else {
+      days.forEach(x=>{
+        const row=document.createElement('div');
+        row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #f1f5f9';
+        row.innerHTML='<div style="font-weight:800;color:#1e293b">วัน'+DAYS[x.di]+'</div>'+
+          '<div style="font-size:12px;color:#64748b">กะ'+SHTH[x.sh]+' · '+x.dept+'</div>'+
+          '<div style="font-weight:800;color:#f59e0b">+'+x.hrs+' ชม.</div>';
+        body.appendChild(row);
+      });
+    }
+    box.appendChild(body);
+    overlay.appendChild(box);
+    overlay.onclick=(e)=>{ if(e.target===overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
   },
 
   // ── EMPLOYEE ──
