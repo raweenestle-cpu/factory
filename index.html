@@ -1358,7 +1358,7 @@ const H = {
       const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt;
     };
     const ws = getWeekStart(now);
-    const wKey = ws.toISOString().slice(0,10);
+    const wKey = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
     const wEnd = new Date(ws); wEnd.setDate(wEnd.getDate()+6);
     const bey = ws.getFullYear()+543;
     const weekRange = ws.getDate()+' '+MON_TH[ws.getMonth()]+' – '+wEnd.getDate()+' '+MON_TH[wEnd.getMonth()]+' '+bey;
@@ -1551,16 +1551,15 @@ const H = {
         }
       }
       sorted.forEach(wk => {
-        // parse วันที่จาก key ตรงๆ ไม่ใช้ UTC
         const parts = wk.split('-');
         const ws = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-        // หาวันจันทร์จริงๆ ของสัปดาห์นี้
         const wsReal = S.getWeekStart(ws);
         const wn = S.getWN(wsReal);
         const we = new Date(wsReal); we.setDate(we.getDate()+5);
         const label = 'สัปดาห์ที่ '+wn+' ('+wsReal.getDate()+'/'+(wsReal.getMonth()+1)+' - '+we.getDate()+'/'+(we.getMonth()+1)+')';
         const opt = document.createElement('option');
-        opt.value = wk; opt.textContent = label;
+        opt.value = wk; // value = key จริงใน localStorage
+        opt.textContent = label;
         weekSel.appendChild(opt);
       });
     }
@@ -1599,17 +1598,18 @@ const H = {
       const thMonths=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
       // ดึง wKeys ทั้งหมดที่มีข้อมูล แล้วกรองเอาที่ตกในเดือนนี้
       const allWK = new Set();
-      ['proc','fill'].forEach(sys=>{ for(let li=0;li<14;li++){ const raw=JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}'); Object.keys(raw).forEach(k=>allWK.add(k)); } });
+      ['proc','fill'].forEach(sys=>{ for(let li=0;li<14;li++){ const raw=JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}'); Object.keys(raw).forEach(k=>{ if(k) allWK.add(k); }); } });
       wKeys = [...allWK].filter(wk=>{
-        const d = new Date(wk);
-        // เช็คว่าสัปดาห์นี้มีวันที่อยู่ในเดือนและปีที่เลือก
+        const parts = wk.split('-');
+        const ws = new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
         for(let i=0;i<6;i++){
-          const dd = new Date(d); dd.setDate(dd.getDate()+i);
+          const dd = new Date(ws); dd.setDate(dd.getDate()+i);
           if(dd.getMonth()===mi && dd.getFullYear()===yr) return true;
         }
         return false;
       });
       titleSub = thMonths[mi]+' '+(yr+543)+' · วันที่พิมพ์: '+dateStr;
+      if(!wKeys.length) { toast('❌ ไม่มีข้อมูล OT เดือน '+thMonths[mi]+' '+(yr+543)); return; }
     } else {
       const selWk = document.getElementById('h-print-week')?.value;
       if(selWk && selWk.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -1628,6 +1628,7 @@ const H = {
       }
     }
     if(!wKeys.length) { toast('❌ ไม่พบข้อมูลในช่วงเวลานี้'); return; }
+    console.log('printAllOT wKeys:', wKeys);
     let html = `<div class="pr-header">
       <div class="pr-title">📋 บิล OT รวมทุกระบบ${isMonth?' (รายเดือน)':''}</div>
       <div class="pr-sub">${titleSub}</div>
