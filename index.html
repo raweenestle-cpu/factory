@@ -401,7 +401,7 @@ tr.dept-row td{border-top:3px solid #000!important}
 .sc-proc .sc-glow-tl{background:radial-gradient(circle,rgba(6,182,212,.6),transparent 70%)}
 .sc-fill .sc-glow-tl{background:radial-gradient(circle,rgba(34,197,94,.6),transparent 70%)}
 .sc-total .sc-glow-tl{background:radial-gradient(circle,rgba(139,92,246,.6),transparent 70%)}
-.signature{font-family:'Brush Script MT','Comic Sans MS',cursive;font-size:28px;color:#1e3a5f;letter-spacing:2px;font-style:italic;transform:rotate(-3deg);display:inline-block}
+.signature{font-family:'Brush Script MT','Comic Sans MS',cursive;font-size:18px;color:#1e3a5f;letter-spacing:1px;font-style:italic;transform:rotate(-2deg);display:inline-block;white-space:nowrap}
 </style>
 
 </head>
@@ -2323,7 +2323,7 @@ const S = {
             <td>${w.dept}</td>
             <td style="text-align:center">${w.totalOTHrs} ชม.</td>
             <td style="text-align:center">${w.days} วัน</td>
-            <td style="text-align:center"><span class="signature" style="font-size:22px">${(()=>{
+            <td style="text-align:center"><span class="signature">${(()=>{
               const prefix='fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+w.name+'_';
               const key=Object.keys(localStorage).find(k=>k.startsWith(prefix));
               return key?JSON.parse(localStorage.getItem(key)).name:'';
