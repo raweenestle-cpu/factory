@@ -499,33 +499,10 @@ tr.dept-row td{border-top:3px solid #000!important}
     </div>
   </div>
 
-  <!-- Debug Button (ชั่วคราว) -->
-  <div style="margin:0 14px 6px">
-    <button onclick="(()=>{const keys=[];['proc','fill'].forEach(s=>{for(let i=0;i<3;i++){const r=JSON.parse(localStorage.getItem('fac_sched_'+s+'_'+i)||'{}');Object.keys(r).forEach(k=>keys.push(s+'_'+i+':'+k));}});alert(keys.join('\n')||'ไม่มีข้อมูล');})()" style="width:100%;padding:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:10px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">
-      🔍 ดู Week Keys จริงๆ
-    </button>
-  </div>
-  <!-- Print All OT Button -->
-  <div style="margin:0 14px 12px;background:rgba(255,255,255,.08);border:1.5px solid rgba(245,158,11,.4);border-radius:14px;padding:12px">
-    <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:8px">🖨️ พิมพ์ OT รวมทุกระบบ</div>
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <select id="h-print-mode" onchange="H.initPrintOptions();H.updatePrintOptions()" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit">
-        <option value="week">📅 รายสัปดาห์</option>
-        <option value="month">📆 รายเดือน</option>
-      </select>
-    </div>
-    <div id="h-print-week-sel" style="display:flex;gap:8px;margin-bottom:8px">
-      <select id="h-print-week" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
-    </div>
-    <div id="h-print-month-sel" style="display:none;gap:8px;margin-bottom:8px">
-      <select id="h-print-month" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
-      <select id="h-print-year" style="width:100px;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
-    </div>
-    <button onclick="H.initPrintOptions();H.printAllOT()" style="width:100%;padding:10px;background:#f59e0b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
-      🖨️ พิมพ์เลย
-    </button>
 
-  </div>
+
+
+
 
   <!-- PWA Install Button -->
   <div id="pwa-install-btn" style="display:none;margin:0 14px 12px;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(37,99,235,.3),rgba(6,182,212,.2));border:1.5px solid rgba(6,182,212,.4);border-radius:14px;padding:12px 16px;cursor:pointer" onclick="installPWA()">
@@ -1090,15 +1067,15 @@ const H = {
       const depts = JSON.parse(localStorage.getItem(`fac_depts_${sys}`)||'null') || ['แผนก 1'];
       Object.entries(allSched).forEach(([wKey, wkData]) => {
         if(!wkData) return;
-        // parse local date ไม่ใช้ UTC
+        // parse date จาก key โดยไม่ใช้ UTC
         const wParts = wKey.split('-');
         if(wParts.length<3) return;
         const wYear = parseInt(wParts[0]);
-        const wMonth = parseInt(wParts[1])-1; // 0-based
+        const wMonth = parseInt(wParts[1])-1;
         const wDay = parseInt(wParts[2]);
-        // เช็คว่าสัปดาห์นี้มีวันในเดือนที่ต้องการ
+        // เช็ค 7 วัน (จ-อา) ว่ามีวันในเดือนที่ต้องการไหม
         let inMonth = false;
-        for(let dd=0;dd<6;dd++){
+        for(let dd=0;dd<7;dd++){
           const d2 = new Date(wYear, wMonth, wDay+dd);
           if(d2.getFullYear()+543===yr && d2.getMonth()===mi){ inMonth=true; break; }
         }
