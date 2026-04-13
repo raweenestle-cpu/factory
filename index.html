@@ -2323,9 +2323,10 @@ const S = {
             <td style="text-align:center">${w.totalOTHrs} ชม.</td>
             <td style="text-align:center">${w.days} วัน</td>
             <td style="text-align:center;font-family:cursive;font-size:18px;color:#1e293b">${(()=>{
-              const s=localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh);
-              return s?JSON.parse(s).name:'';
-            })()}</td>
+              const prefix='fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+w.name+'_';
+              const key=Object.keys(localStorage).find(k=>k.startsWith(prefix));
+              return key?JSON.parse(localStorage.getItem(key)).name:'';
+            }).call(this)}</td>
           </tr>`).join('')}
           <tr style="font-weight:700;background:#f0f0f0">
             <td colspan="3" style="text-align:right">รวม</td>
