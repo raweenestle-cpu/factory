@@ -499,6 +499,13 @@ tr.dept-row td{border-top:3px solid #000!important}
     </div>
   </div>
 
+  <!-- Print All OT Button -->
+  <div style="margin:0 14px 12px">
+    <button onclick="H.printAllOT()" style="width:100%;padding:12px;background:rgba(245,158,11,.2);border:1.5px solid rgba(245,158,11,.5);border-radius:14px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
+      🖨️ พิมพ์ OT รวมทุกระบบ
+    </button>
+  </div>
+
   <!-- PWA Install Button -->
   <div id="pwa-install-btn" style="display:none;margin:0 14px 12px;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(37,99,235,.3),rgba(6,182,212,.2));border:1.5px solid rgba(6,182,212,.4);border-radius:14px;padding:12px 16px;cursor:pointer" onclick="installPWA()">
     <div style="font-size:28px">📲</div>
@@ -1491,6 +1498,98 @@ const H = {
       });
     }, 100);
   },
+
+  printAllOT() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    // ดึงข้อมูลจากทั้ง proc และ fill ทุก line
+    let html = `<div class="pr-header">
+      <div class="pr-title">📋 บิล OT รวมทุกระบบ</div>
+      <div class="pr-sub">วันที่พิมพ์: ${dateStr}</div>
+    </div>`;
+
+    ['proc','fill'].forEach(sys => {
+      const sysName = sys==='proc'?'Process':'Filling';
+      const lines = JSON.parse(localStorage.getItem(sys==='proc'?'fac_proc_lines':'fac_fill_lines')||'null') || 
+                    (sys==='proc'?['Process 1','Process 2','Process 3','Process 4','Process 5']:['Polo 12A','Polo 12B','Comet','Mach','Sandwich','Hoyer','Extrud 3','Glacé','Scooping']);
+      const depts = JSON.parse(localStorage.getItem('fac_depts_'+sys)||'["แผนก 1"]');
+      const tgt = parseInt(localStorage.getItem('fac_target_'+sys)||'15');
+      const curWKey = S.curWKey;
+      const wn = S.getWN(S.curWeekStart);
+
+      lines.forEach((lineName, li) => {
+        const raw = JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}');
+        const wk = raw[curWKey] || {};
+        // รวบรวมพนักงาน OT
+        const shiftData = {morning:[], afternoon:[], night:[]};
+        depts.forEach(dept => {
+          for(let di=0;di<6;di++) {
+            ['morning','afternoon','night'].forEach(sh => {
+              const day = wk[dept]?.[di] || wk[dept]?.[String(di)];
+              (day?.[sh]||[]).forEach(w => {
+                if(!w.ot) return;
+                const existing = shiftData[sh].find(x=>x.name===w.name&&x.dept===dept);
+                if(existing){ existing.days++; existing.totalOTHrs+=w.otHrs||4; }
+                else shiftData[sh].push({name:w.name, dept, days:1, totalOTHrs:w.otHrs||4});
+              });
+            });
+          }
+        });
+        const hasOT = Object.values(shiftData).some(arr=>arr.length>0);
+        if(!hasOT) return;
+
+        html += `<div class="pr-section">
+          <div class="pr-sec-title">⚙️ ${sysName} — ${lineName} · สัปดาห์ที่ ${wn}</div>`;
+
+        ['morning','afternoon','night'].forEach(sh => {
+          const workers = shiftData[sh];
+          if(!workers.length) return;
+          const shTH = {morning:'กะเช้า',afternoon:'กะบ่าย',night:'กะดึก'}[sh];
+          html += `<div class="pr-shift-title">${shTH} (${workers.length} คน)</div>
+          <table class="pr-tbl" style="table-layout:fixed;width:100%">
+            <thead><tr>
+              <th style="width:5%">#</th>
+              <th style="width:25%">ชื่อพนักงาน</th>
+              <th style="width:25%">แผนก</th>
+              <th style="width:15%">ชม. OT</th>
+              <th style="width:15%">จำนวนวัน</th>
+              <th style="width:15%">ลายมือชื่อ</th>
+            </tr></thead>
+            <tbody>
+              ${workers.map((w,i)=>{
+                const prefix='fac_sign_'+sys+'_'+li+'_'+curWKey+'_'+w.name+'_';
+                const key=Object.keys(localStorage).find(k=>k.startsWith(prefix));
+                const sig=key?JSON.parse(localStorage.getItem(key)).name:'';
+                return `<tr>
+                  <td style="text-align:center">${i+1}</td>
+                  <td>${w.name}</td>
+                  <td>${w.dept}</td>
+                  <td style="text-align:center">${w.totalOTHrs} ชม.</td>
+                  <td style="text-align:center">${w.days} วัน</td>
+                  <td style="text-align:center"><span class="signature">${sig}</span></td>
+                </tr>`;
+              }).join('')}
+              <tr style="font-weight:700;background:#f0f0f0">
+                <td colspan="3" style="text-align:right">รวม</td>
+                <td style="text-align:center">${workers.reduce((a,w)=>a+w.totalOTHrs,0)} ชม.</td>
+                <td></td><td></td>
+              </tr>
+            </tbody>
+          </table>`;
+        });
+        html += '</div>';
+      });
+    });
+
+    html += `<div class="pr-footer">
+      <div>วันที่พิมพ์: ${dateStr}</div>
+      <div>ลายมือชื่อผู้อนุมัติ: ________________________</div>
+    </div>`;
+
+    document.getElementById('sched-preview-content').innerHTML = html;
+    openMo('mo-sched-preview', null);
+  },
+
   renderCharts() {
     const procIds = Array.from({length:5},(_,i)=>`proc_${i}`);
     const fillIds = Array.from({length:9},(_,i)=>`fill_${i}`);
