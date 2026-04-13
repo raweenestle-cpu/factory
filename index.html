@@ -2902,6 +2902,55 @@ const S = {
     }
   },
 
+
+  signOT(name, dept, di, sh) {
+    // เช็คว่า login เป็นคนเดียวกัน
+    if(!curUser) { toast('❌ ต้อง Login ก่อน'); return; }
+    if(curUser.role==='admin') { toast('❌ Admin ไม่สามารถเซ็นแทนพนักงานได้'); return; }
+    if(curUser.name !== name) { 
+      toast('❌ คุณไม่สามารถเซ็นแทน '+name+' ได้');
+      return; 
+    }
+    const signKey = 'fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+name;
+    if(localStorage.getItem(signKey)) { toast('✅ เซ็นแล้ว'); return; }
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;margin:16px;text-align:center;max-width:320px;width:100%';
+
+    // preview ลายเซ็น
+    const preview = document.createElement('div');
+    preview.innerHTML = 
+      '<div style="font-size:13px;color:#64748b;margin-bottom:4px">ข้าพเจ้า ยินยอมทำ OT</div>'+
+      '<div style="font-family:cursive;font-size:32px;color:#1e293b;padding:12px 0;border-bottom:2px solid #1e293b;margin-bottom:8px">'+name+'</div>'+
+      '<div style="font-size:11px;color:#94a3b8;margin-bottom:16px">'+['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'][di]+' · กะ'+{morning:'เช้า',afternoon:'บ่าย',night:'ดึก'}[sh]+'</div>';
+    box.appendChild(preview);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px';
+    const btnNo = document.createElement('button');
+    btnNo.textContent = 'ยกเลิก';
+    btnNo.style.cssText = 'flex:1;padding:12px;background:#f1f5f9;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    btnNo.onclick = ()=>overlay.remove();
+    const btnYes = document.createElement('button');
+    btnYes.textContent = '✅ ยินยอม OT';
+    btnYes.style.cssText = 'flex:1;padding:12px;background:#10b981;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    btnYes.onclick = ()=>{
+      const signData = {name, signedAt:Date.now(), wkey:this.curWKey, sys:this.sys, li:this.curLine};
+      localStorage.setItem(signKey, JSON.stringify(signData));
+      try{if(fbDb)fbDb.ref('factory/'+this.sys+'/signs/'+this.curLine+'/'+this.curWKey+'/'+name).set(signData);}catch(e){}
+      overlay.remove();
+      this.renderSched();
+      toast('✅ '+name+' ยินยอม OT แล้ว');
+    };
+    row.appendChild(btnNo);
+    row.appendChild(btnYes);
+    box.appendChild(row);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  },
+
   confirmOTSign() {
     if(!curUser) { toast('❌ ต้อง Login ก่อน'); return; }
     if(curUser.role==='admin') { toast('❌ Admin ไม่สามารถเซ็นแทนพนักงานได้'); return; }
