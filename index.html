@@ -1531,8 +1531,11 @@ const H = {
       weekSel.innerHTML = '';
       for(let i=0;i<12;i++) {
         const d = new Date(); d.setDate(d.getDate() - i*7);
-        const ws = S.getWeekStart(d);
-        const wk = S.weekKey(ws);
+        const _d2 = new Date(d);
+      const _day = _d2.getDay();
+      const _diff = _d2.getDate() - (_day===0?6:_day-1);
+      const ws = new Date(_d2.setDate(_diff));
+        const wk = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
         const wn = S.getWN(ws);
         const we = new Date(ws); we.setDate(we.getDate()+5);
         const label = 'สัปดาห์ที่ '+wn+' ('+ws.getDate()+'/'+(ws.getMonth()+1)+' - '+we.getDate()+'/'+(we.getMonth()+1)+')';
@@ -1581,10 +1584,20 @@ const H = {
       titleSub = thMonths[mi]+' '+(yr+543)+' · วันที่พิมพ์: '+dateStr;
     } else {
       const selWk = document.getElementById('h-print-week')?.value;
-      if(selWk) { wKeys = [selWk]; }
-      else { const ws=S.getWeekStart(new Date()); wKeys=[S.weekKey(ws)]; }
-      const ws2 = new Date(wKeys[0]);
-      titleSub = 'สัปดาห์ที่ '+S.getWN(ws2)+' · วันที่พิมพ์: '+dateStr;
+      if(selWk) {
+        wKeys = [selWk];
+        const ws2 = new Date(selWk);
+        titleSub = 'สัปดาห์ที่ '+S.getWN(ws2)+' · วันที่พิมพ์: '+dateStr;
+      } else {
+        // fallback คำนวณเอง
+        const d = new Date();
+        const day = d.getDay();
+        const diff = d.getDate() - (day===0?6:day-1);
+        const ws = new Date(d.setDate(diff));
+        const wk = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
+        wKeys = [wk];
+        titleSub = 'วันที่พิมพ์: '+dateStr;
+      }
     }
     let html = `<div class="pr-header">
       <div class="pr-title">📋 บิล OT รวมทุกระบบ${isMonth?' (รายเดือน)':''}</div>
