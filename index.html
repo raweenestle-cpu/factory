@@ -1,0 +1,3725 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>ระบบตารางกะ</title>
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ตารางกะ">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" id="pwa-manifest">
+<link rel="apple-touch-icon" id="pwa-icon">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Sarabun',sans-serif;background:#f0f4ff;min-height:100vh;color:#1e293b}
+button,input,select{font-family:'Sarabun',sans-serif;cursor:pointer}
+:root{
+  --navy:#1e3a5f;--navym:#ffffff;--navyl:#e8f0ff;
+  --blue:#1e40af;--blueb:#2563eb;--teal:#0284c7;
+  --green:#16a34a;--red:#dc2626;--gold:#d97706;--purple:#7c3aed;
+}
+
+/* Pages */
+.pg{display:none;min-height:100vh}
+.pg.on{display:block}
+
+/* ── HOME ── */
+.h-hero{
+  background:linear-gradient(160deg,#0a1628 0%,#0d2151 50%,#0a1e4a 100%);
+  padding:24px 20px 20px;position:relative;overflow:hidden;
+}
+.h-hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 50%,rgba(37,99,235,.25),transparent 55%),
+    radial-gradient(ellipse at 80% 20%,rgba(6,182,212,.2),transparent 50%),
+    radial-gradient(ellipse at 60% 80%,rgba(139,92,246,.15),transparent 50%);
+  pointer-events:none;
+}
+/* ดาวพื้นหลัง */
+.h-hero::after{
+  content:'✦ ✧ ✦ ✧ ✦';
+  position:absolute;top:10px;left:0;right:0;
+  font-size:10px;color:rgba(255,255,255,.15);
+  letter-spacing:20px;text-align:center;pointer-events:none;
+}
+.h-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.h-text{text-align:left;flex:1}
+.h-icon{font-size:50px;margin-bottom:6px}
+.h-title{font-size:32px;font-weight:900;color:#fff;margin-bottom:4px;line-height:1.2}
+.h-sub{font-size:13px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.yr-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px}
+.yr-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:20px}
+.yr-lbl{font-size:16px;font-weight:900;color:#fff;min-width:110px;text-align:center}
+.home-cards{padding:14px}
+.sc{border-radius:20px;padding:18px;margin-bottom:12px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden}
+.sc:active{transform:scale(.98)}
+.sc-proc{background:linear-gradient(135deg,#0f3460,#1a4d8f);border:1.5px solid rgba(6,182,212,.3)}
+.sc-fill{background:linear-gradient(135deg,#1a3a1a,#2d6b1f);border:1.5px solid rgba(34,197,94,.3)}
+.sc-total{background:linear-gradient(135deg,#2d1b4e,#4c2480);border:1.5px solid rgba(139,92,246,.3)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sc-left{display:flex;align-items:center;gap:10px}
+.sc-ico{font-size:40px}
+.sc-name{font-size:24px;font-weight:900;color:#fff}
+.sc-sub2{font-size:13px;color:rgba(255,255,255,.6);font-weight:700;margin-top:3px}
+.sc-pct{font-size:36px;font-weight:900;text-align:right}
+.sc-ptlbl{font-size:12px;color:rgba(255,255,255,.6);font-weight:700;text-align:right;margin-top:2px}
+.mini-wrap{position:relative;padding-top:8px;min-height:120px}
+.mini-bars{display:flex;align-items:flex-end;gap:3px;height:100px}
+.mini-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.mini-bar{width:100%;border-radius:2px 2px 0 0;min-height:2px}
+.mini-lbl{font-size:7px;color:rgba(255,255,255,.3);margin-top:2px;white-space:nowrap}
+.mini-tl{position:absolute;left:0;right:0;height:1.5px;background:rgba(245,158,11,.8)}
+.mini-tlbl{position:absolute;right:0;font-size:8px;color:var(--gold);font-weight:700;top:-11px}
+.ok{color:var(--green)}.over{color:var(--red)}.na{color:rgba(255,255,255,.35)}
+.bar-ok{background:#22c55e}.bar-over{background:#ef4444}.bar-na{background:rgba(255,255,255,.08)}
+
+/* ── SCHEDULE PAGE ── */
+.sch-header{background:#1e3a5f;padding:0;position:sticky;top:0;z-index:100}
+.sch-nav{display:flex;align-items:stretch;border-bottom:3px solid #2563eb;overflow-x:auto;background:#1e3a5f}
+.sch-nav::-webkit-scrollbar{display:none}
+.back-btn{min-width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:17px;margin:auto 6px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.nav-tab{flex:1;min-width:60px;padding:13px 6px;color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-3px;text-align:center;white-space:nowrap;border:none;background:none}
+.nav-tab.active{color:#fff;border-bottom:3px solid var(--teal);background:rgba(37,99,235,.18)}
+.line-tabs{display:flex;gap:4px;padding:8px 12px;overflow-x:auto;background:#e8f0ff}
+.line-tabs::-webkit-scrollbar{display:none}
+.line-tab{padding:6px 14px;border-radius:20px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.line-tab.active{border-color:#2563eb;background:#dbeafe;color:#1d4ed8}
+.team-btn{padding:4px 8px;border-radius:20px;border:1.5px solid rgba(139,92,246,.5);background:rgba(139,92,246,.15);color:#c084fc;font-size:10px;font-weight:700;flex-shrink:0}
+
+/* Schedule table */
+.sch-page{display:none}.sch-page.on{display:block}
+.hcard{background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:14px 14px 12px}
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.week-lbl{font-size:18px;font-weight:900;color:#fff}
+.week-range{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+.wb{width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:14px}
+.wn{padding:6px 12px;border-radius:20px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:700}
+.ot-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:0}
+.ot-card{background:rgba(255,255,255,.15);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;border:1px solid rgba(255,255,255,.2)}
+.ot-val{font-size:20px;font-weight:900;color:#fff}
+.ot-lbl{font-size:10px;color:rgba(255,255,255,.7);font-weight:700;margin-top:2px}
+.tbl-wrap{overflow:auto;background:#ffffff}
+table{border-collapse:collapse;min-width:1100px;width:100%;border:2px solid #000;background:#fff}
+thead tr:nth-child(1) th{position:sticky;top:0;z-index:20;background:#1e3a5f}
+thead tr:nth-child(2) th{position:sticky;top:34px;z-index:20}
+thead tr:nth-child(1) th.rl, thead tr:nth-child(2) th.rl{z-index:25!important}
+thead{box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.rl{background:#e8f0ff!important;position:sticky;left:0;z-index:15;font-size:12px;font-weight:800;color:#1e3a5f;padding:8px 8px;min-width:70px;max-width:70px;border-right:3px solid #000}
+th{background:#1e3a5f;padding:4px 2px;font-size:11px;font-weight:800;color:#fff;border-bottom:2px solid #000;border-right:2px dashed rgba(0,0,0,.4)}
+.day-th{text-align:center;padding:4px 2px!important;border-left:3px solid #000!important;border-right:3px solid #000!important}
+.cm{background:#dcfce7}.ca{background:#fef9c3}.cn{background:#dbeafe}
+td.cell{padding:4px 3px;vertical-align:top;overflow:hidden;border-right:1px dashed rgba(0,0,0,.3);border-bottom:1px dashed rgba(0,0,0,.3)}
+tr{border-bottom:2px dashed #000;min-height:40px}
+tr.dept-row td{border-top:3px solid #000!important}
+.ci{display:flex;flex-direction:column;gap:2px;min-height:48px}
+.wtag{display:inline-flex;align-items:center;background:#fff;border:1.5px solid #cbd5e1;border-radius:6px;padding:4px 6px;font-size:11px;font-weight:700;color:#1e293b;cursor:pointer;margin-bottom:3px;white-space:nowrap}
+.wtag.has-ot{background:#fef3c7;border-color:#f59e0b}
+.wav{display:none}
+.otb{background:#f59e0b;color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:8px}
+.rbtn{background:#fee2e2;border:1px solid #fca5a5;color:#ef4444;font-size:9px;border-radius:3px;padding:1px 4px;margin-left:auto;cursor:pointer}
+.addbtn{background:transparent;border:1.5px dashed rgba(0,0,0,.2);border-radius:6px;color:rgba(0,0,0,.35);font-size:14px;padding:3px 0;width:100%;margin-top:2px;box-sizing:border-box}
+.dept-sep{border-top:2.5px solid rgba(255,255,255,.15)!important}
+.today-col{background:rgba(6,182,212,.08)!important}
+
+/* ── EMPLOYEE PAGE ── */
+.emp-section{padding:12px 14px;background:#f0f4ff}
+.emp-card{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.emp-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.emp-name{font-size:15px;font-weight:800;color:#1e293b}
+.emp-dept{font-size:12px;color:#64748b;margin-top:2px}
+.emp-del{margin-left:auto;width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(239,68,68,.4);background:rgba(239,68,68,.15);color:var(--red);font-size:12px}
+
+/* ── GRAPH PAGE ── */
+.graph-section{padding:12px 14px;background:#f0f4ff}
+.graph-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.graph-title{font-size:14px;font-weight:800;color:#1e3a5f;margin-bottom:12px}
+.legend{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.7);font-weight:700}
+.leg-dot{width:10px;height:10px;border-radius:2px}
+.leg-line{width:24px;height:2px;background:var(--gold)}
+
+/* ── SETTINGS PAGE ── */
+.settings-section{padding:12px 14px;background:#f0f4ff}
+.setting-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;border:1.5px solid #e2e8f0}
+.setting-title{font-size:14px;font-weight:800;color:#1e3a5f;margin-bottom:10px}
+
+/* ── TEAM PAGE ── */
+.team-section{padding:12px 14px;background:#f0f4ff}
+
+/* ── MODAL ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+.mo.on{display:flex}
+.md{background:#fff;border-radius:16px;padding:16px 18px 30px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;animation:su .25s ease}
+@keyframes su{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.md-handle{width:40px;height:4px;background:#e2e8f0;border-radius:4px;margin:0 auto 14px}
+.mdt{font-size:15px;font-weight:800;color:#0d1b3e;margin-bottom:12px}
+.mdf{display:flex;gap:8px;margin-top:10px}
+.bconf{flex:1;padding:11px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700}
+.bcanc{flex:1;padding:11px;background:#f1f5f9;color:#334e8a;border:2px solid #cbd5e0;border-radius:10px;font-size:14px;font-weight:700}
+.md input,.md select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;margin-bottom:8px}
+.md input:focus,.md select:focus{border-color:var(--blueb)}
+.md label{display:block;font-size:12px;font-weight:700;color:#334e8a;margin-bottom:3px;margin-top:8px}
+
+/* PIN modal */
+.pin-mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;padding:20px}
+.pin-mo.on{display:flex}
+.pin-box{background:#fff;border-radius:20px;padding:24px 20px 20px;width:100%;max-width:340px;animation:pop .2s ease}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.pin-title{font-size:18px;font-weight:800;color:#0d1b3e;text-align:center;margin-bottom:4px}
+.pin-sub{font-size:12px;color:#94a3b8;text-align:center;margin-bottom:18px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:6px}
+.pd{width:14px;height:14px;border-radius:50%;border:2px solid #cbd5e0;transition:all .15s}
+.pd.on{background:var(--blueb);border-color:var(--blueb)}
+.pd.err{background:var(--red);border-color:var(--red)}
+.pin-err{color:var(--red);font-size:12px;font-weight:700;text-align:center;min-height:20px;margin-bottom:10px}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.nb{padding:15px;border:2px solid #e2e8f0;border-radius:12px;font-size:22px;font-weight:700;background:#f8faff;color:#0d1b3e;transition:all .15s}
+.nb:active{background:#dbeafe;border-color:var(--blueb);transform:scale(.95)}
+.nb.zero{grid-column:2}
+.nb.del{background:#fef2f2;border-color:#fecaca;color:var(--red)}
+.pin-cancel{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;background:#f8faff;color:#64748b}
+
+/* OT hours */
+.ot-hrs-row{display:none;align-items:center;gap:8px;background:#fef3c7;border:1.5px solid var(--gold);border-radius:10px;padding:8px 12px;margin-bottom:10px}
+.oth-btn{padding:6px 12px;border-radius:8px;border:2px solid var(--gold);background:#fff;color:#92400e;font-size:13px;font-weight:700;transition:all .15s}
+.oth-btn.on{background:var(--gold);color:#fff}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Log */
+.log-item{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1.5px solid #e2e8f0}
+.log-who{font-size:13px;font-weight:800;color:#0284c7}
+.log-what{font-size:12px;color:#475569;margin-top:2px}
+.log-when{font-size:11px;color:#94a3b8;margin-top:4px}
+
+/* AV colors */
+.av0{background:#1a4db5}.av1{background:#e53e3e}.av2{background:#2e7d32}
+.av3{background:#7c3aed}.av4{background:#ea580c}.av5{background:#0891b2}
+.av6{background:#be185d}.av7{background:#854d0e}
+
+.bot-pad{height:20px}
+
+#ot-result-box.ok{background:linear-gradient(145deg,#052e16,#14532d)}
+#ot-result-box.over{background:linear-gradient(145deg,#450a0a,#7f1d1d)}
+#ot-result-box.ok #ot-result-pct{color:#86efac}
+#ot-result-box.over #ot-result-pct{color:#fca5a5}
+#ot-result-box.ok #ot-result-msg{color:#4ade80}
+#ot-result-box.over #ot-result-msg{color:#f87171}
+#ot-result-box label,#ot-result-box #ot-result-by,#ot-result-box #ot-result-target{color:rgba(255,255,255,.8)!important}
+#ot-confirm-btn.ok{background:#16a34a}
+#ot-confirm-btn.over{background:#dc2626}
+#ot-confirm-btn:disabled{opacity:.35;cursor:not-allowed}
+
+@media print {
+  * { background:#fff!important; color:#000!important; -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+  body { background:#fff!important; color:#000!important; }
+  .pg, .sch-header, .bot-pad, .toast, .mo, .pin-mo, #pwa-install-btn { display:none!important; }
+  #print-area { display:block!important; }
+  @page { size:A4 portrait; margin:15mm 12mm; }
+  .print-page-break { page-break-before:always; }
+  #print-area .pr-sec-title { background:#1e40af!important; color:#fff!important; -webkit-print-color-adjust:exact!important; }
+  #print-area .pr-shift-title { background:#f0f0f0!important; color:#000!important; }
+  #print-area table.pr-tbl th { background:#e8edf8!important; }
+  #print-area .day-block { border:2px solid #000; border-radius:4px; margin-bottom:12px; page-break-inside:avoid; }
+  #print-area .day-block-header { background:#1e3a5f!important; color:#fff!important; padding:6px 10px; font-weight:900; font-size:12pt; border-bottom:2px solid #000; -webkit-print-color-adjust:exact!important; }
+  #print-area .day-block-header.over { background:#dc2626!important; }
+  #print-area .day-block-header.ok { background:#16a34a!important; }
+}
+#print-area {
+  display:none;
+  font-family:'Sarabun',sans-serif;
+  color:#000;
+  font-size:11pt;
+  background:#fff;
+}
+#print-area .pr-header {
+  border-bottom:2px solid #000;
+  padding-bottom:8px;
+  margin-bottom:12px;
+}
+#print-area .pr-title {
+  font-size:16pt;
+  font-weight:900;
+  margin-bottom:2px;
+}
+#print-area .pr-sub {
+  font-size:10pt;
+  color:#444;
+}
+#print-area .pr-section {
+  margin-bottom:14px;
+}
+#print-area .pr-sec-title {
+  font-size:12pt;
+  font-weight:800;
+  background:#1e40af;
+  color:#fff;
+  padding:4px 10px;
+  border-radius:4px;
+  margin-bottom:6px;
+}
+#print-area .pr-shift-title {
+  font-size:10pt;
+  font-weight:700;
+  background:#f0f0f0;
+  padding:3px 8px;
+  margin-bottom:4px;
+  border-left:3px solid #1e40af;
+}
+#print-area table.pr-tbl {table-layout:fixed;width:100%;
+  width:100%;
+  border-collapse:collapse;
+  font-size:10pt;
+  margin-bottom:8px;
+}
+#print-area table.pr-tbl th {
+  background:#e8edf8;
+  border:1px solid #aaa;
+  padding:4px 6px;
+  font-weight:700;
+  text-align:left;
+}
+#print-area table.pr-tbl td {
+  border:1px solid #ccc;
+  padding:4px 6px;
+}
+#print-area .pr-sign { min-width:80px; }
+#print-area .pr-footer {
+  border-top:1.5px solid #000;
+  padding-top:8px;
+  margin-top:12px;
+  font-size:10pt;
+  display:flex;
+  justify-content:space-between;
+}
+#print-area .pr-summary {
+  background:#f8f8f8;
+  border:1px solid #ccc;
+  border-radius:4px;
+  padding:6px 10px;
+  margin-bottom:12px;
+  font-size:10pt;
+}
+
+/* Mascot */
+.mascot-wrap{
+  width:96px;height:96px;flex-shrink:0;
+  position:relative;
+  filter:drop-shadow(0 4px 20px rgba(6,182,212,.45));
+}
+.mascot-inner{
+  width:96px;height:96px;border-radius:50%;overflow:hidden;
+  border:2.5px solid rgba(255,255,255,.25);
+  position:relative;cursor:pointer;
+  background:rgba(255,255,255,.08);
+  transition:transform .2s;
+}
+.mascot-inner:active{transform:scale(.92)}
+.mascot-slide{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  position:absolute;inset:0;
+  transition:opacity .6s ease;
+  opacity:0;
+}
+.mascot-slide.active{opacity:1}
+.mascot-slide img{width:100%;height:100%;object-fit:cover}
+.mascot-slide .mascot-emoji{
+  font-size:64px;line-height:1;
+  animation:bob 3s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+/* Nav arrows */
+.mascot-prev,.mascot-next{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.3);
+  color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:5;opacity:0;transition:opacity .2s;
+}
+.mascot-wrap:hover .mascot-prev,
+.mascot-wrap:hover .mascot-next{opacity:1}
+.mascot-prev{left:-10px}
+.mascot-next{right:-10px}
+/* Dots */
+.mascot-dots{
+  position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+  display:flex;gap:3px;
+}
+.mascot-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(255,255,255,.3);transition:all .2s;
+}
+.mascot-dot.active{background:#fff;width:10px;border-radius:3px}
+/* Edit badge */
+.mascot-badge{
+  position:absolute;top:-6px;right:-6px;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(37,99,235,.9);border:2px solid rgba(255,255,255,.4);
+  color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:5;
+}
+
+/* การ์ดกราฟ glass morphism */
+.sc{
+  border-radius:20px;padding:16px;margin-bottom:12px;
+  cursor:pointer;transition:transform .15s,box-shadow .15s;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.sc:active{transform:scale(.975);box-shadow:0 0 0 2px rgba(255,255,255,.2)}
+.sc-proc{
+  background:linear-gradient(135deg,rgba(15,52,96,.85),rgba(26,77,143,.75));
+  border:1px solid rgba(6,182,212,.4);
+  box-shadow:0 4px 24px rgba(6,182,212,.15),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.sc-fill{
+  background:linear-gradient(135deg,rgba(26,58,26,.85),rgba(45,107,31,.75));
+  border:1px solid rgba(34,197,94,.4);
+  box-shadow:0 4px 24px rgba(34,197,94,.12),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.sc-total{
+  background:linear-gradient(135deg,rgba(45,27,78,.85),rgba(76,36,128,.75));
+  border:1px solid rgba(139,92,246,.4);
+  box-shadow:0 4px 24px rgba(139,92,246,.12),inset 0 1px 0 rgba(255,255,255,.1);
+}
+/* Glow corner decoration */
+.sc-glow-tl{
+  position:absolute;top:-20px;left:-20px;
+  width:80px;height:80px;border-radius:50%;
+  pointer-events:none;opacity:.4;
+}
+.sc-proc .sc-glow-tl{background:radial-gradient(circle,rgba(6,182,212,.6),transparent 70%)}
+.sc-fill .sc-glow-tl{background:radial-gradient(circle,rgba(34,197,94,.6),transparent 70%)}
+.sc-total .sc-glow-tl{background:radial-gradient(circle,rgba(139,92,246,.6),transparent 70%)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- HOME PAGE                                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="pg-home" class="pg on">
+  <div class="h-hero">
+    <div class="h-top">
+      <div class="h-text">
+        <div class="h-title">ระบบตารางกะ</div>
+        <div class="h-sub" style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Production Scheduling</div>
+        <div class="yr-row" style="justify-content:flex-start;margin-top:0">
+          <button class="yr-btn" onclick="H.chYr(-1)">‹</button>
+          <div class="yr-lbl" id="h-yr-lbl" style="min-width:90px;font-size:13px">2569</div>
+          <button class="yr-btn" onclick="H.chYr(1)">›</button>
+        </div>
+      </div>
+      <!-- Mascot Slideshow -->
+      <div class="mascot-wrap">
+        <div class="mascot-inner" onclick="H.openMascotMenu(event)" id="mascot-display">
+          <!-- slides จะ render ด้วย JS -->
+        </div>
+        <button class="mascot-prev" onclick="event.stopPropagation();H.slidePrev()">‹</button>
+        <button class="mascot-next" onclick="event.stopPropagation();H.slideNext()">›</button>
+        <div class="mascot-dots" id="mascot-dots"></div>
+        <div class="mascot-badge" onclick="event.stopPropagation();H.openMascotMenu(event)">✏️</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-cards">
+    <!-- Process Card -->
+    <div class="sc sc-proc" onclick="H.openPin('proc')">
+      <div class="sc-glow-tl"></div>
+      <div class="sc-top">
+        <div class="sc-left">
+          <div class="sc-ico">⚙️</div>
+          <div>
+            <div class="sc-name">Process</div>
+            <div class="sc-sub2">5 Lines · แตะเพื่อเข้าระบบ</div>
+          </div>
+        </div>
+        <div>
+          <div class="sc-pct na" id="h-proc-pct">-</div>
+          <div class="sc-ptlbl">OT ล่าสุด</div>
+        </div>
+      </div>
+      <div class="mini-wrap" id="h-proc-chart" onclick="event.stopPropagation()"></div>
+    </div>
+    <!-- Filling Card -->
+    <div class="sc sc-fill" onclick="H.openPin('fill')">
+      <div class="sc-glow-tl"></div>
+      <div class="sc-top">
+        <div class="sc-left">
+          <div class="sc-ico">🏭</div>
+          <div>
+            <div class="sc-name">Filling</div>
+            <div class="sc-sub2">9 Lines · แตะเพื่อเข้าระบบ</div>
+          </div>
+        </div>
+        <div>
+          <div class="sc-pct na" id="h-fill-pct">-</div>
+          <div class="sc-ptlbl">OT ล่าสุด</div>
+        </div>
+      </div>
+      <div class="mini-wrap" id="h-fill-chart" onclick="event.stopPropagation()"></div>
+    </div>
+    <!-- Total Card -->
+    <div class="sc sc-total">
+      <div class="sc-glow-tl"></div>
+      <div class="sc-top">
+        <div class="sc-left">
+          <div class="sc-ico">📊</div>
+          <div>
+            <div class="sc-name">Total Production</div>
+            <div class="sc-sub2">รวม Process + Filling</div>
+          </div>
+        </div>
+        <div>
+          <div class="sc-pct na" id="h-total-pct">-</div>
+          <div class="sc-ptlbl">OT เฉลี่ย</div>
+        </div>
+      </div>
+      <div class="mini-wrap" id="h-total-chart" onclick="event.stopPropagation()"></div>
+      <div class="legend" style="margin-top:8px">
+        <div class="leg-item"><div class="leg-dot bar-ok"></div>ไม่เกิน Target</div>
+        <div class="leg-item"><div class="leg-dot bar-over"></div>เกิน Target</div>
+        <div class="leg-item"><div class="leg-line"></div>Target</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA Install Button -->
+  <div id="pwa-install-btn" style="display:none;margin:0 14px 12px;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(37,99,235,.3),rgba(6,182,212,.2));border:1.5px solid rgba(6,182,212,.4);border-radius:14px;padding:12px 16px;cursor:pointer" onclick="installPWA()">
+    <div style="font-size:28px">📲</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:800;color:#fff">ติดตั้งแอพลงเครื่อง</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">เพิ่มไอคอนบน Home Screen / Desktop</div>
+    </div>
+    <div style="font-size:18px;color:rgba(255,255,255,.4)">›</div>
+  </div>
+  <div style="padding:0 14px 20px">
+    <button onclick="H.openPrintSelect()" style="width:100%;padding:14px;background:#1e3a5f;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:800;font-family:inherit">🖨️ พิมพ์บิล OT</button>
+  </div>
+  <div class="bot-pad"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SCHEDULE PAGE (Process & Filling share this)   -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="pg-sched" class="pg">
+  <!-- Header nav -->
+  <div class="sch-header">
+    <div class="sch-nav">
+      <button class="back-btn" onclick="S.goHome()">←</button>
+      <button class="nav-tab active" data-tab="sched" onclick="S.goTab(this)">📋 ตาราง</button>
+      <button class="nav-tab" data-tab="alllines" onclick="S.goTab(this)">📋 ทุกไลน์</button>
+      <button class="nav-tab" data-tab="graph" onclick="S.goTab(this)">📊 กราฟ</button>
+      <button class="nav-tab" data-tab="ot" onclick="S.goTab(this)">👤 OT</button>
+      <button class="nav-tab" data-tab="emp" onclick="S.goTab(this)">👥 พนักงาน</button>
+      <button class="nav-tab" data-tab="log" onclick="S.goTab(this)">📋 ประวัติ</button>
+      <button class="nav-tab" data-tab="team" onclick="S.goTab(this)">👥 ทีม</button>
+      <button class="nav-tab" data-tab="settings" onclick="S.goTab(this)">⚙️ ตั้งค่า</button>
+      <button onclick="S.goHome()" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:52px" title="กลับหน้าหลัก">🏠<span style="font-size:9px;font-weight:800;line-height:1">HOME</span></button>
+    </div>
+    <!-- Line tabs -->
+    <div style="display:flex;align-items:center;background:#e8f0ff">
+      <div class="line-tabs" id="s-line-tabs" style="flex:1"></div>
+      <button id="s-view-toggle" onclick="S.toggleView()" 
+        style="padding:6px 10px;background:rgba(255,255,255,.08);border:none;border-left:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;height:100%">
+        📋 รวม
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: SCHEDULE -->
+  <div class="sch-page on" id="tab-sched">
+    <div class="hcard">
+      <div class="week-nav">
+        <div>
+          <div class="week-lbl" id="s-week-lbl">สัปดาห์ที่ -</div>
+          <div class="week-range" id="s-week-range">-</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="wb" onclick="S.navWeek(-1)">◀</button>
+          <button class="wn" onclick="S.navWeek(0)">สัปดาห์นี้</button>
+          <button class="wb" onclick="S.navWeek(1)">▶</button>
+        </div>
+      </div>
+      <div class="ot-cards">
+        <div class="ot-card" onclick="S.goTab(document.querySelector('[data-tab=graph]'))">
+          <div class="ot-val" id="s-ot-day">-</div>
+          <div class="ot-lbl">วันนี้</div>
+        </div>
+        <div class="ot-card" onclick="S.goTab(document.querySelector('[data-tab=graph]'))">
+          <div class="ot-val" id="s-ot-week">-</div>
+          <div class="ot-lbl">สัปดาห์</div>
+        </div>
+        <div class="ot-card" onclick="S.goTab(document.querySelector('[data-tab=graph]'))">
+          <div class="ot-val" id="s-ot-month">-</div>
+          <div class="ot-lbl">เดือน</div>
+        </div>
+        <div class="ot-card" onclick="S.goTab(document.querySelector('[data-tab=graph]'))">
+          <div class="ot-val" id="s-ot-target">15%</div>
+          <div class="ot-lbl">Target</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button onclick="S.triggerSave()" style="flex:1;padding:10px;background:rgba(37,99,235,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">💾 บันทึก</button>
+        <button onclick="S.openPrintSched()" style="flex:1;padding:10px;background:rgba(15,52,96,.9);color:#fff;border:1.5px solid rgba(6,182,212,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ตาราง</button>
+        <button onclick="S.printOT()" style="flex:1;padding:10px;background:rgba(0,0,0,.3);color:#fff;border:1.5px solid rgba(245,158,11,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ OT</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="s-table">
+        <thead id="s-thead"></thead>
+        <tbody id="s-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: ALL LINES -->
+  <div class="sch-page" id="tab-alllines">
+    <div style="padding:12px 14px" id="s-alllines-content"></div>
+  </div>
+
+  <!-- TAB: GRAPH -->
+  <div class="sch-page" id="tab-graph">
+    <div class="graph-section">
+      <div class="graph-card">
+        <div class="graph-title">📊 OT% รายเดือน (12 เดือน)</div>
+        <div id="s-graph-chart" style="position:relative;padding-top:14px">
+          <div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">ยังไม่มีข้อมูล</div>
+        </div>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot bar-ok"></div>ไม่เกิน Target</div>
+          <div class="leg-item"><div class="leg-dot bar-over"></div>เกิน Target</div>
+          <div class="leg-item"><div class="leg-line"></div>Target</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: OT คน -->
+  <div class="sch-page" id="tab-ot">
+    <div class="graph-section">
+      <div class="graph-card">
+        <div class="graph-title">👤 สรุป OT รายคน — สัปดาห์นี้</div>
+        <div id="s-ot-people"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EMPLOYEE -->
+  <div class="sch-page" id="tab-emp">
+    <div class="emp-section">
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button onclick="S.exportEmps()" style="flex:1;padding:9px;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;font-size:12px;font-weight:800;color:#166534;font-family:inherit;cursor:pointer">📥 Export</button>
+        <button onclick="document.getElementById('imp-file').click()" style="flex:1;padding:9px;background:#eff6ff;border:1.5px solid #2563eb;border-radius:10px;font-size:12px;font-weight:800;color:#1d4ed8;font-family:inherit;cursor:pointer">📤 Import</button>
+        <input type="file" id="imp-file" accept=".json" style="display:none" onchange="S.importEmps(this)">
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button style="flex:1;padding:11px;background:var(--blueb);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800" onclick="S.openAddEmp()">+ เพิ่มพนักงาน</button>
+        <button style="flex:1;padding:11px;background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;font-size:13px;font-weight:800" onclick="S.openAddDept()">+ เพิ่มแผนก</button>
+      </div>
+      <div id="s-emp-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB: LOG -->
+  <div class="sch-page" id="tab-log">
+    <div class="emp-section">
+      <div id="s-log-list" style="color:#94a3b8;text-align:center;padding:30px;font-size:13px">ยังไม่มีประวัติ</div>
+    </div>
+  </div>
+
+  <!-- TAB: SETTINGS -->
+  <div class="sch-page" id="tab-settings">
+    <div class="settings-section">
+      <!-- Target -->
+      <div class="setting-card">
+        <div class="setting-title">🎯 Target OT%</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="number" id="s-target-inp" min="0" max="100" value="15" style="width:80px;padding:8px;border:2px solid #2563eb;border-radius:10px;background:#fff;color:#1e3a5f;font-size:16px;font-weight:800;text-align:center">
+          <span style="font-size:14px;font-weight:700;color:#475569">% ต่อสัปดาห์</span>
+          <button onclick="S.saveTarget()" style="padding:8px 16px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700">บันทึก</button>
+        </div>
+      </div>
+      <!-- Line management -->
+      <div class="setting-card">
+        <div class="setting-title">🏭 จัดการไลน์</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="s-new-line" placeholder="ชื่อไลน์ใหม่..." style="flex:1;padding:9px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;color:#1e293b;font-size:13px">
+          <button onclick="S.addLine()" style="padding:9px 14px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700">+</button>
+        </div>
+        <div id="s-line-list"></div>
+      </div>
+      <!-- Dept management -->
+      <div class="setting-card">
+        <div class="setting-title">📋 จัดการแผนก</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="s-new-dept" placeholder="ชื่อแผนกใหม่..." style="flex:1;padding:9px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;color:#1e293b;font-size:13px">
+          <button onclick="S.addDept()" style="padding:9px 14px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700">+</button>
+        </div>
+        <div id="s-dept-list"></div>
+      </div>
+      <!-- PIN change -->
+      <div class="setting-card">
+        <div class="setting-title">🔐 เปลี่ยนรหัส Admin</div>
+        <input type="password" id="s-new-pin" placeholder="รหัสใหม่ 4 หลัก" maxlength="4" inputmode="numeric" style="padding:9px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;color:#1e293b;font-size:14px;width:200px;margin-bottom:8px">
+        <button onclick="S.changePin()" style="padding:9px 16px;background:var(--blueb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700">เปลี่ยนรหัส</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: TEAM -->
+  <div class="sch-page" id="tab-team">
+    <div class="team-section" id="s-team-content"></div>
+  </div>
+
+  <div class="bot-pad"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- MODALS                                          -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<!-- PIN Modal -->
+<div class="pin-mo" id="mo-pin">
+  <div class="pin-box">
+    <div class="pin-title" id="pin-title">🔐 ใส่รหัสของคุณ</div>
+    <div class="pin-sub" id="pin-sub">ระบบจะรู้เองว่าคุณเป็นใคร</div>
+    <div class="pin-dots" onclick="document.getElementById('pin-hidden').focus()">
+      <div class="pd" id="pd0"></div>
+      <div class="pd" id="pd1"></div>
+      <div class="pd" id="pd2"></div>
+      <div class="pd" id="pd3"></div>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+    <input type="password" id="pin-hidden" maxlength="4" inputmode="numeric" pattern="[0-9]*"
+      style="opacity:0;position:absolute;width:1px;height:1px;pointer-events:none"
+      oninput="PIN.onInput(this.value)" autocomplete="off">
+    <div style="text-align:center;margin:10px 0;color:#94a3b8;font-size:13px">
+      👆 กดที่จุดเพื่อพิมพ์รหัส
+    </div>
+    <button class="pin-cancel" onclick="PIN.cancel()">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- Worker Note Modal -->
+<div class="mo" id="mo-note" onclick="if(event.target===this)closeMo('mo-note')">
+  <div class="md">
+    <div class="md-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div class="mdt" id="note-title" style="margin-bottom:2px">พนักงาน</div>
+        <div style="font-size:11px;color:#7a90c0" id="note-sub"></div>
+      </div>
+      <button id="note-ot-btn" onclick="S.toggleOT()" style="padding:7px 12px;border-radius:20px;font-size:12px;font-weight:800;background:#f1f5f9;border:2px solid #cbd5e0;color:#64748b">+ เพิ่ม OT</button>
+    </div>
+    <!-- OT hours row -->
+    <div class="ot-hrs-row" id="ot-hrs-row">
+      <span style="font-size:12px;font-weight:700;color:#92400e">⏱ ชั่วโมง OT:</span>
+      <div style="display:flex;gap:6px">
+        <button class="oth-btn" onclick="S.setOTHrs(2)" id="oth-2">2 ชม.</button>
+        <button class="oth-btn" onclick="S.setOTHrs(3)" id="oth-3">3 ชม.</button>
+        <button class="oth-btn" onclick="S.setOTHrs(4)" id="oth-4">4 ชม.</button>
+      </div>
+    </div>
+    <div id="note-list" style="max-height:150px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:6px"></div>
+    <textarea id="note-txt" rows="2" placeholder="ใส่ comment..." style="width:100%;padding:9px;border:2px solid #e2e8f0;border-radius:9px;font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:4px"></textarea>
+    <div style="font-size:10px;color:#94a3b8;margin-bottom:10px">Enter เพื่อบันทึก comment</div>
+    <div class="mdf">
+      <button class="bcanc" onclick="closeMo('mo-note')">ปิด</button>
+      <button class="bconf" onclick="S.saveNote()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Worker Modal -->
+<div class="mo" id="mo-add-worker" onclick="if(event.target===this)closeMo('mo-add-worker')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-handle"></div>
+    <div class="mdt" id="add-worker-title">เพิ่มพนักงาน</div>
+    <div id="add-worker-list" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <div id="add-worker-confirm" style="margin-top:8px"></div>
+    <div class="mdf"><button class="bcanc" onclick="closeMo('mo-add-worker')">ปิด</button></div>
+  </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="mo" id="mo-emp" onclick="if(event.target===this)closeMo('mo-emp')">
+  <div class="md">
+    <div class="md-handle"></div>
+    <div class="mdt">➕ เพิ่มพนักงาน</div>
+    <label>ชื่อ</label>
+    <input type="text" id="emp-name-inp" placeholder="ชื่อพนักงาน..." maxlength="30">
+    <label>แผนก</label>
+    <select id="emp-dept-inp"></select>
+    <label>รหัส PIN (4 หลัก)</label>
+    <input type="password" id="emp-pin-inp" placeholder="ตัวเลข 4 หลัก..." maxlength="4" inputmode="numeric">
+    <div class="mdf">
+      <button class="bcanc" onclick="closeMo('mo-emp')">ยกเลิก</button>
+      <button class="bconf" onclick="S.saveEmp()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Team Modal -->
+<div class="mo" id="mo-team" onclick="if(event.target===this)closeMo('mo-team')">
+  <div class="md">
+    <div class="md-handle"></div>
+    <div class="mdt" id="team-modal-title">👥 จัดการทีม</div>
+    <div id="team-modal-body"></div>
+    <div class="mdf"><button class="bcanc" onclick="closeMo('mo-team')">ปิด</button></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONSTANTS & STORAGE KEYS
+// ══════════════════════════════════════════════════════
+const FB_URL = 'https://factory-schedule-f342c-default-rtdb.asia-southeast1.firebasedatabase.app';
+const PIN_KEY = 'fac_pin_v1';
+const MON_TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const AV_COLS = ['av0','av1','av2','av3','av4','av5','av6','av7'];
+const SHIFTS = ['morning','afternoon','night'];
+const SHIFT_TH = {morning:'เช้า',afternoon:'บ่าย',night:'ดึก'};
+const DAYS_TH = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.']; // index ตาม getDay()
+const DAYS_WK = ['จ.','อ.','พ.','พฤ.','ศ.','ส.']; // 6 วัน ไม่มีอาทิตย์
+const NORMAL_HRS = 8;
+
+// Default data
+const DEFAULT_PROC_LINES = ['Process 1', 'Process 2', 'Process 3', 'Process 4', 'Process 5'];
+const DEFAULT_FILL_LINES = ['Polo 12A', 'Polo 12B', 'Comet', 'Mach', 'Sandwich', 'Hoyer', 'Extrud 3', 'Glacé', 'Scooping'];
+const DEFAULT_DEPTS = ['แผนก 1','แผนก 2','แผนก 3'];
+
+function sk(type, suffix='') { return `fac_${type}_${suffix}`; }
+function load(key, def) { try{ const s=localStorage.getItem(key); return s?JSON.parse(s):def; }catch(e){return def;} }
+function save(key, val) { try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){} }
+
+// ══════════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════════
+let fbDb = null;
+let fbData = {};
+
+function initFB() {
+  if(typeof firebase === 'undefined') {
+    console.log('Firebase ไม่พร้อม ทำงานแบบ offline');
+    return;
+  }
+  try {
+    fbDb = firebase.initializeApp({databaseURL:FB_URL},'fac').database();
+
+    // OT Summary สำหรับกราฟหน้าหลัก
+    fbDb.ref('ot_summary').on('value', snap => {
+      fbData = snap.val() || {};
+      if(document.getElementById('pg-home')?.classList.contains('on')) H.renderCharts();
+    });
+
+    // Sync ข้อมูลแต่ละ sys
+    ['proc','fill'].forEach(sys => {
+
+      // Lines
+      fbDb.ref(`factory/${sys}/lines`).on('value', snap => {
+        const v = snap.val();
+        if(!v) return;
+        const local = load(sys==='proc'?'fac_proc_lines':'fac_fill_lines',[]);
+        if(!local.length) {
+          save(sys==='proc'?'fac_proc_lines':'fac_fill_lines', v);
+          if(S.sys===sys) S.renderLineTabs();
+        }
+      });
+
+      // Depts
+      fbDb.ref(`factory/${sys}/depts`).on('value', snap => {
+        const v = snap.val();
+        if(!v || !v.length) return;
+        const local = load(`fac_depts_${sys}`,[]);
+        if(!local.length) {
+          save(`fac_depts_${sys}`, v);
+          if(S.sys===sys) S.renderSched();
+        }
+      });
+
+      // Emps — ไม่ทับ local เด็ดขาด local เป็น master เสมอ
+      fbDb.ref(`factory/${sys}/emps`).once('value', snap => {
+        const v = snap.val();
+        const local = load(`fac_emps_${sys}`,[]);
+        if(local.length) {
+          // local มีข้อมูล → push ขึ้น Firebase แทน
+          fbDb.ref(`factory/${sys}/emps`).set(local).catch(()=>{});
+        } else if(v && v.length) {
+          // local ว่าง → ดึงจาก Firebase
+          save(`fac_emps_${sys}`, v);
+          if(S.sys===sys) { S.renderEmp(); toast('✅ โหลดพนักงาน '+v.length+' คน'); }
+        }
+      });
+
+      // Target
+      fbDb.ref(`factory/${sys}/target`).on('value', snap => {
+        const v = snap.val();
+        if(v == null) return;
+        const local = load(`fac_target_${sys}`, null);
+        if(local == null) {
+          save(`fac_target_${sys}`, v);
+          if(S.sys===sys) S.updateOTCards();
+        }
+      });
+
+      // Sched
+      for(let li=0; li<14; li++) {
+        fbDb.ref(`factory/${sys}/sched/${li}`).on('value', snap => {
+          const v = snap.val();
+          if(!v) return;
+          const existing = load(`fac_sched_${sys}_${li}`,{});
+          let changed = false;
+          Object.entries(v).forEach(([wk, wkData]) => {
+            if(!existing[wk]) { existing[wk] = wkData; changed = true; }
+          });
+          if(changed) {
+            save(`fac_sched_${sys}_${li}`, existing);
+            if(S.sys===sys && S.curLine===li) { S.renderSched(); S.updateOTCards(); }
+          }
+        });
+
+        // Comments
+        fbDb.ref(`factory/${sys}/comments/${li}`).on('value', snap => {
+          const v = snap.val();
+          if(!v) return;
+          Object.entries(v).forEach(([yr, months]) => {
+            if(!months) return;
+            Object.entries(months).forEach(([mi, cmt]) => {
+              if(cmt) save(`fac_gcmt_${sys}_${li}_${yr}_${mi}`, cmt);
+            });
+          });
+        });
+      }
+    });
+
+  } catch(e) { console.log('FB Error:', e); }
+}
+
+
+function fbSet(path, val) {
+  if (!fbDb) return;
+  try { fbDb.ref(path).set(val); } catch(e) {}
+}
+
+function fbSync(sys) {
+  if (!fbDb) return;
+  try {
+    const lines = load(sys==='proc'?'fac_proc_lines':'fac_fill_lines',
+                       sys==='proc'?[...DEFAULT_PROC_LINES]:[...DEFAULT_FILL_LINES]);
+    const depts = load(`fac_depts_${sys}`,[...DEFAULT_DEPTS]);
+    const emps = load(`fac_emps_${sys}`,[]);
+    const target = load(`fac_target_${sys}`,15);
+
+    fbDb.ref(`factory/${sys}/lines`).set(lines);
+    fbDb.ref(`factory/${sys}/depts`).set(depts);
+    fbDb.ref(`factory/${sys}/emps`).set(emps);
+    fbDb.ref(`factory/${sys}/target`).set(target);
+
+    // Sync ตารางกะทุก line
+    lines.forEach((_, li) => {
+      const sched = load(`fac_sched_${sys}_${li}`,{});
+      if(Object.keys(sched).length) fbDb.ref(`factory/${sys}/sched/${li}`).set(sched);
+      const teams = load(`fac_teams_${sys}_${li}`,null);
+      if(teams) fbDb.ref(`factory/${sys}/teams/${li}`).set(teams);
+    });
+  } catch(e) { console.log('fbSync error',e); }
+}
+
+function syncOT(system, lineIdx, schedData) {
+  const key = `${system}_${lineIdx}`;
+  const sched = schedData || S.getSched(lineIdx);
+  const depts = load(`fac_depts_${system}`,['แผนก 1']);
+  let totalHrs=0, otHrs=0;
+  ['morning','afternoon','night'].forEach(sh => {
+    depts.forEach(d => {
+      for(let di=0;di<6;di++) {
+        const day = sched[d]?.[di] || sched[d]?.[String(di)];
+        (day?.[sh]||[]).forEach(w => {
+          const hrs = w.ot?(w.otHrs||4):0;
+          totalHrs += 8+hrs; otHrs += hrs;
+        });
+      }
+    });
+  });
+  const pct = totalHrs>0?Math.round(otHrs/totalHrs*100):0;
+  const now = new Date();
+  const yr = now.getFullYear()+543;
+  const mi = now.getMonth();
+  // บันทึก OT summary ลง localStorage ด้วย (ไม่ต้องรอ Firebase)
+  const otKey = `fac_ot_${key}_${yr}_${mi}_${S.curWKey}`;
+  save(otKey, {weekPct:pct, target:S.getTarget(), updatedAt:Date.now()});
+  // push ขึ้น Firebase ด้วย
+  if(fbDb) {
+    fbDb.ref(`ot_summary/${key}/${yr}/${mi}/${S.curWKey}`).set({
+      weekPct:pct, target:S.getTarget(), updatedAt:Date.now()
+    }).catch(()=>{});
+    fbDb.ref(`factory/${system}/sched/${lineIdx}/${S.curWKey}`).set(sched).catch(()=>{});
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CURRENT USER
+// ══════════════════════════════════════════════════════
+let curUser = null; // {id, name, dept, av, pin, isAdmin}
+
+// ══════════════════════════════════════════════════════
+// HOME (H)
+// ══════════════════════════════════════════════════════
+const H = {
+  yr: new Date().getFullYear()+543,
+  chYr(d) {
+    this.yr += d;
+    document.getElementById('h-yr-lbl').textContent = this.yr+' (พ.ศ.)';
+    this.renderCharts();
+  },
+  openPin(target) {
+    PIN.open(target==='proc'?'⚙️ Process Login':'🏭 Filling Login', target);
+  },
+  getMonthAvg(ids, yr, mi) {
+    let totalH=0, otH=0;
+    (Array.isArray(ids)?ids:[ids]).forEach(id => {
+      const parts = id.split('_');
+      const sys = parts[0];
+      const li = parseInt(parts[1])||0;
+      const allSched = JSON.parse(localStorage.getItem(`fac_sched_${sys}_${li}`)||'{}');
+      const depts = JSON.parse(localStorage.getItem(`fac_depts_${sys}`)||'null') || ['แผนก 1'];
+      Object.entries(allSched).forEach(([wKey, wkData]) => {
+        if(!wkData) return;
+        const wDate = new Date(wKey);
+        if(isNaN(wDate)) return;
+        if(wDate.getFullYear()+543 !== yr || wDate.getMonth() !== mi) return;
+        depts.forEach(d => {
+          for(let di=0;di<6;di++) {
+            const day = wkData[d]?.[di] || wkData[d]?.[String(di)];
+            if(!day) return;
+            ['morning','afternoon','night'].forEach(sh => {
+              (day[sh]||[]).forEach(w => {
+                const hrs = w.ot?(w.otHrs||4):0;
+                totalH += 8+hrs; otH += hrs;
+              });
+            });
+          }
+        });
+      });
+    });
+    return totalH>0 ? Math.round(otH/totalH*100) : null;
+  },
+
+  makeChart(elId, pctElId, ids) {
+    const tgt = 15;
+    const data = Array.from({length:12},(_,mi)=>this.getMonthAvg(ids,this.yr,mi));
+    const latest = [...data].reverse().find(v=>v!==null);
+    const hasData = data.some(v=>v!==null);
+    const pctEl = document.getElementById(pctElId);
+    if(pctEl) {
+      pctEl.textContent = latest!=null?latest+'%':'-';
+      pctEl.className = 'sc-pct '+(latest==null?'na':latest>tgt?'over':'ok');
+    }
+    const el=document.getElementById(elId);
+    if(!el) return;
+    if(!hasData) {
+      el.innerHTML='<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">ยังไม่มีข้อมูล OT</div>';
+      return;
+    }
+    const yr = this.yr;
+    const maxV = Math.max(...data.filter(v=>v!==null), tgt, 1);
+    const tTopPx = Math.round((1 - tgt/maxV) * 72) + 20;
+    const bars = data.map((v,mi) => {
+      const cmts = H.getHomeCmts(ids, yr, mi);
+      const hasCmt = cmts.length > 0;
+      const idsStr = JSON.stringify(ids).replace(/"/g,"'");
+      if(v === null) {
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer" onclick="event.stopPropagation();H.showHomeCmt(event,${idsStr},${yr},${mi})">
+          <div style="height:72px"></div>
+          <div style="font-size:10px;color:#94a3b8;font-weight:700;margin-top:3px">${MON_TH[mi]}</div>
+        </div>`;
+      }
+      const bh = Math.max(Math.round((v/maxV)*72), 6);
+      const barColor = v > tgt ? '#ef4444' : '#22c55e';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;position:relative" onclick="event.stopPropagation();H.showHomeCmt(event,${idsStr},${yr},${mi})">
+        <div style="font-size:11px;font-weight:900;color:${barColor};margin-bottom:3px">${v}%</div>
+        <div style="width:60%;height:${bh}px;background:${barColor};border-radius:3px 3px 0 0;transition:opacity .2s" onmouseover="this.style.opacity='.6'" onmouseout="this.style.opacity='1'"></div>
+        <div style="font-size:10px;color:#475569;font-weight:700;margin-top:3px">${MON_TH[mi]}</div>
+        ${hasCmt ? '<div style="font-size:10px;line-height:1">💬</div>' : ''}
+      </div>`;
+    }).join('');
+    el.innerHTML = `<div style="position:relative;padding-top:4px">
+      <div style="position:absolute;top:${tTopPx}px;left:0;right:0;height:1.5px;background:#d97706;pointer-events:none">
+        <span style="position:absolute;right:2px;top:-14px;font-size:10px;color:#d97706;font-weight:800">Target ${tgt}%</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:92px;padding-top:20px">${bars}</div>
+    </div>`;
+  },
+
+  printSys: 'proc',
+  printShift: 'morning',
+  printDay: 'today',
+
+
+  _slides: [],
+  _curSlide: 0,
+  _slideTimer: null,
+  _interval: 3,
+
+  loadMascot() {
+    const data = load('fac_mascot_v2', {
+      slides:[{type:'emoji',val:'🍦'}],
+      interval:3
+    });
+    this._slides = data.slides || [{type:'emoji',val:'🍦'}];
+    this._interval = data.interval || 3;
+    this._curSlide = 0;
+    this.renderMascot();
+    this.startSlideshow();
+  },
+
+  renderMascot() {
+    const el = document.getElementById('mascot-display');
+    const dots = document.getElementById('mascot-dots');
+    if(!el) return;
+    el.innerHTML = this._slides.map((s,i) =>
+      `<div class="mascot-slide${i===this._curSlide?' active':''}" data-idx="${i}">
+        ${s.type==='emoji'
+          ? `<span class="mascot-emoji">${s.val}</span>`
+          : `<img src="${s.val}" style="width:100%;height:100%;object-fit:cover">`
+        }
+      </div>`
+    ).join('');
+    if(dots) dots.innerHTML = this._slides.length > 1
+      ? this._slides.map((_,i)=>`<div class="mascot-dot${i===this._curSlide?' active':''}"></div>`).join('')
+      : '';
+  },
+
+  startSlideshow() {
+    if(this._slideTimer) clearInterval(this._slideTimer);
+    if(this._slides.length <= 1) return;
+    this._slideTimer = setInterval(()=>this.slideNext(), this._interval * 1000);
+  },
+
+  slideNext() {
+    this._curSlide = (this._curSlide + 1) % this._slides.length;
+    this.renderMascot();
+  },
+
+  slidePrev() {
+    this._curSlide = (this._curSlide - 1 + this._slides.length) % this._slides.length;
+    this.renderMascot();
+  },
+
+  openMascotMenu(event) {
+    this.renderMascotList();
+    const inp = document.getElementById('mascot-interval');
+    if(inp) inp.value = this._interval;
+    openMo('mo-mascot', event);
+  },
+
+  renderMascotList() {
+    const el = document.getElementById('mascot-list');
+    const cnt = document.getElementById('mascot-count');
+    if(cnt) cnt.textContent = this._slides.length;
+    if(!el) return;
+    el.innerHTML = this._slides.map((s,i) =>
+      `<div style="position:relative;width:54px;height:54px">
+        <div style="width:54px;height:54px;border-radius:12px;overflow:hidden;border:2px solid #e2e8f0;background:#f8faff;display:flex;align-items:center;justify-content:center">
+          ${s.type==='emoji'
+            ?`<span style="font-size:32px">${s.val}</span>`
+            :`<img src="${s.val}" style="width:100%;height:100%;object-fit:cover">`
+          }
+        </div>
+        <button onclick="H.removeSlide(${i})"
+          style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;border:1.5px solid #fff;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>`
+    ).join('') + (this._slides.length < 10
+      ? `<div style="width:54px;height:54px;border-radius:12px;border:2px dashed #cbd5e0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:22px;cursor:pointer" onclick="document.getElementById('mascot-file').click()">+</div>`
+      : '');
+  },
+
+  addEmoji(emoji) {
+    if(this._slides.length >= 10) { toast('❌ ใส่ได้สูงสุด 10 รูป'); return; }
+    this._slides.push({type:'emoji', val:emoji});
+    this.renderMascotList();
+    toast('✅ เพิ่ม '+emoji);
+  },
+
+  uploadMascots(e) {
+    const files = Array.from(e.target.files);
+    let added = 0;
+    const readNext = (idx) => {
+      if(idx >= files.length || this._slides.length >= 10) {
+        e.target.value = '';
+        if(added > 0) { this.renderMascotList(); toast('✅ เพิ่ม '+added+' รูป'); }
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        this._slides.push({type:'img', val:ev.target.result});
+        added++;
+        readNext(idx+1);
+      };
+      reader.readAsDataURL(files[idx]);
+    };
+    readNext(0);
+  },
+
+  removeSlide(i) {
+    this._slides.splice(i, 1);
+    if(!this._slides.length) this._slides = [{type:'emoji',val:'🍦'}];
+    if(this._curSlide >= this._slides.length) this._curSlide = 0;
+    this.renderMascotList();
+    this.renderMascot();
+  },
+
+  saveMascotSettings() {
+    const inp = document.getElementById('mascot-interval');
+    this._interval = Math.max(1, parseInt(inp?.value)||3);
+    save('fac_mascot_v2', {slides:this._slides, interval:this._interval});
+    this.renderMascot();
+    this.startSlideshow();
+    closeMo('mo-mascot');
+    toast('✅ บันทึก Mascot Slideshow แล้ว');
+  },
+
+  // legacy compat
+  setMascotEmoji(e){ this.addEmoji(e); },
+  uploadMascot(e){ this.uploadMascots(e); },
+  saveMascot(){ this.saveMascotSettings(); },
+  openPrintSelect() {
+    this.printSys = 'proc';
+    this.printShift = 'morning';
+    this.printDay = 'today';
+    this.updatePrintBtns();
+    openMo('mo-print-select', null);
+  },
+
+  setPrintSys(v) {
+    this.printSys = v;
+    this.updatePrintBtns();
+  },
+  setPrintShift(v) {
+    this.printShift = v;
+    this.updatePrintBtns();
+  },
+  setPrintDay(v) {
+    this.printDay = v;
+    this.updatePrintBtns();
+  },
+
+  updatePrintBtns() {
+    // sys buttons
+    ['proc','fill','all'].forEach(s => {
+      const el = document.getElementById('ps-'+s);
+      if(!el) return;
+      const active = this.printSys === s;
+      el.style.borderColor = active?'#2563eb':'#e2e8f0';
+      el.style.background = active?'#dbeafe':'#f8faff';
+      el.style.color = active?'#1d4ed8':'#64748b';
+    });
+    // shift buttons
+    ['morning','afternoon','night','allshift'].forEach(s => {
+      const el = document.getElementById('ps-'+s);
+      if(!el) return;
+      const key = s === 'allshift' ? 'all' : s;
+      const active = this.printShift === key;
+      el.style.borderColor = active?'#2563eb':'#e2e8f0';
+      el.style.background = active?'#dbeafe':'#f8faff';
+      el.style.color = active?'#1d4ed8':'#64748b';
+    });
+    // day buttons
+    ['today','week'].forEach(s => {
+      const el = document.getElementById('ps-'+s);
+      if(!el) return;
+      const active = this.printDay === s;
+      el.style.borderColor = active?'#2563eb':'#e2e8f0';
+      el.style.background = active?'#dbeafe':'#f8faff';
+      el.style.color = active?'#1d4ed8':'#64748b';
+    });
+  },
+
+  doPrint() {
+    closeMo('mo-print-select');
+    const now = new Date();
+    const todayDi = (()=>{ const d=now.getDay(); return d===0?6:d-1; })();
+    const diRange = this.printDay==='today'?[todayDi]:Array.from({length:6},(_,i)=>i);
+    const sysArr = this.printSys==='all'?['proc','fill']:
+                   this.printSys==='proc'?['proc']:['fill'];
+    const shiftArr = this.printShift==='all'?['morning','afternoon','night']:[this.printShift];
+    const shiftTH = {morning:'กะเช้า',afternoon:'กะบ่าย',night:'กะดึก'};
+    const sysName = {proc:'Process',fill:'Filling'};
+    const dateStr = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const MON_TH_L = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+    // คำนวณ week key
+    const getWeekStart = (d) => {
+      const dt=new Date(d); dt.setHours(0,0,0,0);
+      const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt;
+    };
+    const ws = getWeekStart(now);
+    const wKey = ws.toISOString().slice(0,10);
+    const wEnd = new Date(ws); wEnd.setDate(wEnd.getDate()+6);
+    const bey = ws.getFullYear()+543;
+    const weekRange = ws.getDate()+' '+MON_TH[ws.getMonth()]+' – '+wEnd.getDate()+' '+MON_TH[wEnd.getMonth()]+' '+bey;
+    const getWN = (d) => {
+      const dt=new Date(d); dt.setHours(0,0,0,0);
+      dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);
+      const w=new Date(dt.getFullYear(),0,4);
+      return 1+Math.round(((dt-w)/86400000-3+(w.getDay()+6)%7)/7);
+    };
+    const wn = getWN(ws);
+
+    let html = `<div class="pr-header">
+      <div class="pr-title">📋 บิล OT รายชื่อพนักงาน</div>
+      <div class="pr-sub">สัปดาห์ที่ ${wn} · ${weekRange} · พิมพ์: ${dateStr}</div>
+    </div>`;
+
+    sysArr.forEach(sys => {
+      const lines = load(sys==='proc'?'fac_proc_lines':'fac_fill_lines',
+                         sys==='proc'?[...DEFAULT_PROC_LINES]:[...DEFAULT_FILL_LINES]);
+      const depts = load(`fac_depts_${sys}`,[...DEFAULT_DEPTS]);
+
+      html += `<div class="pr-section">
+        <div class="pr-sec-title">${sys==='proc'?'⚙️':'🏭'} ${sysName[sys]}</div>`;
+
+      lines.forEach((lineName, lineIdx) => {
+        const allSched = load(`fac_sched_${sys}_${lineIdx}`,{});
+        const sched = allSched[wKey] || {};
+        let hasOT = false;
+        let lineHtml = `<div style="font-weight:700;font-size:11pt;margin:6px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px">${lineName}</div>`;
+
+        shiftArr.forEach(sh => {
+          const workers = [];
+          depts.forEach(dept => {
+            diRange.forEach(di => {
+              (sched[dept]?.[di]?.[sh]||[]).forEach(w => {
+                if(!w.ot) return;
+                hasOT = true;
+                const ex = workers.find(x=>x.name===w.name&&x.dept===dept);
+                if(ex) { ex.days++; ex.hrs+=w.otHrs||4; }
+                else workers.push({name:w.name,dept,days:1,hrs:w.otHrs||4});
+              });
+            });
+          });
+          if(!workers.length) return;
+          lineHtml += `<div class="pr-shift-title">${shiftTH[sh]} (${workers.length} คน)</div>
+          <table class="pr-tbl">
+            <thead><tr>
+              <th style="width:24px">#</th>
+              <th>ชื่อพนักงาน</th>
+              <th>แผนก</th>
+              <th style="width:70px">ชม. OT</th>
+              <th style="width:60px">จำนวนวัน</th>
+              <th class="pr-sign">ลายมือชื่อ</th>
+            </tr></thead>
+            <tbody>
+              ${workers.map((w,i)=>`<tr>
+                <td style="text-align:center">${i+1}</td>
+                <td>${w.name}</td><td>${w.dept}</td>
+                <td style="text-align:center">${w.hrs} ชม.</td>
+                <td style="text-align:center">${w.days} วัน</td>
+                <td></td>
+              </tr>`).join('')}
+              <tr style="font-weight:700;background:#f0f0f0">
+                <td colspan="3" style="text-align:right">รวม</td>
+                <td style="text-align:center">${workers.reduce((a,w)=>a+w.hrs,0)} ชม.</td>
+                <td></td><td></td>
+              </tr>
+            </tbody>
+          </table>`;
+        });
+        if(hasOT) html += lineHtml;
+      });
+      html += '</div>';
+    });
+
+    html += `<div class="pr-footer">
+      <div>ผู้พิมพ์: <strong>Admin</strong></div>
+      <div>วันที่: ${dateStr}</div>
+      <div>ผู้อนุมัติ: ________________________</div>
+    </div>`;
+
+    // แสดง preview modal
+    document.getElementById('sched-preview-content').innerHTML = html;
+    openMo('mo-sched-preview', null);
+  },
+
+  confirmPrintSched() {
+    const html = document.getElementById('sched-preview-content').innerHTML;
+    document.getElementById('print-content').innerHTML = html;
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(()=>{ window.print(); document.getElementById('print-area').style.display='none'; }, 300);
+  },
+
+  getHomeCmts(ids, yr, mi) {
+    // หา comment จากทุก sys และ line ที่ตรงกับ ids
+    const results = [];
+    ['proc','fill'].forEach(sys => {
+      const lines = load(sys==='proc'?'fac_proc_lines':'fac_fill_lines',
+                         sys==='proc'?[...DEFAULT_PROC_LINES]:[...DEFAULT_FILL_LINES]);
+      lines.forEach((lineName, lineIdx) => {
+        const id = `${sys}_${lineIdx}`;
+        if(!ids.includes(id)) return;
+        const cmt = load(`fac_gcmt_${sys}_${lineIdx}_${yr}_${mi}`,'');
+        if(cmt && cmt.trim()) results.push({lineName, sys, cmt});
+      });
+    });
+    return results;
+  },
+
+  showHomeCmt(event, ids, yr, mi) {
+    document.getElementById('home-cmt-popup')?.remove();
+    const cmts = this.getHomeCmts(ids, yr, mi);
+    // หา OT% ของเดือนนี้
+    const avg = this.getMonthAvg(ids, yr, mi);
+    const tgt = 15;
+    const isOver = avg !== null && avg > tgt;
+    const MON_TH_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                         'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const popup = document.createElement('div');
+    popup.id = 'home-cmt-popup';
+    popup.style.cssText = `position:fixed;z-index:9999;background:#1e293b;border:1.5px solid rgba(255,255,255,.2);border-radius:14px;padding:14px;width:270px;box-shadow:0 8px 32px rgba(0,0,0,.6)`;
+
+    let inner = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-size:14px;font-weight:900;color:#fff">📅 ${MON_TH_FULL[mi]} ${yr}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">เดือนที่ ${mi+1} · ปี พ.ศ. ${yr}</div>
+      </div>
+      <button onclick="document.getElementById('home-cmt-popup').remove()" style="width:24px;height:24px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <!-- OT Summary -->
+    <div style="background:rgba(${isOver?'239,68,68':'34,197,94'},.15);border:1.5px solid rgba(${isOver?'239,68,68':'34,197,94'},.4);border-radius:10px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:26px;font-weight:900;color:${isOver?'#fca5a5':'#86efac'}">${avg!==null?avg+'%':'-'}</div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#fff">OT เฉลี่ยเดือนนี้</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.5)">Target: ${tgt}% · ${isOver?'⚠️ เกิน':'✅ ผ่าน'}</div>
+      </div>
+    </div>`;
+
+    if(cmts.length) {
+      inner += `<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px">💬 Comment (${cmts.length})</div>`;
+      cmts.forEach(({lineName, cmt}) => {
+        inner += `<div style="margin-bottom:6px;background:rgba(255,255,255,.07);border-radius:8px;padding:8px;border-left:3px solid var(--teal)">
+          <div style="font-size:10px;font-weight:800;color:var(--teal);margin-bottom:3px">${lineName}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.5">${cmt}</div>
+        </div>`;
+      });
+    } else {
+      inner += `<div style="text-align:center;padding:8px;color:rgba(255,255,255,.3);font-size:11px">ยังไม่มี comment เดือนนี้</div>`;
+    }
+
+    popup.innerHTML = inner;
+    // วาง popup ตรงจุดคลิก
+    const x = Math.min(event.clientX - 135, window.innerWidth - 285);
+    const y = Math.max(10, event.clientY - 180);
+    popup.style.left = Math.max(10, x) + 'px';
+    popup.style.top = y + 'px';
+    document.body.appendChild(popup);
+    setTimeout(() => {
+      document.addEventListener('click', function h(e) {
+        if(!popup.contains(e.target)) { popup.remove(); document.removeEventListener('click',h); }
+      });
+    }, 100);
+  },
+  renderCharts() {
+    const procIds = Array.from({length:5},(_,i)=>`proc_${i}`);
+    const fillIds = Array.from({length:9},(_,i)=>`fill_${i}`);
+    this.makeChart('h-proc-chart','h-proc-pct',procIds);
+    this.makeChart('h-fill-chart','h-fill-pct',fillIds);
+    this.makeChart('h-total-chart','h-total-pct',[...procIds,...fillIds]);
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// PIN (PIN)
+// ══════════════════════════════════════════════════════
+const PIN = {
+  p:'', target:'',
+
+  open(title, target) {
+    this.target = target;
+    this.p = '';
+    this.updateDots();
+    document.getElementById('pin-title').textContent = title;
+    document.getElementById('pin-sub').textContent = 'ระบบจะรู้เองว่าคุณเป็นใคร';
+    document.getElementById('pin-err').textContent = '';
+    document.getElementById('mo-pin').classList.add('on');
+    // focus input hidden หลัง modal เปิด
+    setTimeout(()=>{
+      const inp = document.getElementById('pin-hidden');
+      if(inp){ inp.value=''; inp.focus(); }
+    }, 300);
+  },
+
+  cancel() {
+    document.getElementById('mo-pin').classList.remove('on');
+    this.p = ''; this.updateDots();
+    const inp = document.getElementById('pin-hidden');
+    if(inp) inp.value = '';
+  },
+
+  onInput(val) {
+    // รับเฉพาะตัวเลข
+    const digits = val.replace(/[^0-9]/g,'').slice(0,4);
+    const inp = document.getElementById('pin-hidden');
+    if(inp) inp.value = digits;
+    this.p = digits;
+    this.updateDots();
+    document.getElementById('pin-err').textContent = '';
+    if(this.p.length === 4) setTimeout(()=>this.check(), 150);
+  },
+
+  num(n) {
+    if(this.p.length>=4) return;
+    this.p+=String(n); this.updateDots();
+    if(this.p.length===4) setTimeout(()=>this.check(),150);
+  },
+
+  del() {
+    this.p=this.p.slice(0,-1); this.updateDots();
+    document.getElementById('pin-err').textContent='';
+  },
+
+  updateDots() {
+    for(let i=0;i<4;i++) {
+      const d=document.getElementById('pd'+i);
+      d.classList.remove('on','err');
+      if(i<this.p.length) d.classList.add('on');
+    }
+  },
+
+  check() {
+    const emps = load(`fac_emps_${this.target}`,[]);
+    const adminPin = load(PIN_KEY,'1234');
+
+    // ไล่เช็ค PIN ทุกคน
+    let matchedUser = null;
+
+    // เช็ค Admin ก่อน
+    if(this.p === adminPin) {
+      matchedUser = {id:0, name:'Admin', dept:'ผู้จัดการ', av:0, isAdmin:true};
+    } else {
+      // เช็คพนักงานทุกคน
+      const emp = emps.find(e => e.pin === this.p);
+      if(emp) matchedUser = {...emp, isAdmin:false};
+    }
+
+    if(matchedUser) {
+      document.getElementById('mo-pin').classList.remove('on');
+      curUser = {...matchedUser, sys: this.target};
+      // แสดงชื่อผู้ login ชั่วคราว
+      toast('👋 ยินดีต้อนรับ ' + matchedUser.name);
+      S.open(this.target);
+    } else {
+      for(let i=0;i<4;i++) { const d=document.getElementById('pd'+i); d.classList.remove('on'); d.classList.add('err'); }
+      document.getElementById('pin-err').textContent='❌ ไม่พบรหัสนี้ในระบบ';
+      setTimeout(()=>{
+        this.p=''; this.updateDots();
+        document.getElementById('pin-err').textContent='';
+        const inp=document.getElementById('pin-hidden');
+        if(inp) inp.value='';
+      },1000);
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// SCHEDULE (S)
+// ══════════════════════════════════════════════════════
+const S = {
+  sys:'proc', curLine:0, curWeekStart:null, curWKey:'',
+  notePending:null, addWorkerPending:null,
+  teamEditLine:0, teamEditTeam:'A',
+
+  open(sys) {
+    this.sys = sys;
+    this.curLine = 0;
+    this.curWeekStart = this.getWeekStart(new Date());
+    this.curWKey = this.weekKey(this.curWeekStart);
+    showPage('pg-sched');
+    this.renderLineTabs();
+    this.renderWeekHeader();
+    this.renderSched();
+    this.updateOTCards();
+    this.renderEmp();
+    this.renderLog();
+    this.renderSettings();
+    // Make sure first tab active
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('[data-tab=sched]').classList.add('active');
+    document.querySelectorAll('.sch-page').forEach(p=>p.classList.remove('on'));
+    document.getElementById('tab-sched').classList.add('on');
+  },
+
+  goHome() { showPage('pg-home'); setTimeout(()=>H.renderCharts(),100); },
+
+  goTab(el) {
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.sch-page').forEach(p=>{ p.classList.remove('on'); p.style.cssText=''; });
+    document.getElementById('tab-'+el.dataset.tab).classList.add('on');
+    if(el.dataset.tab==='graph') this.renderGraph();
+    if(el.dataset.tab==='alllines') this.renderAllLines();
+    if(el.dataset.tab==='team') this.openTeamTab();
+    if(el.dataset.tab==='ot') this.renderOTPeople();
+    if(el.dataset.tab==='emp') this.renderEmp();
+    if(el.dataset.tab==='log') this.renderLog();
+    if(el.dataset.tab==='settings') this.renderSettings();
+  },
+
+  // ── DATA ──
+  getLines() {
+    const key = this.sys==='proc'?'fac_proc_lines':'fac_fill_lines';
+    return load(key, this.sys==='proc'?[...DEFAULT_PROC_LINES]:[...DEFAULT_FILL_LINES]);
+  },
+  saveLines(lines) {
+    const key = this.sys==='proc'?'fac_proc_lines':'fac_fill_lines';
+    save(key,lines);
+    if(fbDb) { this._blockLineSync=true; fbDb.ref(`factory/${this.sys}/lines`).set(lines).then(()=>setTimeout(()=>this._blockLineSync=false,2000)); }
+  },
+  getDepts() {
+    const key = `fac_depts_${this.sys}`;
+    return load(key,[...DEFAULT_DEPTS]);
+  },
+  saveDepts(d) {
+    save(`fac_depts_${this.sys}`,d);
+    if(fbDb) { this._blockDeptSync=true; fbDb.ref(`factory/${this.sys}/depts`).set(d).then(()=>setTimeout(()=>this._blockDeptSync=false,2000)); }
+  },
+  getEmps() {
+    const key = `fac_emps_${this.sys}`;
+    return load(key,[]);
+  },
+  saveEmps(e) {
+    save(`fac_emps_${this.sys}`,e);
+    if(fbDb) fbDb.ref(`factory/${this.sys}/emps`).set(e).catch(()=>{});
+  },
+  getSched(lineIdx) {
+    const all = load(`fac_sched_${this.sys}_${lineIdx}`,{});
+    const raw = all[this.curWKey] || this.emptyWeek();
+    // normalize รองรับ key ทั้ง number และ string
+    const result = {};
+    const depts = this.getDepts();
+    depts.forEach(dept => {
+      result[dept] = {};
+      for(let i=0;i<7;i++) {
+        // รองรับทั้ง raw[dept][i] (number) และ raw[dept]["i"] (string)
+        const day = (raw[dept]&&(raw[dept][i]||raw[dept][String(i)])) || {morning:[],afternoon:[],night:[]};
+        result[dept][i] = {
+          morning: day.morning||[],
+          afternoon: day.afternoon||[],
+          night: day.night||[]
+        };
+      }
+    });
+    return result;
+  },
+  saveSched(lineIdx, sched) {
+    const all = load(`fac_sched_${this.sys}_${lineIdx}`,{});
+    all[this.curWKey] = sched;
+    save(`fac_sched_${this.sys}_${lineIdx}`,all);
+    syncOT(this.sys, lineIdx);
+    this.addLog('save','บันทึกตาราง');
+  },
+  getTarget() { return parseInt(load(`fac_target_${this.sys}`,15))||15; },
+  saveTarget(v) {
+    const val = v !== undefined ? v : parseInt(document.getElementById('s-target-inp')?.value)||15;
+    save(`fac_target_${this.sys}`, val);
+    if(fbDb) fbDb.ref(`factory/${this.sys}/target`).set(val);
+    this.updateOTCards();
+    toast('✅ บันทึก Target OT ' + val + '%');
+  },
+  getNotes(key) { return load('fac_notes_'+key,[]); },
+  saveNotes(key,n) { save('fac_notes_'+key,n); },
+  getLog() { return load(`fac_log_${this.sys}`,[]).slice(0,200); },
+  addLog(type,what) {
+    const log = this.getLog();
+    const now = new Date();
+    log.unshift({type,what,time:now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}),date:now.toLocaleDateString('th-TH')});
+    save(`fac_log_${this.sys}`,log.slice(0,200));
+  },
+  getTeams(lineIdx) {
+    return load(`fac_teams_${this.sys}_${lineIdx}`,{A:[],B:[],C:[]});
+  },
+  saveTeams(lineIdx,t) {
+    save(`fac_teams_${this.sys}_${lineIdx}`,t);
+    if(fbDb) fbDb.ref(`factory/${this.sys}/teams/${lineIdx}`).set(t);
+  },
+  getTeamCfg(lineIdx) {
+    return load(`fac_teamcfg_${this.sys}_${lineIdx}`,{rotateSW:2,startWeek:1});
+  },
+  saveTeamCfg(lineIdx,c) { save(`fac_teamcfg_${this.sys}_${lineIdx}`,c); },
+
+  emptyWeek() {
+    const s={};
+    this.getDepts().forEach(d=>{
+      s[d]={};
+      for(let i=0;i<6;i++) { s[d][i]={morning:[],afternoon:[],night:[]}; }
+    });
+    return s;
+  },
+
+  // ── WEEK ──
+  getWeekStart(d) {
+    const dt=new Date(d); dt.setHours(0,0,0,0);
+    const day=dt.getDay(); dt.setDate(dt.getDate()-(day===0?6:day-1)); return dt;
+  },
+  weekKey(d) { return d.toISOString().slice(0,10); },
+  getWN(d) {
+    const dt=new Date(d); dt.setHours(0,0,0,0);
+    dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);
+    const w=new Date(dt.getFullYear(),0,4);
+    return 1+Math.round(((dt-w)/86400000-3+(w.getDay()+6)%7)/7);
+  },
+  navWeek(d) {
+    if(d===0) { this.curWeekStart=this.getWeekStart(new Date()); }
+    else { this.curWeekStart=new Date(this.curWeekStart); this.curWeekStart.setDate(this.curWeekStart.getDate()+d*7); }
+    this.curWKey=this.weekKey(this.curWeekStart);
+    this.renderWeekHeader(); this.renderSched(); this.updateOTCards();
+  },
+  renderWeekHeader() {
+    const wn=this.getWN(this.curWeekStart);
+    const end=new Date(this.curWeekStart); end.setDate(end.getDate()+6);
+    const bey=this.curWeekStart.getFullYear()+543;
+    document.getElementById('s-week-lbl').textContent='สัปดาห์ที่ '+wn;
+    document.getElementById('s-week-range').textContent=
+      this.curWeekStart.getDate()+' '+MON_TH[this.curWeekStart.getMonth()]+' – '+
+      end.getDate()+' '+MON_TH[end.getMonth()]+' '+bey;
+  },
+
+  // ── LINE TABS ──
+  renderLineTabs() {
+    const lines=this.getLines();
+    const el=document.getElementById('s-line-tabs');
+    el.innerHTML=lines.map((name,i)=>
+      `<button class="line-tab${i===this.curLine?' active':''}" onclick="S.switchLine(${i})">${name}</button>
+       <button class="team-btn" onclick="S.openTeam(${i})">👥</button>`
+    ).join('');
+  },
+  switchLine(i) {
+    this.curLine=i;
+    this.renderLineTabs();
+    this.renderSched();
+    this.updateOTCards();
+  },
+
+  // ── OT CALC ──
+  calcOT(sched) {
+    let totalHrs=0,otHrs=0;
+    this.getDepts().forEach(d=>{
+      for(let di=0;di<7;di++) {
+        SHIFTS.forEach(sh=>{
+          (sched[d]?.[di]?.[sh]||[]).forEach(w=>{
+            const hrs=w.ot?(w.otHrs||4):0;
+            totalHrs+=NORMAL_HRS+hrs; otHrs+=hrs;
+          });
+        });
+      }
+    });
+    return totalHrs>0?{pct:Math.round(otHrs/totalHrs*100),totalHrs,otHrs}:{pct:0,totalHrs:0,otHrs:0};
+  },
+  updateOTCards() {
+    const tgt=this.getTarget();
+    const sched=this.getSched(this.curLine);
+    const {pct}=this.calcOT(sched);
+    const col=pct>tgt?'var(--red)':'var(--teal)';
+    document.getElementById('s-ot-week').textContent=pct+'%';
+    document.getElementById('s-ot-week').style.color=pct>tgt?'var(--red)':'var(--green)';
+    document.getElementById('s-ot-target').textContent=tgt+'%';
+    // Today
+    const todayDi=new Date().getDay()===0?6:new Date().getDay()-1;
+    let tTotalHrs=0,tOtHrs=0;
+    this.getDepts().forEach(d=>{
+      SHIFTS.forEach(sh=>{
+        (sched[d]?.[todayDi]?.[sh]||[]).forEach(w=>{
+          const hrs=w.ot?(w.otHrs||4):0;
+          tTotalHrs+=NORMAL_HRS+hrs; tOtHrs+=hrs;
+        });
+      });
+    });
+    const dayPct=tTotalHrs>0?Math.round(tOtHrs/tTotalHrs*100):0;
+    document.getElementById('s-ot-day').textContent=dayPct+'%';
+    document.getElementById('s-ot-day').style.color=dayPct>tgt?'var(--red)':'var(--green)';
+    // Month
+    let mTotalHrs=0,mOtHrs=0;
+    const thisYr=new Date().getFullYear()+543;
+    const allSched=load(`fac_sched_${this.sys}_${this.curLine}`,{});
+    Object.values(allSched).forEach(ws=>{
+      this.getDepts().forEach(d=>{
+        for(let di=0;di<7;di++) {
+          SHIFTS.forEach(sh=>{
+            (ws[d]?.[di]?.[sh]||[]).forEach(w=>{
+              const hrs=w.ot?(w.otHrs||4):0;
+              mTotalHrs+=NORMAL_HRS+hrs; mOtHrs+=hrs;
+            });
+          });
+        }
+      });
+    });
+    const mPct=mTotalHrs>0?Math.round(mOtHrs/mTotalHrs*100):0;
+    document.getElementById('s-ot-month').textContent=mPct+'%';
+    document.getElementById('s-ot-month').style.color=mPct>tgt?'var(--red)':'var(--green)';
+  },
+
+  // ── RENDER SCHEDULE ──
+  renderSched() {
+    const sched=this.getSched(this.curLine);
+    const depts=this.getDepts();
+    const tgt=this.getTarget();
+    // Build week days
+    const days=Array.from({length:6},(_,i)=>{
+      const d=new Date(this.curWeekStart); d.setDate(d.getDate()+i);
+      return {d,isToday:d.toDateString()===new Date().toDateString(),th:DAYS_WK[i],date:d.getDate()+'/'+(d.getMonth()+1)};
+    });
+    // Header
+    const thead=document.getElementById('s-thead');
+    let hdr = `<tr><th class="rl">แผนก</th>`;
+    days.forEach((day,di)=>{
+      const tc=day.isToday?'background:rgba(6,182,212,.2);color:#22d3ee;border-bottom:2px solid #06b6d4':'';
+      hdr+=`<th colspan="3" class="day-th" style="${tc}">${day.th}<br><span style="font-size:8px;opacity:.6">${day.date}</span></th>`;
+    });
+    hdr+='</tr><tr><th class="rl"></th>';
+    days.forEach((day,di)=>{
+      ['เช้า','บ่าย','ดึก'].forEach((sh,shi)=>{
+        const bg=sh==='เช้า'?'#f0fdf4':sh==='บ่าย'?'#fff7ed':'#eff6ff';
+        const col=sh==='เช้า'?'#166534':sh==='บ่าย'?'#92400e':'#1e40af';
+        const br = shi===2 ? 'border-right:3px solid #000' : 'border-right:1.5px dashed rgba(0,0,0,.4)';
+        hdr+=`<th style="background:${bg};color:${col};font-size:11px;font-weight:800;padding:6px 4px;${br}">${sh}</th>`;
+      });
+    });
+    hdr+='</tr>';
+    thead.innerHTML=hdr;
+    // Body
+    const tbody=document.getElementById('s-tbody');
+    let rows='';
+    depts.forEach((dept,deptIdx)=>{
+      const borderTop=deptIdx>0?'class="dept-sep"':'';
+      rows+=`<tr class='${deptIdx>0?"dept-row":""}'>`;
+      rows+=`<td class="rl" ${borderTop?" style='border-top:2.5px solid rgba(255,255,255,.15)'":''}>${dept}</td>`;
+      days.forEach((day,di)=>{
+        ['morning','afternoon','night'].forEach((sh,shi)=>{
+          const cls=sh==='morning'?'cm':sh==='afternoon'?'ca':'cn';
+          const workers=(sched[dept]?.[di]?.[sh])||[];
+          const emps=this.getEmps();
+          let cells=workers.map((w,wi)=>{
+            const shColor = sh==='morning'?'#166534':sh==='afternoon'?'#92400e':'#1e40af';
+            const shBg = sh==='morning'?'#dcfce7':sh==='afternoon'?'#fef9c3':'#dbeafe';
+            const otBg = sh==='morning'?'#16a34a':sh==='afternoon'?'#d97706':'#2563eb';
+            const rowBg = w.ot ? shBg : '#fff';
+            const otBadge = w.ot
+              ? `<span style="background:${otBg};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px;flex-shrink:0">OT ${w.otHrs||4}ชม.</span>`
+              : '';
+            return `<div class="wtag" style="background:${rowBg};border-color:${w.ot?otBg:'#cbd5e1'};cursor:pointer;display:flex;align-items:center;padding:5px 7px;border-radius:6px;margin-bottom:3px;border:1.5px solid;white-space:nowrap" onclick="S.workerMenu(event,'${dept.replace(/'/g,"\\'")}',${di},'${sh}',${wi})">
+              <span style="font-size:11px;font-weight:700;color:${w.ot?shColor:'#1e293b'};flex:1">${w.name}</span>
+              ${otBadge}
+            </div>`;
+          }).join('');
+          cells+=`<button class="addbtn" onclick="S.openAddWorker('${dept.replace(/'/g,"\\'")}',${di},'${sh}')">＋</button>`;
+          const borderStyle = sh==='night' ? 'border-right:3px solid #000' : 'border-right:1px dashed rgba(0,0,0,.4)';
+          rows+=`<td class="cell ${cls}" style="${day.isToday?'outline:2px solid rgba(6,182,212,.3);outline-offset:-2px':''};${borderStyle}">${cells}</td>`;
+        });
+      });
+      rows+='</tr>';
+    });
+    tbody.innerHTML=rows;
+  },
+
+  // ── WORKER ACTIONS ──
+  openAddWorker(dept,di,sh) {
+    this._pending={dept,di,sh};
+    this._sel=[];
+    // โหลด sched ตรงๆ รองรับทั้ง string และ number key
+    const raw=JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+this.curLine)||'{}');
+    const wk=raw[this.curWKey]||{};
+    const depts=this.getDepts();
+    const getDay=(dept,di)=>wk[dept]?.[di]||wk[dept]?.[String(di)]||{morning:[],afternoon:[],night:[]};
+    // กรองเฉพาะวัน di เดียวกัน
+    const usedShift=new Set((getDay(dept,di)[sh]||[]).map(w=>w.name));
+    const usedDay=new Set();
+    depts.forEach(d=>{ ['morning','afternoon','night'].forEach(s=>{ (getDay(d,di)[s]||[]).forEach(w=>usedDay.add(w.name)); }); });
+    // ดึงพนักงานจากทั้ง proc และ fill
+    const _ep2 = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+    const _ef2 = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+    const _em2 = new Map();
+    [..._ep2,..._ef2].forEach(e=>{ if(e&&e.name) _em2.set(e.name,e); });
+    const emps = [..._em2.values()];
+    document.getElementById('add-worker-title').textContent=`เพิ่มพนักงาน → กะ${SHIFT_TH[sh]}`;
+    document.getElementById('add-worker-list').innerHTML=emps.map(e=>{
+      const inShift=usedShift.has(e.name);
+      const inDay=usedDay.has(e.name);
+      const isUsed=inShift||inDay;
+      const reason=inShift?'· อยู่ในกะนี้แล้ว':inDay?'· มีกะอื่นวันนี้แล้ว':'';
+      if(isUsed) return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;margin-bottom:6px;opacity:.5">
+        <div class="wav ${AV_COLS[e.av%8]}" style="width:36px;height:36px;font-size:14px">${e.name.charAt(0)}</div>
+        <div><div style="font-size:13px;font-weight:700;color:#1e293b">${e.name}</div>
+        <div style="font-size:11px;color:#ef4444;font-weight:700">${reason}</div></div></div>`;
+      return `<div onclick="S.selEmp(this,${e.id})" data-eid="${e.id}"
+        style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#fff;margin-bottom:6px;cursor:pointer;transition:all .15s">
+        <div class="wav ${AV_COLS[e.av%8]}" style="width:36px;height:36px;font-size:14px">${e.name.charAt(0)}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1e293b">${e.name}</div>
+        <div style="font-size:11px;color:#64748b">${e.dept}</div></div>
+        <div class="sel-badge" style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;border:2px solid #e2e8f0;color:#94a3b8"></div>
+      </div>`;
+    }).join('');
+    this.updateSelBtn();
+    openMo('mo-add-worker',null);
+  },
+
+  selEmp(el,id) {
+    if(!this._sel) this._sel=[];
+    const sid = String(id);
+    const idx = this._sel.findIndex(x=>String(x)===sid);
+    const badge=el.querySelector('.sel-badge');
+    if(idx<0){
+      this._sel.push(sid);
+      el.style.borderColor='#2563eb';
+      el.style.background='#eff6ff';
+      if(badge){badge.textContent='✓ เลือก';badge.style.borderColor='#2563eb';badge.style.color='#1d4ed8';}
+    } else {
+      this._sel.splice(idx,1);
+      el.style.borderColor='#e2e8f0';
+      el.style.background='#fff';
+      if(badge){badge.textContent='';badge.style.borderColor='#e2e8f0';badge.style.color='#94a3b8';}
+    }
+    this.updateSelBtn();
+  },
+
+  updateSelBtn() {
+    const n=this._sel?this._sel.length:0;
+    const el=document.getElementById('add-worker-confirm');
+    if(!el) return;
+    const bg = n>0?'#2563eb':'#94a3b8';
+    const cur = n>0?'pointer':'not-allowed';
+    const lbl = n>0?'✅ เพิ่ม '+n+' คน':'✅ เพิ่มที่เลือก';
+    el.innerHTML='<button onclick="S.doAddWorkers()" '+(n===0?'disabled':'')+
+      ' style="width:100%;padding:13px;background:'+bg+';color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:inherit;cursor:'+cur+'">'+lbl+'</button>';
+  },
+
+  doAddWorkers() {
+    if(!this._sel||!this._sel.length){toast('❌ เลือกพนักงานก่อน');return;}
+    const {dept,di,sh}=this._pending;
+    const emps=this.getEmps();
+    // โหลดตรงๆ ไม่ normalize
+    const storeKey='fac_sched_'+this.sys+'_'+this.curLine;
+    const allSched=JSON.parse(localStorage.getItem(storeKey)||'{}');
+    if(!allSched[this.curWKey]) allSched[this.curWKey]={};
+    const wk=allSched[this.curWKey];
+    if(!wk[dept]) wk[dept]={};
+    if(!wk[dept][di]) wk[dept][di]={morning:[],afternoon:[],night:[]};
+    if(!wk[dept][di][sh]) wk[dept][di][sh]=[];
+    let added=0;
+    this._sel.forEach(id=>{
+      const emp=emps.find(e=>String(e.id)===String(id));
+      if(!emp) return;
+      if(!wk[dept][di][sh].find(w=>w.name===emp.name)){
+        wk[dept][di][sh].push({name:emp.name,ot:false,otHrs:4,av:emp.av});
+        added++;
+      }
+    });
+    localStorage.setItem(storeKey,JSON.stringify(allSched));
+    if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+this.curLine+'/'+this.curWKey).set(wk);
+    syncOT(this.sys,this.curLine,wk);
+    closeMo('mo-add-worker');
+    if(this.viewAll) this.renderSchedAll(); else this.renderSched();
+    this.updateOTCards();
+    toast('✅ เพิ่ม '+added+' คน');
+  },
+
+
+  togglePickWorker(el, id) {
+    if(!this._pickedIds) this._pickedIds = new Set();
+    const numId = Number(id); // แปลงเป็น number เสมอ
+    const check = el.querySelector('.pick-check');
+    if(this._pickedIds.has(numId)) {
+      this._pickedIds.delete(numId);
+      el.style.borderColor = '#e2e8f0';
+      el.style.background = '';
+      if(check) check.innerHTML = '';
+    } else {
+      this._pickedIds.add(numId);
+      el.style.borderColor = '#2563eb';
+      el.style.background = '#eff6ff';
+      if(check) check.innerHTML = '✓';
+    }
+  },
+
+  confirmPickWorkers() {
+    if(!this._pickedIds || !this._pickedIds.size) { toast('❌ ยังไม่ได้เลือกใคร'); return; }
+    const {dept,di,sh}=this.addWorkerPending;
+    const emps=this.getEmps();
+    const allSched=load('fac_sched_'+this.sys+'_'+this.curLine,{});
+    const sched=allSched[this.curWKey]||this.emptyWeek();
+    const diStr=di;
+    if(!sched[dept]) sched[dept]={};
+    if(!sched[dept][diStr]) sched[dept][diStr]={morning:[],afternoon:[],night:[]};
+    let added=0;
+    this._pickedIds.forEach(id=>{
+      const emp=emps.find(e=>Number(e.id)===Number(id));
+      if(!emp) return;
+      if(!sched[dept][di][sh].find(w=>w.name===emp.name)){
+        sched[dept][di][sh].push({name:emp.name,ot:false,otHrs:4,av:emp.av});
+        added++;
+      }
+    });
+    allSched[this.curWKey]=sched;
+    save('fac_sched_'+this.sys+'_'+this.curLine, allSched);
+    if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+this.curLine+'/'+this.curWKey).set(sched);
+    syncOT(this.sys, this.curLine, sched);
+    closeMo('mo-add-worker');
+    if(this.viewAll) this.renderSchedAll(); else this.renderSched();
+    this.updateOTCards();
+    toast('✅ เพิ่ม '+added+' คน');
+  },
+
+  pickWorker(id) { this.togglePickWorker(document.querySelector(`[data-id="${id}"]`)||document.createElement('div'),id); },
+  removeWorker(dept,di,sh,wi) {
+    const sched=this.getSched(this.curLine);
+    const diStr=di;
+    const w=sched[dept]?.[diStr]?.[sh]?.[wi];
+    if(!w) return;
+    sched[dept][diStr][sh].splice(wi,1);
+    this.saveSched(this.curLine,sched);
+    this.renderSched(); this.updateOTCards();
+    toast('🗑️ ลบ '+w.name);
+  },
+
+  // ── NOTE / OT ──
+
+  workerMenu(event, dept, di, sh, wi) {
+    // ลบ popup เก่า
+    document.getElementById('worker-menu-popup')?.remove();
+    const sched = this.getSched(this.curLine);
+    const w = sched[dept]?.[di]?.[sh]?.[wi];
+    if(!w) return;
+    const popup = document.createElement('div');
+    popup.id = 'worker-menu-popup';
+    popup.style.cssText = `position:fixed;z-index:9999;background:#1e293b;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:10px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.5)`;
+    popup.innerHTML = `
+      <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.15)">${w.name}</div>
+      <button onclick="S.toggleOTMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})" 
+        style="display:block;width:100%;padding:8px;background:${w.ot?'#fef3c7':'rgba(255,255,255,.08)'};color:${w.ot?'#92400e':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:6px">
+        ${w.ot?'🟡 OT '+( w.otHrs||4)+' ชม. (กดปิด)':'+ เพิ่ม OT'}
+      </button>
+      ${w.ot?`<div style="display:flex;gap:4px;margin-bottom:6px">
+        ${[2,3,4].map(h=>`<button onclick="S.setOTHrsMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi},${h})"
+          style="flex:1;padding:5px;background:${(w.otHrs||4)===h?'#f59e0b':'rgba(255,255,255,.1)'};color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer">${h}ชม.</button>`).join('')}
+      </div>`:''}
+      <button onclick="S.removeWorkerMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})"
+        style="display:block;width:100%;padding:8px;background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4);border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left">
+        🗑️ ลบออกจากกะ
+      </button>
+      <button onclick="document.getElementById('worker-menu-popup').remove()"
+        style="display:block;width:100%;padding:6px;background:transparent;color:rgba(255,255,255,.4);border:none;font-size:11px;font-family:inherit;cursor:pointer;margin-top:4px">ปิด</button>
+    `;
+    // วาง popup ตรงจุดคลิก
+    const x = Math.min(event.clientX, window.innerWidth - 180);
+    const y = Math.min(event.clientY, window.innerHeight - 220);
+    popup.style.left = Math.max(10,x) + 'px';
+    popup.style.top = Math.max(10,y) + 'px';
+    document.body.appendChild(popup);
+    event.stopPropagation();
+    setTimeout(()=>{
+      document.addEventListener('click', function h(e){
+        if(!popup.contains(e.target)){ popup.remove(); document.removeEventListener('click',h); }
+      });
+    },100);
+  },
+
+  toggleOTMenu(dept,di,sh,wi) {
+    document.getElementById('worker-menu-popup')?.remove();
+    const sched=this.getSched(this.curLine);
+    const w=sched[dept]?.[di]?.[sh]?.[wi]; if(!w) return;
+    w.ot=!w.ot;
+    if(w.ot) w.otHrs=w.otHrs||4;
+    this.saveSched(this.curLine,sched);
+    this.renderSched(); this.updateOTCards();
+    toast(w.ot?'🟡 เปิด OT':'ปิด OT แล้ว');
+  },
+
+  setOTHrsMenu(dept,di,sh,wi,hrs) {
+    document.getElementById('worker-menu-popup')?.remove();
+    const sched=this.getSched(this.curLine);
+    const w=sched[dept]?.[di]?.[sh]?.[wi]; if(!w) return;
+    w.ot=true; w.otHrs=hrs;
+    this.saveSched(this.curLine,sched);
+    this.renderSched(); this.updateOTCards();
+    toast('✅ OT '+hrs+' ชม.');
+  },
+
+  removeWorkerMenu(dept,di,sh,wi) {
+    document.getElementById('worker-menu-popup')?.remove();
+    this.removeWorker(dept,di,sh,wi);
+  },
+
+  openNote(dept,di,sh,name,wi) {
+    this.notePending={dept,di,sh,name,wi};
+    const sched=this.getSched(this.curLine);
+    const w=sched[dept]?.[di]?.[sh]?.[wi];
+    if(!w) return;
+    document.getElementById('note-title').textContent=name;
+    document.getElementById('note-sub').textContent=`${dept} · ${DAYS_WK[di]} · กะ${SHIFT_TH[sh]}`;
+    document.getElementById('note-txt').value='';
+    this.updateOTBtn(w.ot,w.otHrs);
+    this.renderNoteList(dept,di,sh,name);
+    openMo('mo-note', null);
+  },
+  updateOTBtn(hasOT,otHrs) {
+    const btn=document.getElementById('note-ot-btn');
+    const row=document.getElementById('ot-hrs-row');
+    if(hasOT) {
+      btn.textContent='🟡 OT อยู่ — กดปิด';
+      btn.style.cssText='padding:7px 12px;border-radius:20px;font-size:12px;font-weight:800;background:#fef3c7;border:2px solid var(--gold);color:#92400e';
+      row.style.display='flex';
+      [2,3,4].forEach(h=>{
+        const b=document.getElementById('oth-'+h);
+        if(b) b.classList.toggle('on',(otHrs||4)===h);
+      });
+    } else {
+      btn.textContent='+ เพิ่ม OT';
+      btn.style.cssText='padding:7px 12px;border-radius:20px;font-size:12px;font-weight:800;background:#f1f5f9;border:2px solid #cbd5e0;color:#64748b';
+      row.style.display='none';
+    }
+  },
+  toggleOT() {
+    const {dept,di,sh,wi}=this.notePending;
+    const sched=this.getSched(this.curLine);
+    const w=sched[dept]?.[di]?.[sh]?.[wi]; if(!w) return;
+    w.ot=!w.ot;
+    if(w.ot){w.otHrs=w.otHrs||4;}else{delete w.otHrs;}
+    this.saveSched(this.curLine,sched);
+    this.updateOTBtn(w.ot,w.otHrs);
+    this.renderSched(); this.updateOTCards();
+    if(!w.ot){closeMo('mo-note');toast('ปิด OT แล้ว');}
+    else toast('🟡 เปิด OT — เลือกชั่วโมง');
+  },
+  setOTHrs(hrs) {
+    const {dept,di,sh,wi}=this.notePending;
+    const sched=this.getSched(this.curLine);
+    const w=sched[dept]?.[di]?.[sh]?.[wi]; if(!w||!w.ot) return;
+    w.otHrs=hrs;
+    this.saveSched(this.curLine,sched);
+    this.updateOTBtn(true,hrs);
+    this.updateOTCards();
+    this.renderSched();
+    toast(`✅ OT ${hrs} ชั่วโมง`);
+  },
+  saveNote() {
+    const {dept,di,sh,name}=this.notePending;
+    const txt=document.getElementById('note-txt').value.trim(); if(!txt) return;
+    const key=`${this.curWKey}__${dept}__${di}__${sh}__${name}`;
+    const notes=this.getNotes(key);
+    const now=new Date();
+    notes.push({text:txt,time:now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}),date:now.toLocaleDateString('th-TH')});
+    this.saveNotes(key,notes);
+    document.getElementById('note-txt').value='';
+    this.renderNoteList(dept,di,sh,name);
+    toast('💬 บันทึก comment แล้ว');
+  },
+  renderNoteList(dept,di,sh,name) {
+    const key=`${this.curWKey}__${dept}__${di}__${sh}__${name}`;
+    const notes=this.getNotes(key);
+    document.getElementById('note-list').innerHTML=notes.map(n=>
+      `<div style="background:#f8faff;border-radius:8px;padding:8px 10px;border:1.5px solid #e2e8f0">
+        <div style="font-size:12px;color:#0d1b3e">${n.text}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:3px">🕐 ${n.time} · ${n.date}</div>
+      </div>`
+    ).join('');
+  },
+
+  // ── GRAPH ──
+
+
+  printOT() {
+    const lines = this.getLines();
+    const depts = this.getDepts();
+    const sched = this.getSched(this.curLine);
+    const tgt = this.getTarget();
+    const {pct, otHrs, totalHrs} = this.calcOT(sched);
+    const lineName = lines[this.curLine] || 'Line '+(this.curLine+1);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const wn = this.getWN(this.curWeekStart);
+    const weekEnd = new Date(this.curWeekStart); weekEnd.setDate(weekEnd.getDate()+6);
+    const bey = this.curWeekStart.getFullYear()+543;
+    const weekRange = this.curWeekStart.getDate()+' '+MON_TH[this.curWeekStart.getMonth()]+' – '+
+      weekEnd.getDate()+' '+MON_TH[weekEnd.getMonth()]+' '+bey;
+    const sysName = this.sys==='proc'?'Process':'Filling';
+    const printer = curUser?.name || 'Admin';
+
+    // รวบรวมพนักงาน OT แยกตามกะ
+    const shiftData = {morning:[], afternoon:[], night:[]};
+    const shiftTH = {morning:'กะเช้า',afternoon:'กะบ่าย',night:'กะดึก'};
+
+    depts.forEach(dept => {
+      for(let di=0;di<7;di++) {
+        SHIFTS.forEach(sh => {
+          (sched[dept]?.[di]?.[sh]||[]).forEach(w => {
+            if(!w.ot) return;
+            const existing = shiftData[sh].find(x=>x.name===w.name&&x.dept===dept);
+            if(existing) {
+              existing.days++;
+              existing.totalOTHrs += w.otHrs||4;
+            } else {
+              shiftData[sh].push({name:w.name, dept, days:1, totalOTHrs:w.otHrs||4});
+            }
+          });
+        });
+      }
+    });
+
+    // สร้าง HTML
+    let html = `
+    <div class="pr-header">
+      <div class="pr-title">📋 บิล OT รายชื่อพนักงาน</div>
+      <div class="pr-sub">${sysName} · ${lineName} · สัปดาห์ที่ ${wn} (${weekRange})</div>
+    </div>
+    <div class="pr-summary">
+      <strong>สรุปภาพรวม:</strong> &nbsp;
+      OT รวม ${otHrs} ชม. จาก ${totalHrs} ชม. ทั้งหมด &nbsp;|&nbsp;
+      OT% = <strong style="color:${pct>tgt?'#dc2626':'#16a34a'}">${pct}%</strong> &nbsp;|&nbsp;
+      Target = ${tgt}% &nbsp;|&nbsp;
+      ${pct>tgt?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
+    </div>
+    <div class="pr-section">
+      <div class="pr-sec-title">⚙️ ${sysName} — ${lineName}</div>`;
+
+    ['morning','afternoon','night'].forEach(sh => {
+      const workers = shiftData[sh];
+      if(!workers.length) return;
+      html += `
+      <div class="pr-shift-title">${shiftTH[sh]} (${workers.length} คน)</div>
+      <table class="pr-tbl">
+        <thead>
+          <tr>
+            <th style="width:30px">#</th>
+            <th>ชื่อพนักงาน</th>
+            <th>แผนก</th>
+            <th style="width:80px">ชม. OT</th>
+            <th style="width:80px">จำนวนวัน</th>
+            <th class="pr-sign">ลายมือชื่อ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${workers.map((w,i)=>`
+          <tr>
+            <td style="text-align:center">${i+1}</td>
+            <td>${w.name}</td>
+            <td>${w.dept}</td>
+            <td style="text-align:center">${w.totalOTHrs} ชม.</td>
+            <td style="text-align:center">${w.days} วัน</td>
+            <td></td>
+          </tr>`).join('')}
+          <tr style="font-weight:700;background:#f0f0f0">
+            <td colspan="3" style="text-align:right">รวม</td>
+            <td style="text-align:center">${workers.reduce((a,w)=>a+w.totalOTHrs,0)} ชม.</td>
+            <td></td><td></td>
+          </tr>
+        </tbody>
+      </table>`;
+    });
+
+    html += `</div>
+    <div class="pr-footer">
+      <div>ผู้จัด: <strong>${printer}</strong></div>
+      <div>วันที่พิมพ์: ${dateStr}</div>
+      <div>ลายมือชื่อผู้อนุมัติ: ________________________</div>
+    </div>`;
+
+    // แสดง preview
+    document.getElementById('sched-preview-content').innerHTML = html;
+    openMo('mo-sched-preview', null);
+  },
+
+  _printSchedType: 'day',
+  _printSchedDay: 0,
+
+  openPrintSched() {
+    // default วันนี้
+    const todayDi = new Date().getDay()===0?6:new Date().getDay()-1;
+    this._printSchedType = 'day';
+    this._printSchedDay = todayDi;
+    this.updatePrintSchedUI();
+    openMo('mo-print-sched', null);
+  },
+
+  setPrintSchedType(type) {
+    this._printSchedType = type;
+    this.updatePrintSchedUI();
+  },
+
+  setPrintSchedDay(di) {
+    this._printSchedDay = di;
+    this.updatePrintSchedUI();
+  },
+
+  updatePrintSchedUI() {
+    const isDay = this._printSchedType === 'day';
+    const dayBtn = document.getElementById('ps-day-btn');
+    const weekBtn = document.getElementById('ps-week-btn');
+    const daySelect = document.getElementById('ps-day-select');
+    if(dayBtn) { dayBtn.style.borderColor=isDay?'#2563eb':'#e2e8f0'; dayBtn.style.background=isDay?'#dbeafe':'#f8faff'; dayBtn.style.color=isDay?'#1d4ed8':'#64748b'; }
+    if(weekBtn) { weekBtn.style.borderColor=!isDay?'#2563eb':'#e2e8f0'; weekBtn.style.background=!isDay?'#dbeafe':'#f8faff'; weekBtn.style.color=!isDay?'#1d4ed8':'#64748b'; }
+    if(daySelect) daySelect.style.display = isDay?'block':'none';
+    // highlight วันที่เลือก
+    document.querySelectorAll('[data-day]').forEach(btn=>{
+      const active = parseInt(btn.dataset.day)===this._printSchedDay;
+      btn.style.borderColor = active?'#2563eb':'#e2e8f0';
+      btn.style.background = active?'#dbeafe':'#f8faff';
+      btn.style.color = active?'#1d4ed8':'#64748b';
+    });
+  },
+
+  doPrintSched() {
+    const sched = this.getSched(this.curLine);
+    const depts = this.getDepts();
+    const lines = this.getLines();
+    const lineName = lines[this.curLine]||'Line '+(this.curLine+1);
+    const sysName = this.sys==='proc'?'Process':'Filling';
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const wn = this.getWN(this.curWeekStart);
+    const tgt = this.getTarget();
+    const {pct:weekPct} = this.calcOT(sched);
+    const isOver = weekPct > tgt;
+    const pctColor = isOver?'#dc2626':'#16a34a';
+    const weekMi = this.curWeekStart.getMonth();
+    const weekYr = this.curWeekStart.getFullYear()+543;
+    const nowYr = new Date().getFullYear()+543;
+    const nowMi = new Date().getMonth();
+    // ดึง comment จากทุก line ที่เป็นไปได้
+    const lines2 = this.getLines();
+    let cmt = '';
+    for(let li=0; li<lines2.length; li++) {
+      const k1 = load('fac_gcmt_'+this.sys+'_'+li+'_'+weekYr+'_'+weekMi,'');
+      const k2 = load('fac_gcmt_'+this.sys+'_'+li+'_'+nowYr+'_'+nowMi,'');
+      if(k1){ cmt=k1; break; }
+      if(k2){ cmt=k2; break; }
+    }
+    const yr = weekYr;
+    const mi = weekMi;
+    const days = Array.from({length:6},(_,i)=>{
+      const d=new Date(this.curWeekStart); d.setDate(d.getDate()+i);
+      return {d, th:DAYS_WK[i], date:d.getDate()+'/'+(d.getMonth()+1)};
+    });
+    let html = '';
+
+    if(this._printSchedType==='day') {
+      const di = this._printSchedDay;
+      const day = days[di];
+      // คำนวณ OT วันนั้น
+      let dTH=0,dOH=0;
+      depts.forEach(d=>{ ['morning','afternoon','night'].forEach(sh=>{ (sched[d]?.[di]?.[sh]||[]).forEach(w=>{ const h=w.ot?(w.otHrs||4):0; dTH+=8+h; dOH+=h; }); }); });
+      const dayPct = dTH>0?Math.round(dOH/dTH*100):0;
+      const dayOver = dayPct>tgt;
+      html += `<div class="pr-header">
+        <div class="pr-title">📋 ตารางกะ ${sysName} — ${lineName}</div>
+        <div class="pr-sub">วัน${day.th} ที่ ${day.date} &nbsp;|&nbsp; สัปดาห์ที่ ${wn} &nbsp;|&nbsp; พิมพ์: ${dateStr}</div>
+      </div>
+      <div class="pr-summary">
+        OT%: <strong style="color:${dayOver?'#dc2626':'#16a34a'};font-size:15px">${dayPct}%</strong>
+        &nbsp;|&nbsp; Target: ${tgt}%
+        &nbsp;|&nbsp; ${dayOver?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
+        ${cmt?`<div style="margin-top:6px;padding:6px 10px;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:4px;font-size:11px;color:#166534">💬 ${cmt}</div>`:''}
+      </div>
+      <table class="pr-tbl" style="table-layout:fixed;width:100%">
+        <colgroup>
+          <col style="width:22%">
+          <col style="width:26%">
+          <col style="width:26%">
+          <col style="width:26%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th style="width:22%;border-right:3px solid #000">แผนก</th>
+            <th style="background:#dcfce7;color:#166534;width:26%;border-right:3px solid #000">กะเช้า</th>
+            <th style="background:#fef9c3;color:#92400e;width:26%;border-right:3px solid #000">กะบ่าย</th>
+            <th style="background:#dbeafe;color:#1e40af;width:26%">กะดึก</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${depts.map(dept=>`<tr>
+            <td style="font-weight:700">${dept}</td>
+            ${['morning','afternoon','night'].map((sh,shi)=>{
+              const ws=(sched[dept]?.[di]?.[sh]||[]);
+              const br2=shi<2?'border-right:3px solid #000':'';
+              return `<td style="vertical-align:top;font-size:11px;${br2}">`+
+                ws.map(w=>w.name+(w.ot?` <span style="color:#d97706;font-weight:700">(OT +${w.otHrs||4}ชม.)</span>`:'')).join('<br>')+
+                '</td>';
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    } else {
+      // รายสัปดาห์
+      const wkEnd2 = new Date(this.curWeekStart); wkEnd2.setDate(wkEnd2.getDate()+6);
+      const wkRange = this.curWeekStart.getDate()+'/'+(this.curWeekStart.getMonth()+1)+' – '+wkEnd2.getDate()+'/'+(wkEnd2.getMonth()+1)+'/'+weekYr;
+      html += `<div class="pr-header">
+        <div class="pr-title">📋 ตารางกะรายสัปดาห์ ${sysName} — ${lineName}</div>
+        <div class="pr-sub">สัปดาห์ที่ ${wn} &nbsp;|&nbsp; ${wkRange} &nbsp;|&nbsp; พิมพ์: ${dateStr}</div>
+      </div>
+      <div class="pr-summary">
+        OT% สัปดาห์: <strong style="color:${pctColor};font-size:15px">${weekPct}%</strong>
+        &nbsp;|&nbsp; Target: ${tgt}%
+        &nbsp;|&nbsp; ${isOver?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
+        ${cmt?`<div style="margin-top:6px;padding:6px 10px;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:4px;font-size:11px;color:#166534">💬 ${cmt}</div>`:''}
+      </div>`;
+      // แยกตารางแต่ละวัน
+      days.forEach((day,di)=>{
+        let dTH=0,dOH=0;
+        depts.forEach(d=>{ ['morning','afternoon','night'].forEach(sh=>{ (sched[d]?.[di]?.[sh]||[]).forEach(w=>{ const h=w.ot?(w.otHrs||4):0; dTH+=8+h; dOH+=h; }); }); });
+        const dPct=dTH>0?Math.round(dOH/dTH*100):0;
+        const dOver=dPct>tgt;
+        let dayCmt = cmt; // ใช้ comment เดียวกัน
+        html+=`<div class="day-block" style="page-break-inside:avoid">
+          <div class="day-block-header ${dOver?'over':'ok'}">
+            📅 วัน${day.th} &nbsp;${day.date}
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            OT: ${dPct}%
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            ${dOver?'⚠️ เกิน Target':'✅ อยู่ใน Target'}
+            ${dayCmt?`<div style="font-size:10pt;font-weight:400;margin-top:3px;opacity:.9">💬 ${dayCmt}</div>`:''}
+          </div>
+          <table class="pr-tbl" style="font-size:10px;margin:0;border:none;table-layout:fixed;width:100%">
+            <colgroup>
+              <col style="width:22%">
+              <col style="width:26%">
+              <col style="width:26%">
+              <col style="width:26%">
+            </colgroup>
+            <thead><tr style="border-bottom:2px solid #000">
+              <th style="border-right:2px solid #000">แผนก</th>
+              <th style="background:#dcfce7;color:#166534;border-right:3px solid #000">กะเช้า</th>
+              <th style="background:#fef9c3;color:#92400e;border-right:3px solid #000">กะบ่าย</th>
+              <th style="background:#dbeafe;color:#1e40af">กะดึก</th>
+            </tr></thead>
+            <tbody>
+              ${depts.map((dept,di2)=>`<tr style="border-top:${di2>0?'1px dashed #ccc':'none'}">
+                <td style="font-weight:700;border-right:2px solid #000;padding:4px 6px">${dept}</td>
+                ${['morning','afternoon','night'].map((sh,shi)=>{
+                  const ws=(sched[dept]?.[di]?.[sh]||[]);
+                  const br=shi<2?'border-right:3px solid #000':'';
+                  return `<td style="vertical-align:top;padding:4px 6px;${br}">`+
+                    (ws.length?ws.map(w=>`<div>${w.name}${w.ot?` <b style="color:#d97706">OT+${w.otHrs||4}ชม.</b>`:''}</div>`).join(''):'<span style="color:#ccc">-</span>')+
+                    '</td>';
+                }).join('')}
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      });
+    }
+
+    html += `<div class="pr-footer">
+      <div>ผู้พิมพ์: ${curUser?.name||'Admin'}</div>
+      <div>วันที่: ${dateStr}</div>
+      <div>ลายมือชื่อ: ________________________</div>
+    </div>`;
+
+    document.getElementById('sched-preview-content').innerHTML = html;
+    openMo('mo-sched-preview', null);
+  },
+
+
+  confirmPrintSched() {
+    const html = document.getElementById('sched-preview-content').innerHTML;
+    document.getElementById('print-content').innerHTML = html;
+    document.getElementById('print-area').style.display = 'block';
+    setTimeout(()=>{ window.print(); document.getElementById('print-area').style.display='none'; }, 300);
+  },
+  triggerSave() {
+    const sched = this.getSched(this.curLine);
+    const {pct} = this.calcOT(sched);
+    const tgt = this.getTarget();
+    OTResult.show(pct, tgt, sched, this.curLine);
+  },
+
+  clickGraphBar(event, mi, yr, barColor) {
+    const cmt = this.getGraphComment(yr, mi);
+    // สร้าง tooltip/popup ตรงจุดที่คลิก
+    let existing = document.getElementById('graph-cmt-popup');
+    if(existing) existing.remove();
+    const popup = document.createElement('div');
+    popup.id = 'graph-cmt-popup';
+    popup.style.cssText = `position:fixed;z-index:9999;background:#1e293b;border:1.5px solid rgba(255,255,255,.2);border-radius:14px;padding:14px;width:260px;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:pop .2s ease`;
+    const isOver = barColor.includes('red') || barColor === 'var(--red)';
+    popup.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:800;color:#fff">💬 ${MON_TH[mi]} ${yr}</div>
+        <button onclick="document.getElementById('graph-cmt-popup').remove()" style="width:24px;height:24px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;font-size:12px;cursor:pointer">✕</button>
+      </div>
+      ${cmt ? `<div style="font-size:12px;color:rgba(255,255,255,.8);line-height:1.5;margin-bottom:12px;background:rgba(255,255,255,.07);padding:8px;border-radius:8px">${cmt}</div>` : `<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;text-align:center">ยังไม่มี comment</div>`}
+      <textarea id="graph-cmt-new" placeholder="${isOver?'ระบุเหตุผล OT เกิน Target...':'เพิ่ม comment...'}" rows="2"
+        style="width:100%;padding:8px;border:2px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-family:inherit;resize:none;outline:none;margin-bottom:8px">${cmt||''}</textarea>
+      <button onclick="S.saveGraphBarCmt(${mi},${yr})" 
+        style="width:100%;padding:9px;background:${isOver?'#dc2626':'#16a34a'};color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">
+        💾 บันทึก
+      </button>
+    `;
+    // วาง popup ใกล้จุดคลิก
+    const x = Math.min(event.clientX - 130, window.innerWidth - 280);
+    const y = Math.max(20, event.clientY - 200);
+    popup.style.left = Math.max(10, x) + 'px';
+    popup.style.top = y + 'px';
+    document.body.appendChild(popup);
+    // ปิดเมื่อคลิกข้างนอก
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if(!popup.contains(e.target)) {
+          popup.remove();
+          document.removeEventListener('click', handler);
+        }
+      });
+    }, 100);
+  },
+
+  saveGraphBarCmt(mi, yr) {
+    const txt = document.getElementById('graph-cmt-new')?.value.trim() || '';
+    this.saveGraphComment(yr, mi, txt);
+    document.getElementById('graph-cmt-popup')?.remove();
+    this.renderGraph();
+    toast('✅ บันทึก comment แล้ว');
+  },
+  getGraphComment(yr,mi) { return load(`fac_gcmt_${this.sys}_${this.curLine}_${yr}_${mi}`,''); },
+  saveGraphComment(yr,mi,txt) {
+    save(`fac_gcmt_${this.sys}_${this.curLine}_${yr}_${mi}`,txt);
+    if(fbDb) fbDb.ref(`factory/${this.sys}/comments/${this.curLine}/${yr}/${mi}`).set(txt);
+  },
+  openGraphComment(yr,mi,pct) {
+    const existing = this.getGraphComment(yr,mi);
+    const txt = prompt(`💬 Comment เดือน ${MON_TH[mi]} ${yr}\nOT: ${pct!==null?pct+'%':'ไม่มีข้อมูล'}\n\nใส่ comment:`, existing||'');
+    if(txt===null) return;
+    this.saveGraphComment(yr,mi,txt);
+    this.renderGraph();
+    toast('✅ บันทึก comment แล้ว');
+  },
+  renderGraph() {
+    const tgt=this.getTarget();
+    const allSched=load(`fac_sched_${this.sys}_${this.curLine}`,{});
+    const yr=new Date().getFullYear()+543;
+    const data=Array.from({length:12},(_,mi)=>{
+      let tH=0,oH=0;
+      Object.entries(allSched).forEach(([wk,ws])=>{
+        const wDate=new Date(wk);
+        if(wDate.getFullYear()+543!==yr||wDate.getMonth()!==mi) return;
+        this.getDepts().forEach(d=>{
+          for(let di=0;di<7;di++) {
+            SHIFTS.forEach(sh=>{
+              (ws[d]?.[di]?.[sh]||[]).forEach(w=>{
+                const hrs=w.ot?(w.otHrs||4):0;
+                tH+=NORMAL_HRS+hrs; oH+=hrs;
+              });
+            });
+          }
+        });
+      });
+      return tH>0?Math.round(oH/tH*100):null;
+    });
+    const maxV=Math.max(...data.filter(v=>v!==null),tgt,1);
+    const tTop=Math.round((1-tgt/maxV)*120);
+    const yr2=new Date().getFullYear()+543;
+    const bars=data.map((v,mi)=>{
+      const bh=v===null?2:Math.max(Math.round((v/maxV)*120),4);
+      const bc=v===null?'rgba(255,255,255,.1)':v>tgt?'var(--red)':'var(--green)';
+      const lbl=v!==null?v+'%':'';
+      const cmt=this.getGraphComment(yr2,mi);
+      const cmtIcon=cmt?`<div title="${cmt}" style="font-size:10px;cursor:pointer" onclick="S.openGraphComment(${yr2},${mi},${v})">💬</div>`:'';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer" onclick="S.openGraphComment(${yr2},${mi},${v})">
+        <div style="font-size:9px;font-weight:800;color:${bc}">${lbl}</div>
+        <div style="width:100%;height:${bh}px;background:${bc};border-radius:3px 3px 0 0;min-height:2px;transition:opacity .15s;opacity:.9" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.9"></div>
+        <div style="font-size:8px;color:#64748b">${MON_TH[mi]}</div>
+        ${cmtIcon}
+      </div>`;
+    }).join('');
+    document.getElementById('s-graph-chart').innerHTML=`
+      <div style="position:absolute;top:${tTop}px;left:0;right:0;height:1.5px;background:var(--gold)"><span style="position:absolute;right:0;top:-12px;font-size:9px;color:var(--gold);font-weight:700">Target ${tgt}%</span></div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:${120+30}px;padding-top:16px">${bars}</div>`;
+  },
+
+  // ── OT PEOPLE ──
+
+
+  viewAll: false,
+
+  toggleView() {
+    this.viewAll = !this.viewAll;
+    const btn = document.getElementById('s-view-toggle');
+    if(btn) btn.textContent = this.viewAll ? '📋 แยก Line' : '📋 รวม';
+    if(this.viewAll) {
+      this.renderSchedAll();
+    } else {
+      this.renderSched();
+    }
+  },
+
+  renderSchedAll() {
+    // แสดงทุก Line เรียงลงมาในหน้าเดียว
+    const lines = this.getLines();
+    const depts = this.getDepts();
+    const tgt = this.getTarget();
+    const days = Array.from({length:6},(_,i)=>{
+      const d=new Date(this.curWeekStart); d.setDate(d.getDate()+i);
+      return {d, isToday:d.toDateString()===new Date().toDateString(), th:DAYS_WK[i], date:d.getDate()+'/'+(d.getMonth()+1)};
+    });
+
+    // Header วัน (แสดงครั้งเดียว)
+    const thead = document.getElementById('s-thead');
+    let hdr = `<tr><th class="rl" style="min-width:90px">Line / แผนก</th>`;
+    days.forEach(day=>{
+      const tc = day.isToday?'background:rgba(6,182,212,.15);color:var(--teal)':'';
+      hdr += `<th colspan="3" class="day-th" style="${tc}">${day.th}<br><span style="font-size:8px;opacity:.6">${day.date}</span></th>`;
+    });
+    hdr += '</tr><tr><th class="rl"></th>';
+    days.forEach(()=>{
+      ['เช้า','บ่าย','ดึก'].forEach(sh=>{
+        const bg=sh==='เช้า'?'#e8f8ee':sh==='บ่าย'?'#fef3e2':'#eef4ff';
+        const col=sh==='เช้า'?'#166534':sh==='บ่าย'?'#92400e':'#1e40af';
+        hdr+=`<th style="background:${bg};color:${col};font-size:9px;padding:3px 1px">${sh}</th>`;
+      });
+    });
+    hdr += '</tr>';
+    thead.innerHTML = hdr;
+
+    // Body - แต่ละ Line
+    const tbody = document.getElementById('s-tbody');
+    let rows = '';
+
+    lines.forEach((lineName, li) => {
+      const sched = load(`fac_sched_${this.sys}_${li}`,{})[this.curWKey] || {};
+      const {pct} = this.calcOTForSched(sched, depts);
+      const pctCol = pct > tgt ? 'var(--red)' : 'var(--green)';
+
+      // Line header row
+      rows += `<tr style="background:rgba(37,99,235,.2)">
+        <td class="rl" colspan="${1+days.length*3}" style="font-size:11px;font-weight:900;color:#fff;padding:6px 10px;border-top:2px solid rgba(6,182,212,.4)">
+          ${lineName}
+          <span style="float:right;color:${pctCol};font-weight:900">OT ${pct}%</span>
+        </td>
+      </tr>`;
+
+      // แต่ละแผนก
+      depts.forEach((dept, deptIdx) => {
+        rows += `<tr class="${deptIdx>0?'dept-row':''}">
+          <td class="rl" style="font-size:9px">${dept}</td>`;
+        days.forEach((day,di)=>{
+          ['morning','afternoon','night'].forEach((sh,shi)=>{
+            const cls=sh==='morning'?'cm':sh==='afternoon'?'ca':'cn';
+            const workers=(sched[dept]?.[di]?.[sh])||[];
+            const emps2=this.getEmps();
+            let cells=workers.map((w,wi)=>{
+              const emp=emps2.find(e=>e.name===w.name);
+              const avCls=emp?AV_COLS[emp.av%8]:'av0';
+              return `<div class="wtag${w.ot?' has-ot':''}" onclick="S.openNoteAll(${li},'${dept.replace(/'/g,"\'")}',${di},'${sh}','${w.name.replace(/'/g,"\'")}',${wi})">
+                <div class="wav ${avCls}">${w.name.charAt(0)}</div>
+                <span style="font-size:11px;font-weight:700;color:#1e293b;flex:1">${w.name}</span>
+                ${w.ot?`<span class="otb">+${w.otHrs||4}h</span>`:''}
+                <button class="rbtn" onclick="event.stopPropagation();S.removeWorkerAll(${li},'${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})">✕</button>
+              </div>`;
+            }).join('');
+            cells += `<button class="addbtn" onclick="S.openAddWorkerAll(${li},'${dept.replace(/'/g,"\'")}',${di},'${sh}')">＋</button>`;
+            rows += `<td class="cell ${cls}" style="${day.isToday?'outline:2px solid rgba(6,182,212,.3);outline-offset:-2px':''}">${cells}</td>`;
+          });
+        });
+        rows += '</tr>';
+      });
+    });
+
+    tbody.innerHTML = rows;
+  },
+
+  // All-lines versions ของ worker functions
+  openAddWorkerAll(li, dept, di, sh) {
+    this.curLine = li; // switch to this line
+    this.openAddWorker(dept, di, sh);
+  },
+  removeWorkerAll(li, dept, di, sh, wi) {
+    const prevLine = this.curLine;
+    this.curLine = li;
+    this.removeWorker(dept, di, sh, wi);
+    this.curLine = prevLine;
+    if(this.viewAll) this.renderSchedAll();
+  },
+  openNoteAll(li, dept, di, sh, name, wi) {
+    this.curLine = li;
+    this.openNote(dept, di, sh, name, wi);
+  },
+  renderAllLines() {
+    const lines = this.getLines();
+    const depts = this.getDepts();
+    const tgt = this.getTarget();
+    let html = '';
+    lines.forEach((lineName, li) => {
+      const sched = load(`fac_sched_${this.sys}_${li}`,{})[this.curWKey] || {};
+      const {pct} = this.calcOTForSched(sched, depts);
+      const col = pct > tgt ? 'var(--red)' : 'var(--green)';
+      html += `<div style="background:#fff;border-radius:14px;padding:12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:800;color:#fff">${lineName}</div>
+          <div style="font-size:18px;font-weight:900;color:${col}">${pct}%</div>
+        </div>`;
+      SHIFTS.forEach(sh => {
+        const workers = [];
+        depts.forEach(d => {
+          for(let di=0;di<7;di++) {
+            (sched[d]?.[di]?.[sh]||[]).forEach(w => {
+              if(!workers.find(x=>x.name===w.name)) workers.push(w);
+            });
+          }
+        });
+        if(!workers.length) return;
+        html += `<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">${SHIFT_TH[sh]} (${workers.length} คน)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+            ${workers.map(w=>`<div style="background:${w.ot?'#92400e':'var(--navyl)'};border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:#fff">
+              ${w.name}${w.ot?` +${w.otHrs}h`:''}
+            </div>`).join('')}
+          </div>`;
+      });
+      html += '</div>';
+    });
+    document.getElementById('s-alllines-content').innerHTML = html || '<div style="text-align:center;padding:30px;color:#94a3b8">ยังไม่มีข้อมูล</div>';
+  },
+
+  calcOTForSched(sched, depts) {
+    let tH=0,oH=0;
+    depts.forEach(d=>{
+      for(let di=0;di<7;di++){
+        SHIFTS.forEach(sh=>{
+          (sched[d]?.[di]?.[sh]||[]).forEach(w=>{
+            const hrs=w.ot?(w.otHrs||4):0;
+            tH+=NORMAL_HRS+hrs; oH+=hrs;
+          });
+        });
+      }
+    });
+    return {pct:tH>0?Math.round(oH/tH*100):0};
+  },
+  renderOTPeople() {
+    const sched=this.getSched(this.curLine);
+    const map={};
+    this.getDepts().forEach(d=>{
+      for(let di=0;di<7;di++) {
+        SHIFTS.forEach(sh=>{
+          (sched[d]?.[di]?.[sh]||[]).forEach(w=>{
+            if(!map[w.name]) map[w.name]={totalHrs:0,otHrs:0};
+            const hrs=w.ot?(w.otHrs||4):0;
+            map[w.name].totalHrs+=NORMAL_HRS+hrs;
+            map[w.name].otHrs+=hrs;
+          });
+        });
+      }
+    });
+    const items=Object.entries(map).sort((a,b)=>b[1].otHrs-a[1].otHrs);
+    const emps=this.getEmps();
+    document.getElementById('s-ot-people').innerHTML=items.length?
+      items.map(([name,{totalHrs,otHrs}])=>{
+        const pct=totalHrs>0?Math.round(otHrs/totalHrs*100):0;
+        const emp=emps.find(e=>e.name===name);
+        const avCls=emp?AV_COLS[emp.av%8]:'av0';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#e8f0ff;border-radius:10px;margin-bottom:8px">
+          <div class="wav ${avCls}" style="width:36px;height:36px;font-size:14px">${name.charAt(0)}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:#1e293b">${name}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px">${otHrs} ชม. OT จาก ${totalHrs} ชม. รวม</div>
+          </div>
+          <div style="font-size:20px;font-weight:900;color:${pct>this.getTarget()?'var(--red)':'var(--green)'}">${pct}%</div>
+        </div>`;
+      }).join(''):
+      '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">ยังไม่มีข้อมูลสัปดาห์นี้</div>';
+  },
+
+  // ── EMPLOYEE ──
+  renderEmp() {
+    const emps=this.getEmps();
+    if(!document.getElementById('photo-input')) {
+      const inp=document.createElement('input');
+      inp.type='file'; inp.id='photo-input'; inp.accept='image/*';
+      inp.style.display='none';
+      inp.onchange=(e)=>S.onPhotoSelected(e);
+      document.body.appendChild(inp);
+    }
+    document.getElementById('s-emp-list').innerHTML=emps.length?
+      emps.map((e,i)=>{
+        const hasPhoto=e.photo&&e.photo.length>0;
+        return `<div class="emp-card">
+          <div onclick="S.uploadPhoto(${i})" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;cursor:pointer;position:relative;overflow:hidden;border:2px solid rgba(255,255,255,.3)">
+            ${hasPhoto
+              ?`<img src="${e.photo}" style="width:100%;height:100%;object-fit:cover">`
+              :`<div class="${AV_COLS[e.av%8]}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${e.name.charAt(0)}</div>`
+            }
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:16px">📷</div>
+          </div>
+          <div style="flex:1">
+            <div class="emp-name">${e.name}</div>
+            <div class="emp-dept">${e.dept}</div>
+            <div style="font-size:10px;color:#94a3b8;margin-top:2px">PIN: ••••</div>
+          </div>
+          <button onclick="S.openEditEmp(${i})" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:14px;margin-right:6px">✏️</button>
+          <button class="emp-del" onclick="S.deleteEmp(${i})">✕</button>
+        </div>`;
+      }).join(''):
+      '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">ยังไม่มีพนักงาน</div>';
+  },
+  openAddEmp() {
+    const depts=this.getDepts();
+    document.getElementById('emp-name-inp').value='';
+    document.getElementById('emp-dept-inp').innerHTML=depts.map(d=>`<option value="${d}">${d}</option>`).join('');
+    openMo('mo-emp', null);
+  },
+  saveEmp() {
+    const name=document.getElementById('emp-name-inp').value.trim(); if(!name) return;
+    const dept=document.getElementById('emp-dept-inp').value;
+    const pin=document.getElementById('emp-pin-inp').value.trim();
+    if(pin && (pin.length!==4||isNaN(pin))){ toast('❌ PIN ต้องเป็นตัวเลข 4 หลัก'); return; }
+    const emps=this.getEmps();
+    const id=emps.length?Math.max(...emps.map(e=>e.id))+1:1;
+    emps.push({id,name,dept,av:id%8,pin:pin||load(PIN_KEY,'1234')});
+    this.saveEmps(emps);
+    closeMo('mo-emp');
+    this.renderEmp();
+    toast('✅ เพิ่ม '+name);
+  },
+  _photoEmpIdx: -1,
+  uploadPhoto(i) {
+    this._photoEmpIdx = i;
+    document.getElementById('photo-input')?.click();
+  },
+  onPhotoSelected(e) {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      // ดึงพนักงานจากทั้ง proc และ fill
+    const empProc = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+    const empFill = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+    const allEmpMap = new Map();
+    [...empProc,...empFill].forEach(e=>{ if(e.name && !allEmpMap.has(e.name)) allEmpMap.set(e.name,e); });
+    const emps = [...allEmpMap.values()];
+      emps[this._photoEmpIdx].photo = ev.target.result;
+      this.saveEmps(emps);
+      this.renderEmp();
+      toast('✅ อัพโหลดรูปแล้ว');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  },
+  _editEmpIdx: -1,
+
+  openEditEmp(i) {
+    this._editEmpIdx = i;
+    const emps = this.getEmps();
+    const e = emps[i];
+    const depts = this.getDepts();
+    document.getElementById('edit-emp-name').value = e.name;
+    document.getElementById('edit-emp-pin').value = '';
+    document.getElementById('edit-emp-dept').innerHTML = depts.map(d=>
+      `<option value="${d}" ${d===e.dept?'selected':''}>${d}</option>`
+    ).join('');
+    openMo('mo-edit-emp', null);
+  },
+
+  saveEditEmp() {
+    const i = this._editEmpIdx;
+    const name = document.getElementById('edit-emp-name').value.trim();
+    const dept = document.getElementById('edit-emp-dept').value;
+    const pin = document.getElementById('edit-emp-pin').value.trim();
+    if(!name){ toast('❌ กรุณาใส่ชื่อ'); return; }
+    if(pin && (pin.length!==4||isNaN(pin))){ toast('❌ PIN ต้องเป็นตัวเลข 4 หลัก'); return; }
+    const emps = this.getEmps();
+    emps[i].name = name;
+    emps[i].dept = dept;
+    if(pin) emps[i].pin = pin;
+    this.saveEmps(emps);
+    closeMo('mo-edit-emp');
+    this.renderEmp();
+    toast('✅ แก้ไขพนักงานแล้ว');
+  },
+
+  editEmpPin(i) {
+    const emps=this.getEmps();
+    const pin=prompt(`แก้ไข PIN ของ ${emps[i].name}:`, '');
+    if(pin===null) return;
+    if(pin.length!==4||isNaN(pin)){ toast('❌ PIN ต้องเป็นตัวเลข 4 หลัก'); return; }
+    emps[i].pin=pin;
+    this.saveEmps(emps);
+    this.renderEmp();
+    toast('✅ เปลี่ยน PIN แล้ว');
+  },
+
+  exportEmps() {
+    const emps = this.getEmps();
+    if(!emps.length){ toast('❌ ไม่มีพนักงาน'); return; }
+    const data = JSON.stringify({emps, sys:this.sys, exported: new Date().toISOString()}, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `พนักงาน_${this.sys}_${new Date().toLocaleDateString('th-TH')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('✅ Export ' + emps.length + ' คน สำเร็จ');
+  },
+
+  importEmps(input) {
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        const emps = data.emps || data;
+        if(!Array.isArray(emps) || !emps.length){ toast('❌ ไฟล์ไม่ถูกต้อง'); return; }
+        this.saveEmps(emps);
+        this.renderEmp();
+        toast('✅ Import ' + emps.length + ' คน สำเร็จ');
+      } catch(err) { toast('❌ ไฟล์ไม่ถูกต้อง'); }
+      input.value = '';
+    };
+    reader.readAsText(file);
+  },
+
+  deleteEmp(i) {
+    const emps=this.getEmps();
+    const name=emps[i].name;
+    emps.splice(i,1);
+    this.saveEmps(emps);
+    this.renderEmp();
+    toast('🗑️ ลบ '+name);
+  },
+  openAddDept() {
+    const d=prompt('ชื่อแผนกใหม่:');
+    if(!d||!d.trim()) return;
+    const depts=this.getDepts();
+    depts.push(d.trim());
+    this.saveDepts(depts);
+    this.renderSettings();
+    toast('✅ เพิ่มแผนก '+d);
+  },
+
+  // ── LOG ──
+  renderLog() {
+    const log=this.getLog();
+    document.getElementById('s-log-list').innerHTML=log.length?
+      log.map(l=>`<div class="log-item">
+        <div class="log-who">📝 ${l.what}</div>
+        <div class="log-when">🕐 ${l.time} · ${l.date}</div>
+      </div>`).join(''):
+      '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">ยังไม่มีประวัติ</div>';
+  },
+
+  // ── SETTINGS ──
+  renderSettings() {
+    document.getElementById('s-target-inp').value=this.getTarget();
+    // Line list
+    const lines=this.getLines();
+    document.getElementById('s-line-list').innerHTML=lines.map((name,i)=>
+      `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8faff;border-radius:10px;margin-bottom:6px;border:1.5px solid #e2e8f0">
+        <span style="flex:1;font-size:13px;font-weight:700;color:#1e293b">${name}</span>
+        <button onclick="S.editLine(${i})" style="padding:4px 8px;border-radius:6px;border:1.5px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700">✏️</button>
+        <button onclick="S.deleteLine(${i})" style="padding:4px 8px;border-radius:6px;border:1.5px solid #dc2626;background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700">✕</button>
+      </div>`
+    ).join('');
+    // Dept list
+    const depts=this.getDepts();
+    document.getElementById('s-dept-list').innerHTML=depts.map((d,i)=>
+      `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8faff;border-radius:10px;margin-bottom:6px;border:1.5px solid #e2e8f0">
+        <span style="flex:1;font-size:13px;font-weight:700;color:#1e293b">${d}</span>
+        <button onclick="S.deleteDept(${i})" style="padding:4px 8px;border-radius:6px;border:1.5px solid #dc2626;background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700">✕</button>
+      </div>`
+    ).join('');
+  },
+
+  addLine() {
+    const name=document.getElementById('s-new-line').value.trim(); if(!name) return;
+    const lines=this.getLines();
+    lines.push(name);
+    this.saveLines(lines);
+    document.getElementById('s-new-line').value='';
+    this.renderLineTabs();
+    this.renderSettings();
+    toast('✅ เพิ่มไลน์ '+name);
+  },
+  editLine(i) {
+    const lines=this.getLines();
+    const name=prompt('แก้ไขชื่อไลน์:',lines[i]);
+    if(!name||!name.trim()) return;
+    lines[i]=name.trim();
+    this.saveLines(lines);
+    this.renderLineTabs();
+    this.renderSettings();
+    toast('✅ แก้ไขแล้ว');
+  },
+  deleteLine(i) {
+    const lines=this.getLines();
+    if(lines.length<=1){toast('❌ ต้องมีอย่างน้อย 1 ไลน์');return;}
+    if(!confirm('ลบไลน์ '+lines[i]+'?')) return;
+    lines.splice(i,1);
+    this.saveLines(lines);
+    if(this.curLine>=lines.length) this.curLine=0;
+    this.renderLineTabs();
+    this.renderSettings();
+    this.renderSched();
+    toast('🗑️ ลบไลน์แล้ว');
+  },
+  addDept() {
+    const name=document.getElementById('s-new-dept').value.trim(); if(!name) return;
+    const depts=this.getDepts();
+    depts.push(name);
+    this.saveDepts(depts);
+    document.getElementById('s-new-dept').value='';
+    this.renderSettings();
+    toast('✅ เพิ่มแผนก '+name);
+  },
+  deleteDept(i) {
+    const depts=this.getDepts();
+    if(depts.length<=1){toast('❌ ต้องมีอย่างน้อย 1 แผนก');return;}
+    depts.splice(i,1);
+    this.saveDepts(depts);
+    this.renderSettings();
+    toast('🗑️ ลบแผนกแล้ว');
+  },
+  changePin() {
+    const p=document.getElementById('s-new-pin').value.trim();
+    if(p.length!==4||isNaN(p)){toast('❌ รหัสต้องเป็นตัวเลข 4 หลัก');return;}
+    save(PIN_KEY,p);
+    document.getElementById('s-new-pin').value='';
+    toast('✅ เปลี่ยนรหัสแล้ว');
+  },
+
+  // ── TEAM ──
+  openTeam(lineIdx) {
+    this.teamEditLine=lineIdx;
+    this.teamEditTeam='A';
+    const lines=this.getLines();
+    document.getElementById('team-modal-title').textContent='👥 จัดการทีม — '+(lines[lineIdx]||'Line '+(lineIdx+1));
+    this.renderTeamModal();
+    openMo('mo-team', null);
+  },
+  renderTeamModal() {
+    const li=this.teamEditLine;
+    const teams=this.getTeams(li);
+    const cfg=this.getTeamCfg(li);
+    const wn=this.getWN(new Date());
+    const rot=Math.floor((wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
+    const auto={morning:['A','B','C'][rot%3],afternoon:['A','B','C'][(rot+1)%3],night:['A','B','C'][(rot+2)%3]};
+    let h=`
+    <div style="background:#f0f9ff;border-radius:10px;padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;font-weight:700;color:#0369a1">🔄 หมุนกะทุก</span>
+      <input type="number" min="1" max="52" value="${cfg.rotateSW||2}" id="t-sw" style="width:50px;padding:4px;border:2px solid #0369a1;border-radius:8px;font-size:14px;font-weight:700;text-align:center;font-family:inherit" onchange="S.saveRotate(this.value)">
+      <span style="font-size:12px;font-weight:700;color:#0369a1">สัปดาห์</span>
+    </div>
+    <div style="background:#f0fdf4;border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:12px;font-weight:700;color:#166534">
+      📅 สัปดาห์นี้: เช้า=ทีม${auto.morning} บ่าย=ทีม${auto.afternoon} ดึก=ทีม${auto.night}
+      <button onclick="S.autoLoad()" style="margin-left:6px;padding:3px 8px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">โหลดอัตโนมัติ</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">`;
+    ['A','B','C'].forEach(t=>{
+      const mb=(teams[t]||[]).length;
+      const active=t===this.teamEditTeam;
+      h+=`<button onclick="S.switchTeamTab('${t}')" style="flex:1;padding:8px;border-radius:10px;border:2px solid ${active?'#2563eb':'#e2e8f0'};background:${active?'#dbeafe':'#f8faff'};color:${active?'#1d4ed8':'#64748b'};font-size:13px;font-weight:800;font-family:inherit;cursor:pointer">ทีม ${t} (${mb})</button>`;
+    });
+    h+=`</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button onclick="S.loadTeam('morning','${this.teamEditTeam}')" style="flex:1;padding:7px;background:#f0fdf4;border:1.5px solid var(--green);border-radius:8px;font-size:11px;font-weight:700;color:#166534;font-family:inherit;cursor:pointer">→เช้า</button>
+      <button onclick="S.loadTeam('afternoon','${this.teamEditTeam}')" style="flex:1;padding:7px;background:#fff7ed;border:1.5px solid var(--gold);border-radius:8px;font-size:11px;font-weight:700;color:#92400e;font-family:inherit;cursor:pointer">→บ่าย</button>
+      <button onclick="S.loadTeam('night','${this.teamEditTeam}')" style="flex:1;padding:7px;background:#eff6ff;border:1.5px solid #3b82f6;border-radius:8px;font-size:11px;font-weight:700;color:#1e40af;font-family:inherit;cursor:pointer">→ดึก</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button onclick="S.openTeamPicker()" style="width:100%;padding:10px;background:#dbeafe;border:1.5px solid #2563eb;border-radius:10px;font-size:13px;font-weight:800;color:#1d4ed8;font-family:inherit;cursor:pointer">
+        ➕ เพิ่มสมาชิกหลายคน
+      </button>
+    </div>
+    <div style="max-height:180px;overflow-y:auto">`;
+    const members=teams[this.teamEditTeam]||[];
+    h+=members.length?members.map((name,i)=>
+      `<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f8faff;border-radius:8px;border:1.5px solid #e2e8f0;margin-bottom:5px">
+        <span style="flex:1;font-size:13px;font-weight:700;color:#0d1b3e">${name}</span>
+        <button onclick="S.removeTeamMember(${i})" style="padding:3px 8px;border-radius:6px;border:1.5px solid #fecaca;background:#fef2f2;color:var(--red);font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">✕</button>
+      </div>`
+    ).join(''):'<div style="text-align:center;padding:12px;color:#94a3b8;font-size:13px">ยังไม่มีสมาชิก</div>';
+    h+='</div>';
+    document.getElementById('team-modal-body').innerHTML=h;
+  },
+  switchTeamTab(t) { this.teamEditTeam=t; this.renderTeamModal(); },
+  saveRotate(v) {
+    const cfg=this.getTeamCfg(this.teamEditLine);
+    cfg.rotateSW=parseInt(v)||2;
+    cfg.startWeek=this.getWN(new Date());
+    this.saveTeamCfg(this.teamEditLine,cfg);
+    this.renderTeamModal();
+    toast('✅ หมุนทุก '+v+' สัปดาห์');
+  },
+  addTeamMember() {
+    const name=document.getElementById('t-mb-inp').value.trim(); if(!name) return;
+    const teams=this.getTeams(this.teamEditLine);
+    if(!teams[this.teamEditTeam]) teams[this.teamEditTeam]=[];
+    if(!teams[this.teamEditTeam].includes(name)) {
+      teams[this.teamEditTeam].push(name);
+      this.saveTeams(this.teamEditLine,teams);
+    }
+    document.getElementById('t-mb-inp').value='';
+    this.renderTeamModal();
+  },
+  removeTeamMember(i) {
+    const teams=this.getTeams(this.teamEditLine);
+    teams[this.teamEditTeam]?.splice(i,1);
+    this.saveTeams(this.teamEditLine,teams);
+    this.renderTeamModal();
+  },
+
+  openTeamTab() {
+    const el = document.getElementById('s-team-content');
+    if(!el) return;
+    const lines = this.getLines();
+    const depts = this.getDepts();
+    const TEAM_NAMES = ['A','B','C'];
+    let html = '';
+    lines.forEach((lineName, li) => {
+      const teams = this.getTeams(li);
+      const cfg = this.getTeamCfg(li);
+      html += `<div style="background:#fff;border-radius:14px;border:1.5px solid #e2e8f0;padding:14px;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:900;color:#1e3a5f;margin-bottom:12px">📋 ${lineName}</div>`;
+      TEAM_NAMES.forEach(team => {
+        const members = teams[team]||[];
+        html += `<div style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:13px;font-weight:800;color:#1e293b">ทีม ${team} (${members.length} คน)</div>
+            <button onclick="S.openTeamEdit(${li},'${team}')" 
+              style="padding:5px 12px;background:#dbeafe;border:1.5px solid #2563eb;border-radius:8px;font-size:11px;font-weight:800;color:#1d4ed8;font-family:inherit;cursor:pointer">✏️ แก้ไข</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;background:#f8faff;border-radius:8px;padding:6px">
+            ${members.length ? members.map(m=>`<span style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">${m}</span>`).join('') 
+            : '<span style="color:#94a3b8;font-size:11px">ยังไม่มีสมาชิก</span>'}
+          </div>
+        </div>`;
+      });
+      // Auto rotate settings
+      html += `<div style="background:#f0f9ff;border-radius:10px;padding:10px;margin-top:8px;border:1.5px solid #bae6fd">
+        <div style="font-size:12px;font-weight:800;color:#0369a1;margin-bottom:8px">🔄 Auto หมุนทีม</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;color:#475569">เริ่มจากทีม</span>
+          <select onchange="S.setTeamCfg(${li},'startTeam',this.value)" style="padding:4px 8px;border-radius:6px;border:1.5px solid #cbd5e1;font-size:12px;font-weight:700">
+            ${TEAM_NAMES.map(t=>`<option value="${t}" ${cfg.startTeam===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+          <span style="font-size:12px;color:#475569">หมุนทุก</span>
+          <input type="number" min="1" max="8" value="${cfg.rotateSW||2}" onchange="S.setTeamCfg(${li},'rotateSW',parseInt(this.value))"
+            style="width:50px;padding:4px;border-radius:6px;border:1.5px solid #cbd5e1;font-size:12px;font-weight:700;text-align:center">
+          <span style="font-size:12px;color:#475569">สัปดาห์</span>
+          <button onclick="S.autoLoadTeam(${li})" 
+            style="padding:6px 14px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer">▶ โหลดสัปดาห์นี้</button>
+        </div>
+        <div style="font-size:11px;color:#0369a1;margin-top:6px">สัปดาห์ปัจจุบัน: ทีม <strong>${this.getCurrentTeam(li)}</strong></div>
+      </div>
+      </div>`;
+    });
+    el.innerHTML = html || '<div style="text-align:center;padding:30px;color:#94a3b8">ยังไม่มี Line</div>';
+  },
+
+  setTeamCfg(li, key, val) {
+    const cfg = this.getTeamCfg(li);
+    cfg[key] = val;
+    this.saveTeamCfg(li, cfg);
+    this.openTeamTab();
+  },
+
+  getCurrentTeam(li) {
+    const cfg = this.getTeamCfg(li);
+    const rotateSW = cfg.rotateSW||2;
+    const startTeam = cfg.startTeam||'A';
+    const startWeek = cfg.startWeek||1;
+    const wn = this.getWN(this.curWeekStart);
+    const teams = ['A','B','C'];
+    const startIdx = teams.indexOf(startTeam);
+    const weeksPassed = Math.max(0, wn - startWeek);
+    const idx = (startIdx + Math.floor(weeksPassed/rotateSW)) % 3;
+    return teams[idx];
+  },
+
+  autoLoadTeam(li) {
+    const team = this.getCurrentTeam(li);
+    const teams = this.getTeams(li);
+    const members = teams[team]||[];
+    if(!members.length){ toast('❌ ทีม '+team+' ไม่มีสมาชิก'); return; }
+    const emps = this.getEmps();
+    const depts = this.getDepts();
+    const raw = JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+li)||'{}');
+    if(!raw[this.curWKey]) raw[this.curWKey] = {};
+    const wk = raw[this.curWKey];
+    // ล้างแล้วใส่ใหม่
+    members.forEach((name, idx) => {
+      const emp = emps.find(e=>e.name===name);
+      if(!emp) return;
+      const dept = emp.dept || depts[0];
+      if(!wk[dept]) wk[dept] = {};
+      for(let di=0;di<7;di++) {
+        if(!wk[dept][di]) wk[dept][di] = {morning:[],afternoon:[],night:[]};
+        // กะเช้าเป็น default
+        if(!wk[dept][di].morning.find(w=>w.name===name)) {
+          wk[dept][di].morning.push({name, ot:false, otHrs:4, av:emp.av||0});
+        }
+      }
+    });
+    localStorage.setItem('fac_sched_'+this.sys+'_'+li, JSON.stringify(raw));
+    if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk);
+    const prevLine = this.curLine;
+    this.curLine = li;
+    syncOT(this.sys, li, wk);
+    this.curLine = prevLine;
+    toast('✅ โหลดทีม '+team+' ลงสัปดาห์นี้แล้ว ('+members.length+' คน)');
+    this.openTeamTab();
+  },
+
+
+  _teamPickerSel: new Set(),
+
+  openTeamPicker() {
+    const sys = this.sys;
+    const li = this.teamEditLine;
+    const team = this.teamEditTeam;
+    const storeKey = 'fac_teams_'+sys+'_'+li;
+    const teams = JSON.parse(localStorage.getItem(storeKey)||'{"A":[],"B":[],"C":[]}');
+    const currentMembers = new Set(teams[team]||[]);
+    const usedAll = new Set();
+    Object.values(teams).forEach(ms=>ms.forEach(m=>usedAll.add(m)));
+    const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+    const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+    const empMap = new Map();
+    [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
+    const emps = [...empMap.values()];
+    const sel = new Set();
+
+    // สร้าง overlay ด้วย createElement
+    const overlay = document.createElement('div');
+    overlay.id = 'team-picker-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:flex-end';
+
+    const sheet = document.createElement('div');
+    sheet.style.cssText = 'background:#fff;width:100%;max-height:80vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column';
+
+    // header
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:12px 16px;border-bottom:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between';
+    hdr.innerHTML = '<div style="font-size:15px;font-weight:900;color:#1e293b">เพิ่มสมาชิก ทีม '+team+'</div>';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'width:28px;height:28px;border-radius:50%;border:none;background:#f1f5f9;font-size:14px;cursor:pointer';
+    closeBtn.onclick = () => overlay.remove();
+    hdr.appendChild(closeBtn);
+    sheet.appendChild(hdr);
+
+    // list
+    const list = document.createElement('div');
+    list.style.cssText = 'overflow-y:auto;flex:1;padding:8px 12px';
+
+    const renderList = () => {
+      list.innerHTML = '';
+      emps.forEach(e => {
+        const inCurrent = currentMembers.has(e.name);
+        const inOther = !inCurrent && usedAll.has(e.name);
+        const isSel = sel.has(e.name);
+        const row = document.createElement('div');
+        row.style.cssText = 'padding:10px;border-radius:10px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;'+
+          (inCurrent||inOther ? 'opacity:.5;background:#f8faff;border:1.5px solid #e2e8f0;' :
+           isSel ? 'background:#eff6ff;border:1.5px solid #2563eb;cursor:pointer;' :
+           'background:#fff;border:1.5px solid #e2e8f0;cursor:pointer;');
+        const nameEl = document.createElement('span');
+        nameEl.style.cssText = 'font-size:13px;font-weight:700;color:'+(inCurrent?'#166534':inOther?'#94a3b8':'#1e293b');
+        nameEl.textContent = e.name+' ('+e.dept+')';
+        row.appendChild(nameEl);
+        if(inCurrent){
+          const badge = document.createElement('span');
+          badge.style.cssText = 'font-size:11px;color:#16a34a;font-weight:800';
+          badge.textContent = '✓ ในทีมแล้ว';
+          row.appendChild(badge);
+        } else if(inOther){
+          const badge = document.createElement('span');
+          badge.style.cssText = 'font-size:11px;color:#94a3b8';
+          badge.textContent = 'ทีมอื่น';
+          row.appendChild(badge);
+        } else {
+          const chk = document.createElement('span');
+          chk.style.cssText = 'width:22px;height:22px;border-radius:50%;border:2px solid '+(isSel?'#2563eb':'#e2e8f0')+';display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#2563eb;flex-shrink:0';
+          chk.textContent = isSel ? '✓' : '';
+          row.appendChild(chk);
+          row.onclick = () => {
+            if(sel.has(e.name)) sel.delete(e.name);
+            else sel.add(e.name);
+            renderList();
+            confirmBtn.textContent = sel.size > 0 ? '✅ เพิ่ม '+sel.size+' คน' : '✅ เพิ่มที่เลือก';
+            confirmBtn.style.background = sel.size > 0 ? '#2563eb' : '#94a3b8';
+            confirmBtn.style.cursor = sel.size > 0 ? 'pointer' : 'not-allowed';
+          };
+        }
+        list.appendChild(row);
+      });
+    };
+    renderList();
+    sheet.appendChild(list);
+
+    // footer + confirm button
+    const footer = document.createElement('div');
+    footer.style.cssText = 'padding:12px;border-top:1.5px solid #e2e8f0';
+    const confirmBtn = document.createElement('button');
+    confirmBtn.textContent = '✅ เพิ่มที่เลือก';
+    confirmBtn.style.cssText = 'width:100%;padding:13px;background:#94a3b8;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:inherit;cursor:not-allowed';
+    confirmBtn.onclick = () => {
+      if(!sel.size) return;
+      try {
+        const t2 = JSON.parse(localStorage.getItem(storeKey)||'{"A":[],"B":[],"C":[]}');
+        if(!t2[team]) t2[team] = [];
+        sel.forEach(name => { if(!t2[team].includes(name)) t2[team].push(name); });
+        localStorage.setItem(storeKey, JSON.stringify(t2));
+        try { if(fbDb) fbDb.ref('factory/'+sys+'/teams/'+li).set(t2); } catch(e){}
+        overlay.remove();
+        toast('✅ เพิ่ม '+sel.size+' คน เข้าทีม '+team);
+        S.openTeamTab();
+      } catch(e) {
+        toast('❌ เกิดข้อผิดพลาด: '+e.message);
+      }
+    };
+    footer.appendChild(confirmBtn);
+    sheet.appendChild(footer);
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+  },
+
+
+  openTeamEdit(li, team) {
+    this.teamEditLine = li;
+    this.teamEditTeam = team;
+    this.renderTeamModal();
+    openMo('mo-team', null);
+  },
+
+  loadTeam(shift,teamName) {
+    const teams=this.getTeams(this.teamEditLine);
+    const members=teams[teamName]||[];
+    if(!members.length){toast('❌ ทีม '+teamName+' ไม่มีสมาชิก');return;}
+    const sched=this.getSched(this.curLine);
+    const emps=this.getEmps();
+    // Load to all 7 days
+    for(let di=0;di<7;di++) {
+      const dept=this.getDepts()[0]; // first dept
+      if(!sched[dept]) sched[dept]={};
+      if(!sched[dept][di]&&!sched[dept][di]) sched[dept][di]={morning:[],afternoon:[],night:[]};
+    if(!sched[dept][di]) sched[dept][di]=sched[dept][di]||{morning:[],afternoon:[],night:[]};
+      members.forEach(name=>{
+        if(!sched[dept][di][shift].find(w=>w.name===name)) {
+          const emp=emps.find(e=>e.name===name);
+          sched[dept][di][shift].push({name,ot:false,otHrs:4,av:emp?.av||0});
+        }
+      });
+    }
+    this.saveSched(this.curLine,sched);
+    this.renderSched(); this.updateOTCards();
+    toast('✅ โหลดทีม '+teamName+' → '+SHIFT_TH[shift]);
+  },
+  autoLoad() {
+    const cfg=this.getTeamCfg(this.teamEditLine);
+    const wn=this.getWN(new Date());
+    const rot=Math.floor((wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
+    const auto={morning:['A','B','C'][rot%3],afternoon:['A','B','C'][(rot+1)%3],night:['A','B','C'][(rot+2)%3]};
+    ['morning','afternoon','night'].forEach(sh=>this.loadTeam(sh,auto[sh]));
+    toast('✅ Auto โหลดทีมทั้งหมด');
+  }
+};
+
+
+// ══════════════════════════════════════════════════════
+// OT RESULT MODAL
+// ══════════════════════════════════════════════════════
+const OTResult = {
+  isOver: false,
+  savedSched: null,
+  savedLine: 0,
+
+  show(pct, tgt, sched, lineIdx) {
+    this.isOver = pct > tgt;
+    this.savedSched = sched;
+    this.savedLine = lineIdx;
+    const box = document.getElementById('ot-result-box');
+    const btn = document.getElementById('ot-confirm-btn');
+    const cls = this.isOver ? 'over' : 'ok';
+    box.className = cls;
+    btn.className = cls;
+    document.getElementById('ot-result-icon').textContent = this.isOver ? '⚠️' : '✅';
+    document.getElementById('ot-result-pct').textContent = pct + '%';
+    document.getElementById('ot-result-msg').textContent = this.isOver ? '⚠️ OT เกิน Target!' : '✅ OT อยู่ใน Target';
+    document.getElementById('ot-result-by').textContent = '👤 โดย: ' + (curUser?.name || 'ไม่ทราบ');
+    document.getElementById('ot-result-target').textContent = 'Target: ' + tgt + '%';
+    document.getElementById('ot-cmt-label').textContent = this.isOver ? '💬 ระบุเหตุผล (บังคับ)' : '💬 Comment (ถ้ามี)';
+    document.getElementById('ot-cmt-txt').value = '';
+    document.getElementById('ot-cmt-err').textContent = '';
+    btn.disabled = this.isOver; // ถ้าเกิน target ต้องใส่ comment ก่อน
+    document.getElementById('mo-ot-result').classList.add('on');
+  },
+
+  onInput() {
+    const txt = document.getElementById('ot-cmt-txt').value.trim();
+    const btn = document.getElementById('ot-confirm-btn');
+    if(this.isOver) {
+      btn.disabled = txt.length === 0;
+      document.getElementById('ot-cmt-err').textContent = txt.length === 0 ? '❌ กรุณาระบุเหตุผลก่อนบันทึก' : '';
+    }
+  },
+
+  confirm() {
+    const txt = document.getElementById('ot-cmt-txt').value.trim();
+    if(this.isOver && !txt) return;
+    // บันทึก sched จริง
+    S.saveSched(this.savedLine, this.savedSched);
+    syncOT(S.sys, this.savedLine, this.savedSched);
+    // บันทึก comment ลงกราฟ (พร้อมชื่อผู้จัด)
+    if(txt) {
+      const now = new Date();
+      const yr = now.getFullYear() + 543;
+      const mi = now.getMonth();
+      const now2 = new Date();
+      const dateStr = now2.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+      const timeStr = now2.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+      const fullCmt = `[${curUser?.name||'Admin'} · ${dateStr} ${timeStr}] ${txt}`;
+      S.saveGraphComment(yr, mi, fullCmt);
+    }
+    // Log
+    S.addLog('save', `บันทึกตาราง Line ${S.getLines()[this.savedLine]} (OT ${document.getElementById('ot-result-pct').textContent})`);
+    document.getElementById('mo-ot-result').classList.remove('on');
+    S.renderSched();
+    S.updateOTCards();
+    toast(txt ? '💾 บันทึกพร้อม comment แล้ว' : '💾 บันทึกแล้ว');
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+function openMo(id, event) {
+  const el = document.getElementById(id);
+  el.classList.add('on');
+  // คำนวณ padding-top ให้ modal ขึ้นใกล้จุดที่คลิก
+  if(event) {
+    const clickY = event.clientY;
+    const winH = window.innerHeight;
+    const md = el.querySelector('.md');
+    if(md) {
+      // ถ้าคลิกตรงกลางหรือข้างบน ให้ modal อยู่ใต้จุดคลิก
+      // ถ้าคลิกข้างล่าง ให้ modal อยู่เหนือจุดคลิก
+      let pt = Math.max(20, clickY - 60);
+      if(pt + 400 > winH) pt = Math.max(20, winH - 420);
+      el.style.paddingTop = pt + 'px';
+    }
+  } else {
+    el.style.paddingTop = '60px';
+  }
+}
+function closeMo(id) { document.getElementById(id).classList.remove('on'); }
+let _tT;
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(_tT); _tT=setTimeout(()=>el.classList.remove('on'),2500);
+}
+// Back to top on visibility change
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible') window.scrollTo(0,0);
+});
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+function startApp() {
+  try { document.getElementById('h-yr-lbl').textContent = H.yr+' (พ.ศ.)'; } catch(e){}
+  try { initFB(); } catch(e) { console.log('FB:', e); }
+  try { H.renderCharts(); } catch(e) { console.log('charts:', e); }
+  try { H.loadMascot(); } catch(e) { console.log('mascot:', e); }
+  setTimeout(()=>{ try{fbSync('proc');}catch(e){} try{fbSync('fill');}catch(e){} }, 2000);
+}
+if(document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
+</script>
+
+<!-- OT Result Modal หลังบันทึก -->
+<div class="pin-mo" id="mo-ot-result">
+  <div id="ot-result-box" style="background:#fff;border-radius:20px;padding:24px 20px 20px;width:100%;max-width:360px;animation:pop .2s ease">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:52px;margin-bottom:8px" id="ot-result-icon">✅</div>
+      <div style="font-size:28px;font-weight:900;margin-bottom:4px" id="ot-result-pct">0%</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:2px" id="ot-result-msg">บันทึกสำเร็จ</div>
+      <div style="font-size:12px;opacity:.6" id="ot-result-by">โดย: -</div>
+      <div style="font-size:11px;opacity:.5;margin-top:4px" id="ot-result-target">Target: 15%</div>
+    </div>
+    <!-- Comment -->
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px" id="ot-cmt-label">💬 Comment</label>
+      <textarea id="ot-cmt-txt" rows="3" placeholder="ใส่ comment/เหตุผล..."
+        style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;outline:none;transition:border-color .2s"
+        oninput="OTResult.onInput()"></textarea>
+      <div style="font-size:12px;color:#ef4444;font-weight:700;margin-top:4px;min-height:18px" id="ot-cmt-err"></div>
+    </div>
+    <!-- Confirm button -->
+    <button id="ot-confirm-btn" onclick="OTResult.confirm()"
+      style="width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:900;font-family:inherit;color:#fff;transition:all .2s">
+      💾 บันทึก
+    </button>
+  </div>
+</div>
+
+<!-- Print Area -->
+<div id="print-area">
+  <div id="print-content"></div>
+</div>
+
+<!-- Print Select Modal -->
+<div class="mo" id="mo-print-select" onclick="if(event.target===this)closeMo('mo-print-select')">
+  <div class="md">
+    <div class="md-handle"></div>
+    <div class="mdt">🖨️ พิมพ์บิล OT</div>
+
+    <label style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:6px;display:block">เลือกแผนก</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="ps-proc" onclick="H.setPrintSys('proc')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:13px;font-weight:800;font-family:inherit">⚙️ Process</button>
+      <button id="ps-fill" onclick="H.setPrintSys('fill')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:13px;font-weight:800;font-family:inherit">🏭 Filling</button>
+      <button id="ps-all" onclick="H.setPrintSys('all')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:13px;font-weight:800;font-family:inherit">📋 ทั้งหมด</button>
+    </div>
+
+    <label style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:6px;display:block">เลือกกะ</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="ps-morning" onclick="H.setPrintShift('morning')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:13px;font-weight:800;font-family:inherit">🌅 เช้า</button>
+      <button id="ps-afternoon" onclick="H.setPrintShift('afternoon')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:13px;font-weight:800;font-family:inherit">☀️ บ่าย</button>
+      <button id="ps-night" onclick="H.setPrintShift('night')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:13px;font-weight:800;font-family:inherit">🌙 ดึก</button>
+      <button id="ps-allshift" onclick="H.setPrintShift('all')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:13px;font-weight:800;font-family:inherit">📋 ทั้งหมด</button>
+    </div>
+
+    <label style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:6px;display:block">เลือกวัน</label>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="ps-today" onclick="H.setPrintDay('today')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:13px;font-weight:800;font-family:inherit">📅 วันนี้</button>
+      <button id="ps-week" onclick="H.setPrintDay('week')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:13px;font-weight:800;font-family:inherit">📆 สัปดาห์นี้</button>
+    </div>
+
+    <div class="mdf">
+      <button class="bcanc" onclick="closeMo('mo-print-select')">ยกเลิก</button>
+      <button class="bconf" onclick="H.doPrint()">🖨️ พิมพ์เลย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mascot Menu -->
+<div class="mo" id="mo-mascot" onclick="if(event.target===this)closeMo('mo-mascot')">
+  <div class="md">
+    <div class="md-handle"></div>
+    <div class="mdt">🎨 จัดการ Mascot Slideshow</div>
+
+    <!-- รายการรูปปัจจุบัน -->
+    <div style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:8px">
+      รูปทั้งหมด (<span id="mascot-count">0</span>/10)
+    </div>
+    <div id="mascot-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;min-height:60px"></div>
+
+    <!-- เพิ่มรูป -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button onclick="document.getElementById('mascot-file').click()"
+        style="flex:1;min-width:120px;padding:10px;background:#f0f9ff;border:2px dashed #93c5fd;border-radius:12px;color:#2563eb;font-size:12px;font-weight:700">
+        📷 เพิ่มรูปจากเครื่อง
+      </button>
+      <input type="file" id="mascot-file" accept="image/*" multiple style="display:none" onchange="H.uploadMascots(event)">
+    </div>
+
+    <!-- เพิ่ม Emoji -->
+    <div style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:8px">เพิ่ม Emoji</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      <button onclick="H.addEmoji('🍦')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍦</button>
+      <button onclick="H.addEmoji('🍧')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍧</button>
+      <button onclick="H.addEmoji('🍨')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍨</button>
+      <button onclick="H.addEmoji('🍡')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍡</button>
+      <button onclick="H.addEmoji('🧁')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🧁</button>
+      <button onclick="H.addEmoji('🍰')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍰</button>
+      <button onclick="H.addEmoji('🎂')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🎂</button>
+      <button onclick="H.addEmoji('🍭')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍭</button>
+      <button onclick="H.addEmoji('🍬')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🍬</button>
+      <button onclick="H.addEmoji('🏭')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🏭</button>
+      <button onclick="H.addEmoji('⚙️')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">⚙️</button>
+      <button onclick="H.addEmoji('🤖')" style="font-size:24px;width:42px;height:42px;border-radius:10px;border:2px solid #e2e8f0;background:#f8faff">🤖</button>
+    </div>
+
+    <!-- ตั้งเวลาสลับ -->
+    <div style="display:flex;align-items:center;gap:8px;background:#f8faff;border-radius:12px;padding:10px;margin-bottom:14px">
+      <span style="font-size:12px;font-weight:700;color:#334e8a">⏱ สลับทุก</span>
+      <input type="number" id="mascot-interval" min="1" max="30" value="3"
+        style="width:50px;padding:4px;border:2px solid #cbd5e0;border-radius:8px;font-size:14px;font-weight:700;text-align:center;font-family:inherit">
+      <span style="font-size:12px;font-weight:700;color:#334e8a">วินาที</span>
+    </div>
+
+    <div class="mdf">
+      <button class="bcanc" onclick="closeMo('mo-mascot')">ปิด</button>
+      <button class="bconf" onclick="H.saveMascotSettings()">✅ บันทึก</button>
+    </div>
+  </div>
+</div>
+<script>
+// ══════════════════════════════════════════════════════
+// PWA
+// ══════════════════════════════════════════════════════
+(function(){
+  // SVG icon สำหรับ PWA (ไอศกรีมน่ารัก)
+  const DEFAULT_ICON_URL = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzBhMTYyOCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMjQwIiBmaWxsPSJ1cmwoI2JnKSIvPjxkZWZzPjxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI0MCUiIGN5PSI0MCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxZTQwYWYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwYTE2MjgiLz48L3JhZGlhbEdyYWRpZW50PjwvZGVmcz48IS0tIGNvbmUgLS0+PHBvbHlnb24gcG9pbnRzPSIyNTYsNDIwIDE4MCwyMzAgMzMyLDIzMCIgZmlsbD0iI2Y1OWUwYiIvPjxwb2x5Z29uIHBvaW50cz0iMjU2LDQyMCAxODAsMjMwIDIxOCwyMzAiIGZpbGw9IiNkOTc3MDYiIG9wYWNpdHk9Ii41Ii8+PCEtLSBzY29vcCAxIHBpbmsgLS0+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjAwIiByPSI3NSIgZmlsbD0iI2Y5YThkNCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjIwMCIgcj0iNzUiIGZpbGw9InVybCgjczEpIi8+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJzMSIgY3g9IjM1JSIgY3k9IjM1JSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZjZTdmMyIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2VjNDg5OSIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjwhLS0gc2Nvb3AgMiBtaW50IC0tPjxjaXJjbGUgY3g9IjE5NiIgY3k9IjE3NSIgcj0iNjAiIGZpbGw9InVybCgjczIpIi8+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJzMiIgY3g9IjM1JSIgY3k9IjM1JSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2QxZmFlNSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzEwYjk4MSIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjwhLS0gc2Nvb3AgMyB5ZWxsb3cgLS0+PGNpcmNsZSBjeD0iMzE2IiBjeT0iMTc1IiByPSI2MCIgZmlsbD0idXJsKCNzMykiLz48ZGVmcz48cmFkaWFsR3JhZGllbnQgaWQ9InMzIiBjeD0iMzUlIiBjeT0iMzUlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmVmM2M3Ii8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZjU5ZTBiIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PCEtLSBzcHJpbmtsZXMgLS0+PHJlY3QgeD0iMjMwIiB5PSIxODUiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1IiByeD0iMiIgZmlsbD0iI2VmNDQ0NCIgdHJhbnNmb3JtPSJyb3RhdGUoLTMwIDIzNyAxODcpIi8+PHJlY3QgeD0iMjcwIiB5PSIxOTUiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1IiByeD0iMiIgZmlsbD0iIzNiODJmNiIgdHJhbnNmb3JtPSJyb3RhdGUoMjAgMjc3IDE5NykiLz48cmVjdCB4PSIyNDgiIHk9IjIxMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjUiIHJ4PSIyIiBmaWxsPSIjOGI1Y2Y2IiB0cmFuc2Zvcm09InJvdGF0ZSgtMTAgMjU1IDIxMikiLz48cmVjdCB4PSIxODUiIHk9IjE2NSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjQiIHJ4PSIyIiBmaWxsPSIjZjU5ZTBiIiB0cmFuc2Zvcm09InJvdGF0ZSgxNSAxOTEgMTY3KSIvPjxyZWN0IHg9IjMxMCIgeT0iMTYwIiB3aWR0aD0iMTIiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNlYzQ4OTkiIHRyYW5zZm9ybT0icm90YXRlKC0yMCAzMTYgMTYyKSIvPjwhLS0gc2hpbmUgLS0+PGVsbGlwc2UgY3g9IjIzNiIgY3k9IjE4MiIgcng9IjEyIiByeT0iOCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuMzUpIiB0cmFuc2Zvcm09InJvdGF0ZSgtMzAgMjM2IDE4MikiLz48ZWxsaXBzZSBjeD0iMTg0IiBjeT0iMTYwIiByeD0iMTAiIHJ5PSI3IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LC4zNSkiIHRyYW5zZm9ybT0icm90YXRlKC0yMCAxODQgMTYwKSIvPjxlbGxpcHNlIGN4PSIzMDQiIGN5PSIxNTgiIHJ4PSIxMCIgcnk9IjciIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjM1KSIgdHJhbnNmb3JtPSJyb3RhdGUoMTUgMzA0IDE1OCkiLz48IS0tIHdhZmZsZSBsaW5lcyAtLT48bGluZSB4MT0iMjAwIiB5MT0iMjQwIiB4Mj0iMzEyIiB5Mj0iMjQwIiBzdHJva2U9IiNkOTc3MDYiIHN0cm9rZS13aWR0aD0iMi41IiBvcGFjaXR5PSIuNiIvPjxsaW5lIHgxPSIxOTIiIHkxPSIyNTUiIHgyPSIzMjAiIHkyPSIyNTUiIHN0cm9rZT0iI2Q5NzcwNiIgc3Ryb2tlLXdpZHRoPSIyLjUiIG9wYWNpdHk9Ii42Ii8+PGxpbmUgeDE9IjIyOCIgeTE9IjIzMCIgeDI9IjIxMCIgeTI9IjM0MCIgc3Ryb2tlPSIjZDk3NzA2IiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iLjUiLz48bGluZSB4MT0iMjU2IiB5MT0iMjMwIiB4Mj0iMjU2IiB5Mj0iMzgwIiBzdHJva2U9IiNkOTc3MDYiIHN0cm9rZS13aWR0aD0iMi41IiBvcGFjaXR5PSIuNSIvPjxsaW5lIHgxPSIyODQiIHkxPSIyMzAiIHgyPSIzMDIiIHkyPSIzNDAiIHN0cm9rZT0iI2Q5NzcwNiIgc3Ryb2tlLXdpZHRoPSIyLjUiIG9wYWNpdHk9Ii41Ii8+PC9zdmc+';
+  function makeIcon(emoji, size) {
+    // ใช้ SVG ไอศกรีมเป็น default icon ของแอพ
+    return DEFAULT_ICON_URL;
+  }
+
+  function initPWA() {
+    const md = JSON.parse(localStorage.getItem('fac_mascot_v2')||'{"slides":[{"type":"emoji","val":"🍦"}]}');
+    const s0 = (md.slides||[])[0]||{type:'emoji',val:'🍦'};
+    const iconUrl = s0.type==='img' && s0.val ? s0.val : DEFAULT_ICON_URL;
+
+    // Apple touch icon
+    const ai = document.getElementById('pwa-icon');
+    if(ai && iconUrl) ai.href = iconUrl;
+
+    // Dynamic manifest
+    const manifest = {
+      name:'ระบบตารางกะโรงงาน', short_name:'ตารางกะ',
+      description:'Production Scheduling System',
+      start_url:'./', display:'standalone',
+      background_color:'#0a1628', theme_color:'#0a1628',
+      orientation:'portrait',
+      icons: iconUrl ? [
+        {src:iconUrl,sizes:'192x192',type:'image/png',purpose:'any maskable'},
+        {src:iconUrl,sizes:'512x512',type:'image/png',purpose:'any maskable'}
+      ] : []
+    };
+    try {
+      const blob = new Blob([JSON.stringify(manifest)],{type:'application/json'});
+      const link = document.getElementById('pwa-manifest');
+      if(link) link.href = URL.createObjectURL(blob);
+    } catch(e){}
+
+    // Service Worker
+    if('serviceWorker' in navigator) {
+      const sw = `const CACHE='factory-v2';
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET') return;
+  e.respondWith(caches.open(CACHE).then(c=>c.match(e.request).then(r=>{
+    return r||fetch(e.request).then(res=>{c.put(e.request,res.clone());return res;});
+  })));
+});`;
+      try {
+        const swBlob = new Blob([sw],{type:'application/javascript'});
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+      } catch(e){}
+    }
+  }
+
+  if(document.readyState==='complete') initPWA();
+  else window.addEventListener('load',initPWA);
+
+  let _dp = null;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); _dp=e;
+    const b=document.getElementById('pwa-install-btn');
+    if(b) b.style.display='flex';
+  });
+  window.addEventListener('appinstalled',()=>{
+    const b=document.getElementById('pwa-install-btn');
+    if(b) b.style.display='none';
+    _dp=null;
+    if(typeof toast==='function') toast('✅ ติดตั้งแอพสำเร็จ!');
+  });
+  window.installPWA=function(){
+    if(_dp){ _dp.prompt(); _dp.userChoice.then(()=>{_dp=null;}); }
+  };
+})();
+</script>
+
+<!-- Print Schedule Modal -->
+<div class="mo" id="mo-print-sched" onclick="if(event.target===this)closeMo('mo-print-sched')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-handle"></div>
+    <div class="mdt">🖨️ พิมพ์ตารางกะ</div>
+    <label style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:6px;display:block">เลือกช่วงเวลา</label>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="ps-day-btn" onclick="S.setPrintSchedType('day')"
+        style="flex:1;padding:12px;border-radius:12px;border:2px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
+        📅 รายวัน
+      </button>
+      <button id="ps-week-btn" onclick="S.setPrintSchedType('week')"
+        style="flex:1;padding:12px;border-radius:12px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
+        📆 รายสัปดาห์
+      </button>
+    </div>
+    <!-- เลือกวัน (แสดงเมื่อเลือกรายวัน) -->
+    <div id="ps-day-select" style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#334e8a;margin-bottom:6px;display:block">เลือกวัน</label>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button onclick="S.setPrintSchedDay(0)" data-day="0" style="padding:7px 10px;border-radius:8px;border:2px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">จ.</button>
+        <button onclick="S.setPrintSchedDay(1)" data-day="1" style="padding:7px 10px;border-radius:8px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">อ.</button>
+        <button onclick="S.setPrintSchedDay(2)" data-day="2" style="padding:7px 10px;border-radius:8px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">พ.</button>
+        <button onclick="S.setPrintSchedDay(3)" data-day="3" style="padding:7px 10px;border-radius:8px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">พฤ.</button>
+        <button onclick="S.setPrintSchedDay(4)" data-day="4" style="padding:7px 10px;border-radius:8px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">ศ.</button>
+        <button onclick="S.setPrintSchedDay(5)" data-day="5" style="padding:7px 10px;border-radius:8px;border:2px solid #e2e8f0;background:#f8faff;color:#64748b;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">ส.</button>
+        
+      </div>
+    </div>
+    <div class="mdf">
+      <button class="bcanc" onclick="closeMo('mo-print-sched')">ยกเลิก</button>
+      <button class="bconf" onclick="S.doPrintSched()">🖨️ พิมพ์เลย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sched Preview Modal -->
+<div class="mo" id="mo-sched-preview" onclick="if(event.target===this)closeMo('mo-sched-preview')">
+  <div class="md" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto;border-radius:16px">
+    <div class="md-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="mdt" style="margin-bottom:0">🖨️ Preview ตารางกะ</div>
+      <button onclick="S.confirmPrintSched()" style="padding:8px 16px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer">พิมพ์ ▶</button>
+    </div>
+    <!-- preview content -->
+    <div id="sched-preview-content" style="background:#fff;padding:14px;border-radius:10px;border:1.5px solid #e2e8f0;font-family:'Sarabun',sans-serif;font-size:12px;color:#000"></div>
+    <div class="mdf" style="margin-top:12px">
+      <button class="bcanc" onclick="closeMo('mo-sched-preview')">ยกเลิก</button>
+      <button class="bconf" onclick="S.confirmPrintSched()">🖨️ พิมพ์เลย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="mo" id="mo-edit-emp" onclick="if(event.target===this)closeMo('mo-edit-emp')">
+  <div class="md" onclick="event.stopPropagation()">
+    <div class="md-handle"></div>
+    <div class="mdt">✏️ แก้ไขพนักงาน</div>
+    <label>ชื่อ</label>
+    <input type="text" id="edit-emp-name" placeholder="ชื่อพนักงาน..." maxlength="30">
+    <label>แผนก</label>
+    <select id="edit-emp-dept"></select>
+    <label>PIN (4 หลัก)</label>
+    <input type="password" id="edit-emp-pin" placeholder="ตัวเลข 4 หลัก..." maxlength="4" inputmode="numeric">
+    <div class="mdf">
+      <button class="bcanc" onclick="closeMo('mo-edit-emp')">ยกเลิก</button>
+      <button class="bconf" onclick="S.saveEditEmp()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
