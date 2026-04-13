@@ -491,7 +491,8 @@ tr.dept-row td{border-top:3px solid #000!important}
         </div>
       </div>
       <div class="mini-wrap" id="h-total-chart" onclick="event.stopPropagation()"></div>
-      <button onclick="(()=>{let t='';['proc','fill'].forEach(s=>{const r=JSON.parse(localStorage.getItem('fac_sched_'+s+'_0')||'{}');Object.keys(r).forEach(k=>{t+=s+':'+k+'\n';});});alert(t||'ไม่มีข้อมูล');})()" style="width:100%;margin-top:8px;padding:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:11px;font-family:inherit;cursor:pointer">🔍 ดู Keys</button>
+      <div id="h-keys-out" style="display:none;background:rgba(0,0,0,.4);padding:8px;border-radius:8px;margin-top:6px;font-size:11px;color:#fff;word-break:break-all;user-select:text;-webkit-user-select:text"></div>
+      <button onclick="(()=>{let t='';['proc','fill'].forEach(s=>{const r=JSON.parse(localStorage.getItem('fac_sched_'+s+'_0')||'{}');Object.keys(r).forEach(k=>{t+=s+':'+k+'\n';});});const el=document.getElementById('h-keys-out');el.style.display='block';el.textContent=t||'ไม่มีข้อมูล';})()" style="width:100%;margin-top:8px;padding:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:11px;font-family:inherit;cursor:pointer">🔍 ดู Keys</button>
       <div class="legend" style="margin-top:8px">
         <div class="leg-item"><div class="leg-dot bar-ok"></div>ไม่เกิน Target</div>
         <div class="leg-item"><div class="leg-dot bar-over"></div>เกิน Target</div>
@@ -3838,7 +3839,13 @@ const S = {
       </div>
       </div>`;
     });
-    el.innerHTML = html || '<div style="text-align:center;padding:30px;color:#94a3b8">ยังไม่มี Line</div>';
+    // เพิ่มปุ่มโหลดทุก Line ด้านบน
+    const loadAllBtn = `<div style="margin-bottom:12px">
+      <button onclick="S.autoLoadAllLines()" style="width:100%;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
+        ▶▶ โหลดทุก Line พร้อมกัน
+      </button>
+    </div>`;
+    el.innerHTML = (html ? loadAllBtn + html : '<div style="text-align:center;padding:30px;color:#94a3b8">ยังไม่มี Line</div>');
   },
 
   setTeamCfg(li, key, val) {
@@ -3859,6 +3866,68 @@ const S = {
     const weeksPassed = Math.max(0, wn - startWeek);
     const idx = (startIdx + Math.floor(weeksPassed/rotateSW)) % 3;
     return teams[idx];
+  },
+
+
+  autoLoadAllLines() {
+    const lines = this.getLines();
+    let loaded = 0;
+    lines.forEach((lineName, li) => {
+      const team = this.getCurrentTeam(li);
+      const teams = this.getTeams(li);
+      const members = teams[team]||[];
+      if(!members.length) return;
+
+      const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+      const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+      const empMap = new Map();
+      [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
+
+      const depts = JSON.parse(localStorage.getItem('fac_depts_'+this.sys)||'null') || ['แผนก 1'];
+      const storeKey = 'fac_sched_'+this.sys+'_'+li;
+      const raw = JSON.parse(localStorage.getItem(storeKey)||'{}');
+      if(!raw[this.curWKey]) raw[this.curWKey] = {};
+      const wk = raw[this.curWKey];
+
+      depts.forEach(d=>{ if(!wk[d]) wk[d]={}; for(let di=0;di<6;di++){ const dk=String(di); if(!wk[d][dk]) wk[d][dk]={morning:[],afternoon:[],night:[]}; } });
+
+      // โหลด 3 ทีม 3 กะ
+      const cfg = this.getTeamCfg(li);
+      const wn = this.getWN(this.curWeekStart);
+      const rot = Math.floor(Math.max(0,wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
+      const shiftTeams = {
+        morning: ['A','B','C'][rot%3],
+        afternoon: ['A','B','C'][(rot+1)%3],
+        night: ['A','B','C'][(rot+2)%3]
+      };
+
+      ['morning','afternoon','night'].forEach(sh => {
+        const shTeam = shiftTeams[sh];
+        const shMembers = teams[shTeam]||[];
+        shMembers.forEach(name => {
+          const emp = empMap.get(name);
+          if(!emp) return;
+          const empDept = (emp.dept||'').trim();
+          const dept = depts.find(d=>d.trim()===empDept) || depts[0];
+          if(!wk[dept]) wk[dept]={};
+          for(let di=0;di<6;di++){
+            const dk=String(di);
+            if(!wk[dept][dk]) wk[dept][dk]={morning:[],afternoon:[],night:[]};
+            if(!wk[dept][dk][sh].find(w=>w.name===name)){
+              wk[dept][dk][sh].push({name,ot:false,otHrs:4,av:emp.av||0});
+              loaded++;
+            }
+          }
+        });
+      });
+
+      localStorage.setItem(storeKey, JSON.stringify(raw));
+      try{if(fbDb)fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk);}catch(e){}
+    });
+
+    this.renderSched();
+    this.updateOTCards();
+    toast('✅ โหลดครบทุก '+lines.length+' Line แล้ว');
   },
 
   autoLoadTeam(li) {
