@@ -571,6 +571,7 @@ tr.dept-row td{border-top:3px solid #000!important}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button onclick="S.triggerSave()" style="flex:1;padding:10px;background:rgba(37,99,235,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">💾 บันทึก</button>
+        <button onclick="S.clearWeek()" style="flex:1;padding:10px;background:rgba(239,68,68,.8);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🗑️ ลบทั้งสัปดาห์</button>
         <button onclick="S.openPrintSched()" style="flex:1;padding:10px;background:rgba(15,52,96,.9);color:#fff;border:1.5px solid rgba(6,182,212,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ตาราง</button>
         <button onclick="S.printOT()" style="flex:1;padding:10px;background:rgba(0,0,0,.3);color:#fff;border:1.5px solid rgba(245,158,11,.5);border-radius:10px;font-size:13px;font-weight:800;font-family:inherit">🖨️ พิมพ์ OT</button>
       </div>
@@ -2436,6 +2437,19 @@ const S = {
     document.getElementById('print-area').style.display = 'block';
     setTimeout(()=>{ window.print(); document.getElementById('print-area').style.display='none'; }, 300);
   },
+
+  clearWeek() {
+    if(!confirm('ลบตารางกะทั้งสัปดาห์นี้ใช่ไหมครับ?')) return;
+    const storeKey = 'fac_sched_'+this.sys+'_'+this.curLine;
+    const allSched = JSON.parse(localStorage.getItem(storeKey)||'{}');
+    delete allSched[this.curWKey];
+    localStorage.setItem(storeKey, JSON.stringify(allSched));
+    try { if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+this.curLine+'/'+this.curWKey).remove(); } catch(e){}
+    this.renderSched();
+    this.updateOTCards();
+    toast('✅ ลบตารางสัปดาห์นี้แล้ว');
+  },
+
   triggerSave() {
     const sched = this.getSched(this.curLine);
     const {pct} = this.calcOT(sched);
@@ -3150,6 +3164,10 @@ const S = {
     const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
     const empMap = new Map();
     [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
+    // ดึง depts จากทั้ง proc และ fill
+    const deptsProc = JSON.parse(localStorage.getItem('fac_depts_proc')||'null') || [];
+    const deptsFill = JSON.parse(localStorage.getItem('fac_depts_fill')||'null') || [];
+    const allDepts = [...new Set([...deptsProc,...deptsFill])];
     const depts = this.getDepts();
     const raw = JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+li)||'{}');
     if(!raw[this.curWKey]) raw[this.curWKey] = {};
@@ -3158,9 +3176,10 @@ const S = {
     members.forEach(name => {
       const emp = empMap.get(name);
       if(!emp) return;
-      // ใช้แผนกของพนักงาน ถ้าไม่มีในตารางให้ใช้แผนกแรก
-      const empDept = emp.dept||'';
-      const dept = depts.includes(empDept) ? empDept : depts[0];
+      const empDept = (emp.dept||'').trim();
+      // เช็คจากทั้ง depts ปัจจุบัน และ allDepts
+      const dept = depts.includes(empDept) ? empDept : 
+                   allDepts.includes(empDept) ? empDept : depts[0];
       if(!wk[dept]) wk[dept] = {};
       for(let di=0;di<6;di++) {
         if(!wk[dept][di]) wk[dept][di] = {morning:[],afternoon:[],night:[]};
