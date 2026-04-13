@@ -441,7 +441,8 @@ tr.dept-row td{border-top:3px solid #000!important}
           <div class="sc-ico">⚙️</div>
           <div>
             <div class="sc-name">Process</div>
-            <div class="sc-sub2">5 Lines · <span id="h-proc-emp-count">-</span> คน</div>
+            <div class="sc-sub2">5 Lines</div>
+            <div style="font-size:18px;font-weight:900;color:#fff;margin-top:4px">👥 <span id="h-proc-emp-count">-</span> คน</div>
           </div>
         </div>
         <div>
@@ -459,7 +460,8 @@ tr.dept-row td{border-top:3px solid #000!important}
           <div class="sc-ico">🏭</div>
           <div>
             <div class="sc-name">Filling</div>
-            <div class="sc-sub2">9 Lines · <span id="h-fill-emp-count">-</span> คน</div>
+            <div class="sc-sub2">9 Lines</div>
+            <div style="font-size:18px;font-weight:900;color:#fff;margin-top:4px">👥 <span id="h-fill-emp-count">-</span> คน</div>
           </div>
         </div>
         <div>
@@ -478,6 +480,7 @@ tr.dept-row td{border-top:3px solid #000!important}
           <div>
             <div class="sc-name">Total Production</div>
             <div class="sc-sub2">รวม Process + Filling</div>
+            <div style="font-size:20px;font-weight:900;color:#fff;margin-top:4px">👥 <span id="h-total-emp-count">-</span> คน</div>
           </div>
         </div>
         <div>
@@ -1339,7 +1342,7 @@ const H = {
           });
           if(!workers.length) return;
           lineHtml += `<div class="pr-shift-title">${shiftTH[sh]} (${workers.length} คน)</div>
-          <table class="pr-tbl">
+          <table class="pr-tbl" style="table-layout:fixed;width:100%">
             <thead><tr>
               <th style="width:24px">#</th>
               <th>ชื่อพนักงาน</th>
@@ -2223,15 +2226,15 @@ const S = {
       if(!workers.length) return;
       html += `
       <div class="pr-shift-title">${shiftTH[sh]} (${workers.length} คน)</div>
-      <table class="pr-tbl">
+      <table class="pr-tbl" style="table-layout:fixed;width:100%">
         <thead>
           <tr>
-            <th style="width:30px">#</th>
-            <th>ชื่อพนักงาน</th>
-            <th>แผนก</th>
-            <th style="width:80px">ชม. OT</th>
-            <th style="width:80px">จำนวนวัน</th>
-            <th class="pr-sign">ลายมือชื่อ</th>
+            <th style="width:5%">#</th>
+            <th style="width:25%">ชื่อพนักงาน</th>
+            <th style="width:25%">แผนก</th>
+            <th style="width:15%">ชม. OT</th>
+            <th style="width:15%">จำนวนวัน</th>
+            <th style="width:15%" class="pr-sign">ลายมือชื่อ</th>
           </tr>
         </thead>
         <tbody>
@@ -3588,6 +3591,8 @@ function updateEmpCount() {
   const fe = document.getElementById('h-fill-emp-count');
   if(pe) pe.textContent = proc.length;
   if(fe) fe.textContent = fill.length;
+  const te = document.getElementById('h-total-emp-count');
+  if(te) te.textContent = proc.length + fill.length;
 }
 function startApp() {
   try { document.getElementById('h-yr-lbl').textContent = H.yr+' (พ.ศ.)'; } catch(e){}
