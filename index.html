@@ -2644,10 +2644,6 @@ const S = {
       }
     });
 
-    // ดึง comment
-    const weekMi2 = this.curWeekStart.getMonth();
-    const weekYr2 = this.curWeekStart.getFullYear()+543;
-    let cmt2 = load('fac_gcmt_'+this.sys+'_'+this.curLine+'_'+weekYr2+'_'+weekMi2,'');
     // สร้าง HTML
     let html = `
     <div class="pr-header">
@@ -2660,7 +2656,6 @@ const S = {
       OT% = <strong style="color:${pct>tgt?'#dc2626':'#16a34a'}">${pct}%</strong> &nbsp;|&nbsp;
       Target = ${tgt}% &nbsp;|&nbsp;
       ${pct>tgt?'<strong style="color:#dc2626">⚠️ เกิน Target</strong>':'<strong style="color:#16a34a">✅ อยู่ใน Target</strong>'}
-      ${cmt2?`&nbsp;|&nbsp;<strong>💬 เหตุผล: ${cmt2}</strong>`:''}
     </div>
     <div class="pr-section">
       <div class="pr-sec-title">⚙️ ${sysName} — ${lineName}</div>`;
