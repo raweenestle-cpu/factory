@@ -500,13 +500,23 @@ tr.dept-row td{border-top:3px solid #000!important}
   </div>
 
   <!-- Print All OT Button -->
-  <div style="margin:0 14px 12px;display:flex;gap:8px;align-items:center">
-    <select id="h-print-mode" style="flex:1;padding:10px;background:rgba(255,255,255,.1);border:1.5px solid rgba(245,158,11,.5);border-radius:12px;color:#fff;font-size:13px;font-weight:700;font-family:inherit">
-      <option value="week" style="color:#1e293b">📅 รายสัปดาห์ (ปัจจุบัน)</option>
-      <option value="month" style="color:#1e293b">📆 รายเดือน (เดือนนี้)</option>
-    </select>
-    <button onclick="H.printAllOT()" style="padding:10px 16px;background:rgba(245,158,11,.3);border:1.5px solid rgba(245,158,11,.5);border-radius:12px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap">
-      🖨️ พิมพ์ OT
+  <div style="margin:0 14px 12px;background:rgba(255,255,255,.08);border:1.5px solid rgba(245,158,11,.4);border-radius:14px;padding:12px">
+    <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.7);margin-bottom:8px">🖨️ พิมพ์ OT รวมทุกระบบ</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <select id="h-print-mode" onchange="H.updatePrintOptions()" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit">
+        <option value="week">📅 รายสัปดาห์</option>
+        <option value="month">📆 รายเดือน</option>
+      </select>
+    </div>
+    <div id="h-print-week-sel" style="display:flex;gap:8px;margin-bottom:8px">
+      <select id="h-print-week" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
+    </div>
+    <div id="h-print-month-sel" style="display:none;gap:8px;margin-bottom:8px">
+      <select id="h-print-month" style="flex:1;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
+      <select id="h-print-year" style="width:100px;padding:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;color:#1e293b;font-size:13px;font-weight:700;font-family:inherit"></select>
+    </div>
+    <button onclick="H.printAllOT()" style="width:100%;padding:10px;background:#f59e0b;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">
+      🖨️ พิมพ์เลย
     </button>
   </div>
 
@@ -1513,30 +1523,68 @@ const H = {
     }, 100);
   },
 
+
+  initPrintOptions() {
+    // สัปดาห์ย้อนหลัง 12 สัปดาห์
+    const weekSel = document.getElementById('h-print-week');
+    if(weekSel) {
+      weekSel.innerHTML = '';
+      for(let i=0;i<12;i++) {
+        const d = new Date(); d.setDate(d.getDate() - i*7);
+        const ws = S.getWeekStart(d);
+        const wk = S.weekKey(ws);
+        const wn = S.getWN(ws);
+        const we = new Date(ws); we.setDate(we.getDate()+5);
+        const label = 'สัปดาห์ที่ '+wn+' ('+ws.getDate()+'/'+(ws.getMonth()+1)+' - '+we.getDate()+'/'+(we.getMonth()+1)+')';
+        const opt = document.createElement('option');
+        opt.value = wk; opt.textContent = label;
+        weekSel.appendChild(opt);
+      }
+    }
+    // เดือน
+    const monthSel = document.getElementById('h-print-month');
+    const yearSel = document.getElementById('h-print-year');
+    if(monthSel) {
+      const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      const now = new Date();
+      monthSel.innerHTML = thMonths.map((m,i)=>`<option value="${i}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
+    }
+    if(yearSel) {
+      const yr = new Date().getFullYear();
+      yearSel.innerHTML = [yr-1,yr,yr+1].map(y=>`<option value="${y}" ${y===yr?'selected':''}>${y+543}</option>`).join('');
+    }
+  },
+
+  updatePrintOptions() {
+    const mode = document.getElementById('h-print-mode')?.value;
+    const weekDiv = document.getElementById('h-print-week-sel');
+    const monthDiv = document.getElementById('h-print-month-sel');
+    if(weekDiv) weekDiv.style.display = mode==='week' ? 'flex' : 'none';
+    if(monthDiv) monthDiv.style.display = mode==='month' ? 'flex' : 'none';
+  },
+
   printAllOT() {
     const now = new Date();
     const dateStr = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
     const mode = document.getElementById('h-print-mode')?.value || 'week';
     const isMonth = mode === 'month';
-    // คำนวณ week keys ที่จะดึง
     let wKeys = [];
     let titleSub = '';
     if(isMonth) {
-      // ดึงทุกสัปดาห์ในเดือนนี้
-      const yr = now.getFullYear();
-      const mi = now.getMonth();
+      const mi = parseInt(document.getElementById('h-print-month')?.value||new Date().getMonth());
+      const yr = parseInt(document.getElementById('h-print-year')?.value||new Date().getFullYear());
+      const thMonths=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
       const firstDay = new Date(yr, mi, 1);
       const lastDay = new Date(yr, mi+1, 0);
       let d = S.getWeekStart(firstDay);
-      while(d <= lastDay) {
-        wKeys.push(S.weekKey(d));
-        d = new Date(d); d.setDate(d.getDate()+7);
-      }
-      titleSub = now.toLocaleDateString('th-TH',{year:'numeric',month:'long'}) + ' · วันที่พิมพ์: '+dateStr;
+      while(d <= lastDay) { wKeys.push(S.weekKey(d)); d = new Date(d); d.setDate(d.getDate()+7); }
+      titleSub = thMonths[mi]+' '+(yr+543)+' · วันที่พิมพ์: '+dateStr;
     } else {
-      const weekStart = S.getWeekStart(new Date());
-      wKeys = [S.weekKey(weekStart)];
-      titleSub = 'สัปดาห์ที่ '+S.getWN(weekStart)+' · วันที่พิมพ์: '+dateStr;
+      const selWk = document.getElementById('h-print-week')?.value;
+      if(selWk) { wKeys = [selWk]; }
+      else { const ws=S.getWeekStart(new Date()); wKeys=[S.weekKey(ws)]; }
+      const ws2 = new Date(wKeys[0]);
+      titleSub = 'สัปดาห์ที่ '+S.getWN(ws2)+' · วันที่พิมพ์: '+dateStr;
     }
     let html = `<div class="pr-header">
       <div class="pr-title">📋 บิล OT รวมทุกระบบ${isMonth?' (รายเดือน)':''}</div>
@@ -4174,6 +4222,7 @@ function startApp() {
   try { initFB(); } catch(e) { console.log('FB:', e); }
   try { H.renderCharts(); } catch(e) { console.log('charts:', e); }
   try { updateEmpCount(); } catch(e) {}
+  try { H.initPrintOptions(); H.updatePrintOptions(); } catch(e) {}
   try { H.loadMascot(); } catch(e) { console.log('mascot:', e); }
   setTimeout(()=>{ try{fbSync('proc');}catch(e){} try{fbSync('fill');}catch(e){} }, 2000);
 }
