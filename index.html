@@ -3179,42 +3179,51 @@ const S = {
     const teams = this.getTeams(li);
     const members = teams[team]||[];
     if(!members.length){ toast('❌ ทีม '+team+' ไม่มีสมาชิก'); return; }
+
     // ดึงพนักงานจากทั้ง proc และ fill
     const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
     const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
     const empMap = new Map();
     [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
-    // ดึง depts จากทั้ง proc และ fill
-    const deptsProc = JSON.parse(localStorage.getItem('fac_depts_proc')||'null') || [];
-    const deptsFill = JSON.parse(localStorage.getItem('fac_depts_fill')||'null') || [];
-    const allDepts = [...new Set([...deptsProc,...deptsFill])];
-    const depts = this.getDepts();
+
+    // ดึง depts จริงๆ ของ sys นี้
+    const depts = JSON.parse(localStorage.getItem('fac_depts_'+this.sys)||'null') || ['แผนก 1'];
+
     const raw = JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+li)||'{}');
     if(!raw[this.curWKey]) raw[this.curWKey] = {};
     const wk = raw[this.curWKey];
-    let loaded = 0;
-    members.forEach(name => {
+
+    // เตรียม dept ทุกอันให้พร้อม
+    depts.forEach(d=>{
+      if(!wk[d]) wk[d]={};
+      for(let di=0;di<6;di++){
+        if(!wk[d][di]) wk[d][di]={morning:[],afternoon:[],night:[]};
+      }
+    });
+
+    let loaded=0;
+    members.forEach(name=>{
       const emp = empMap.get(name);
       if(!emp) return;
-      // ใช้แผนกของพนักงานตรงๆ ไม่ต้องเช็ค
       const empDept = (emp.dept||'').trim();
-      const dept = empDept || depts[0];
-      if(!wk[dept]) wk[dept] = {};
-      for(let di=0;di<6;di++) {
-        if(!wk[dept][di]) wk[dept][di] = {morning:[],afternoon:[],night:[]};
-        if(!wk[dept][di].morning.find(w=>w.name===name)) {
+      // หา dept ที่ตรงกันใน depts จริงๆ
+      const dept = depts.find(d=>d.trim()===empDept) || depts[0];
+      if(!wk[dept]) wk[dept]={};
+      for(let di=0;di<6;di++){
+        if(!wk[dept][di]) wk[dept][di]={morning:[],afternoon:[],night:[]};
+        if(!wk[dept][di].morning.find(w=>w.name===name)){
           wk[dept][di].morning.push({name, ot:false, otHrs:4, av:emp.av||0});
           loaded++;
         }
       }
     });
+
     localStorage.setItem('fac_sched_'+this.sys+'_'+li, JSON.stringify(raw));
-    try { if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk); } catch(e){}
-    const prevLine = this.curLine;
-    this.curLine = li;
-    try { syncOT(this.sys, li, wk); } catch(e){}
-    this.curLine = prevLine;
-    toast('✅ โหลดทีม '+team+' ลงสัปดาห์นี้แล้ว ('+members.length+' คน กะเช้า)');
+    try{if(fbDb)fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk);}catch(e){}
+    const prevLine=this.curLine; this.curLine=li;
+    try{syncOT(this.sys,li,wk);}catch(e){}
+    this.curLine=prevLine;
+    toast('✅ โหลดทีม '+team+' ลงสัปดาห์นี้แล้ว ('+members.length+' คน)');
     this.openTeamTab();
   },
 
