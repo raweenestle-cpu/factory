@@ -3396,12 +3396,66 @@ const S = {
     toast('✅ โหลดทีม '+teamName+' → '+SHIFT_TH[shift]);
   },
   autoLoad() {
-    const cfg=this.getTeamCfg(this.teamEditLine);
-    const wn=this.getWN(new Date());
-    const rot=Math.floor((wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
-    const auto={morning:['A','B','C'][rot%3],afternoon:['A','B','C'][(rot+1)%3],night:['A','B','C'][(rot+2)%3]};
-    ['morning','afternoon','night'].forEach(sh=>this.loadTeam(sh,auto[sh]));
-    toast('✅ Auto โหลดทีมทั้งหมด');
+    const li = this.teamEditLine;
+    const cfg = this.getTeamCfg(li);
+    const wn = this.getWN(this.curWeekStart);
+    const rot = Math.floor(Math.max(0,wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
+    const shiftTeams = {
+      morning: ['A','B','C'][rot%3],
+      afternoon: ['A','B','C'][(rot+1)%3],
+      night: ['A','B','C'][(rot+2)%3]
+    };
+
+    // ดึงพนักงานจากทั้ง proc และ fill
+    const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
+    const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+    const empMap = new Map();
+    [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
+
+    const depts = JSON.parse(localStorage.getItem('fac_depts_'+this.sys)||'null') || ['แผนก 1'];
+    const storeKey = 'fac_sched_'+this.sys+'_'+li;
+    const raw = JSON.parse(localStorage.getItem(storeKey)||'{}');
+    if(!raw[this.curWKey]) raw[this.curWKey] = {};
+    const wk = raw[this.curWKey];
+
+    // เตรียม dept ทุกอัน
+    depts.forEach(d=>{
+      if(!wk[d]) wk[d]={};
+      for(let di=0;di<6;di++){
+        const dk=String(di);
+        if(!wk[d][dk]) wk[d][dk]={morning:[],afternoon:[],night:[]};
+      }
+    });
+
+    let total=0;
+    ['morning','afternoon','night'].forEach(sh=>{
+      const team = shiftTeams[sh];
+      const teams = this.getTeams(li);
+      const members = teams[team]||[];
+      members.forEach(name=>{
+        const emp = empMap.get(name);
+        if(!emp) return;
+        const empDept = (emp.dept||'').trim();
+        const dept = depts.find(d=>d.trim()===empDept) || depts[0];
+        if(!wk[dept]) wk[dept]={};
+        for(let di=0;di<6;di++){
+          const dk=String(di);
+          if(!wk[dept][dk]) wk[dept][dk]={morning:[],afternoon:[],night:[]};
+          if(!wk[dept][dk][sh].find(w=>w.name===name)){
+            wk[dept][dk][sh].push({name,ot:false,otHrs:4,av:emp.av||0});
+            total++;
+          }
+        }
+      });
+      toast('กะ'+sh+': ทีม '+team+' ('+members.length+' คน)');
+    });
+
+    localStorage.setItem(storeKey, JSON.stringify(raw));
+    try{if(fbDb)fbDb.ref('factory/'+this.sys+'/sched/'+li+'/'+this.curWKey).set(wk);}catch(e){}
+    try{syncOT(this.sys,li,wk);}catch(e){}
+    this.renderSched();
+    this.updateOTCards();
+    toast('✅ โหลดครบ 3 ทีม: เช้า='+shiftTeams.morning+' บ่าย='+shiftTeams.afternoon+' ดึก='+shiftTeams.night);
   }
 };
 
