@@ -5220,7 +5220,7 @@ if(document.readyState === 'loading') {
 
     // Service Worker
     if('serviceWorker' in navigator) {
-      const sw = `const CACHE='factory-v2';
+      const sw = `const CACHE='factory-v3';
 self.addEventListener('install',e=>{self.skipWaiting();});
 self.addEventListener('activate',e=>{
   e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
