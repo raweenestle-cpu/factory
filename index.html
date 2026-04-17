@@ -4590,10 +4590,10 @@ const S = {
       const members = teams[team]||[];
       if(!members.length) return;
 
-      const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
-      const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+      // ดึงเฉพาะพนักงานของ sys ปัจจุบันเท่านั้น
+      const empList = JSON.parse(localStorage.getItem('fac_emps_'+this.sys)||'[]');
       const empMap = new Map();
-      [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
+      empList.forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
 
       const depts = JSON.parse(localStorage.getItem('fac_depts_'+this.sys)||'null') || ['แผนก 1'];
       const storeKey = 'fac_sched_'+this.sys+'_'+li;
