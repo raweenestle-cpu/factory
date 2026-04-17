@@ -1454,17 +1454,23 @@ const H = {
               <th class="pr-sign">ลายมือชื่อ</th>
             </tr></thead>
             <tbody>
-              ${workers.map((w,i)=>`<tr>
-                <td style="text-align:center">${i+1}</td>
-                <td>${w.name}</td><td>${w.dept}</td>
-                <td style="text-align:center">${w.hrs} ชม.</td>
-                <td style="text-align:center">${w.days} วัน</td>
-                <td></td>
-              </tr>`).join('')}
+              ${workers.map((w,i)=>{
+                const signKey='fac_sign_'+sys+'_'+lineIdx+'_'+wKey+'_'+w.name+'_'+w.dept+'_'+w.di+'_'+sh;
+                const signed=localStorage.getItem(signKey);
+                const sig=signed?JSON.parse(signed).name:'';
+                return `<tr>
+                  <td style="text-align:center">${i+1}</td>
+                  <td>${w.name}</td><td>${w.dept}</td>
+                  <td style="text-align:center">${w.dateStr}</td>
+                  <td style="text-align:center">${w.hrs}</td>
+                  <td style="text-align:center"><span class="signature">${sig}</span></td>
+                </tr>`;
+              }).join('')}
               <tr style="font-weight:700;background:#f0f0f0">
                 <td colspan="3" style="text-align:right">รวม</td>
+                <td></td>
                 <td style="text-align:center">${workers.reduce((a,w)=>a+w.hrs,0)} ชม.</td>
-                <td></td><td></td>
+                <td></td>
               </tr>
             </tbody>
           </table>`;
