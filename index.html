@@ -1113,16 +1113,20 @@ const H = {
       const depts = JSON.parse(localStorage.getItem(`fac_depts_${sys}`)||'null') || ['แผนก 1'];
       Object.entries(allSched).forEach(([wKey, wkData]) => {
         if(!wkData) return;
-        // parse date จาก key โดยไม่ใช้ UTC
         const wParts = wKey.split('-');
         if(wParts.length<3) return;
         const wYear = parseInt(wParts[0]);
         const wMonth = parseInt(wParts[1])-1;
         const wDay = parseInt(wParts[2]);
-        // เช็ค 7 วัน (จ-อา) ว่ามีวันในเดือนที่ต้องการไหม
+        // หาวันจันทร์จริงๆ ของสัปดาห์นี้ (รองรับทั้ง Sunday และ Monday key)
+        const rawDate = new Date(wYear, wMonth, wDay);
+        const dow = rawDate.getDay(); // 0=อาทิตย์
+        const monday = new Date(rawDate);
+        monday.setDate(rawDate.getDate() - (dow===0?6:dow-1));
+        // เช็ค 6 วัน (จ-ส)
         let inMonth = false;
-        for(let dd=0;dd<7;dd++){
-          const d2 = new Date(wYear, wMonth, wDay+dd);
+        for(let dd=0;dd<6;dd++){
+          const d2 = new Date(monday); d2.setDate(monday.getDate()+dd);
           if(d2.getFullYear()+543===yr && d2.getMonth()===mi){ inMonth=true; break; }
         }
         if(!inMonth) return;
