@@ -970,9 +970,10 @@ function initFB() {
           const v = snap.val();
           if(!v) return;
           const existing = load(`fac_sched_${sys}_${li}`,{});
+          const deleted = load(`fac_deleted_weeks_${sys}_${li}`,[]);
           let changed = false;
           Object.entries(v).forEach(([wk, wkData]) => {
-            if(!existing[wk]) { existing[wk] = wkData; changed = true; }
+            if(!existing[wk] && !deleted.includes(wk)) { existing[wk] = wkData; changed = true; }
           });
           if(changed) {
             save(`fac_sched_${sys}_${li}`, existing);
@@ -3054,19 +3055,21 @@ const S = {
       const a=JSON.parse(localStorage.getItem(k)||'{}');
       delete a[S.curWKey];
       localStorage.setItem(k,JSON.stringify(a));
-      // ลบ ot_summary ใน localStorage ด้วย
-      const _now=new Date();
-      const _yr=_now.getFullYear()+543;
-      for(let _mi=0;_mi<12;_mi++){
-        localStorage.removeItem('fac_ot_'+S.sys+'_'+S.curLine+'_'+_yr+'_'+_mi+'_'+S.curWKey);
-      }
+      // บันทึกว่าสัปดาห์นี้ถูกลบแล้ว เพื่อกัน Firebase sync กลับมา
+      const _delKey='fac_deleted_weeks_'+S.sys+'_'+S.curLine;
+      const _delList=JSON.parse(localStorage.getItem(_delKey)||'[]');
+      if(!_delList.includes(S.curWKey)) _delList.push(S.curWKey);
+      localStorage.setItem(_delKey,JSON.stringify(_delList));
+      // ลบ ot_summary ของสัปดาห์นี้ใน localStorage (เฉพาะเดือนที่ถูกต้อง)
+      const _wkDate=new Date(S.curWKey);
+      const _fbKey=S.sys+'_'+S.curLine;
+      const _yr=isNaN(_wkDate)?new Date().getFullYear()+543:_wkDate.getFullYear()+543;
+      const _mi=isNaN(_wkDate)?new Date().getMonth():_wkDate.getMonth();
+      localStorage.removeItem('fac_ot_'+_fbKey+'_'+_yr+'_'+_mi+'_'+S.curWKey);
       try{
         if(fbDb){
           fbDb.ref('factory/'+S.sys+'/sched/'+S.curLine+'/'+S.curWKey).remove();
-          // ลบ ot_summary ทุกเดือนของสัปดาห์นี้ใน Firebase ด้วย
-          for(let _mi=0;_mi<12;_mi++){
-            fbDb.ref('ot_summary/'+S.sys+'_'+S.curLine+'/'+_yr+'/'+_mi+'/'+S.curWKey).remove();
-          }
+          fbDb.ref('ot_summary/'+_fbKey+'/'+_yr+'/'+_mi+'/'+S.curWKey).remove();
         }
       }catch(e){}
       S.renderSched();S.updateOTCards();
