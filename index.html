@@ -2981,7 +2981,18 @@ const S = {
                   const ws=(sched[dept]?.[di]?.[sh]||[]);
                   const br=shi<2?'border-right:3px solid #000':'';
                   return `<td style="vertical-align:top;padding:4px 6px;${br}">`+
-                    (ws.length?ws.map(w=>`<div>${w.name}${w.ot?` <b style="color:#d97706">OT+${w.otHrs||4}ชม.</b>`:''}</div>`).join(''):'<span style="color:#ccc">-</span>')+
+                    (ws.length?ws.map(w=>{
+                      let timeStr='';
+                      if(w.ot){
+                        if(sh==='morning') timeStr='06:00-18:00';
+                        else if(sh==='night') timeStr='18:00-06:00';
+                        else if(sh==='afternoon'){
+                          const r=w.shiftRange||'14-22';
+                          timeStr=r==='10-22'?'10:00-22:00':r==='14-02'?'14:00-02:00':'14:00-22:00';
+                        }
+                      }
+                      return `<div>${w.name}${w.ot?` <b style="color:#d97706">OT ${timeStr}</b>`:''}</div>`;
+                    }).join(''):'<span style="color:#ccc">-</span>')+
                     '</td>';
                 }).join('')}
               </tr>`).join('')}
