@@ -2914,7 +2914,18 @@ const S = {
               const ws=(sched[dept]?.[di]?.[sh]||[]);
               const br2=shi<2?'border-right:3px solid #000':'';
               return `<td style="vertical-align:top;font-size:11px;${br2}">`+
-                ws.map(w=>w.name+(w.ot?` <span style="color:#d97706;font-weight:700">(OT +${w.otHrs||4}ชม.)</span>`:'')).join('<br>')+
+                ws.map(w=>{
+                  let timeStr='';
+                  if(w.ot){
+                    if(sh==='morning') timeStr='06:00-18:00';
+                    else if(sh==='night') timeStr='18:00-06:00';
+                    else if(sh==='afternoon'){
+                      const r=w.shiftRange||'14-22';
+                      timeStr=r==='10-22'?'10:00-22:00':r==='14-02'?'14:00-02:00':'14:00-22:00';
+                    }
+                  }
+                  return w.name+(w.ot?` <span style="color:#d97706;font-weight:700">(OT ${timeStr})</span>`:'');
+                }).join('<br>')+
                 '</td>';
             }).join('')}
           </tr>`).join('')}
