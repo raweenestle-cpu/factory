@@ -2379,15 +2379,18 @@ const S = {
     if(!wk[dept]) wk[dept]={};
     if(!wk[dept][di]) wk[dept][di]={morning:[],afternoon:[],night:[]};
     if(!wk[dept][di][sh]) wk[dept][di][sh]=[];
-    let added=0;
+    let added=0, blocked2=[];
     this._sel.forEach(id=>{
       const emp=emps.find(e=>String(e.id)===String(id));
       if(!emp) return;
+      const restCheck = this.checkRestHours(emp.name, di, sh);
+      if(restCheck.blocked) { blocked2.push(restCheck.reason); return; }
       if(!wk[dept][di][sh].find(w=>w.name===emp.name)){
         wk[dept][di][sh].push({name:emp.name,ot:false,otHrs:4,av:emp.av});
         added++;
       }
     });
+    if(blocked2.length) this.showRestPopup(blocked2.join('\n\n'));
     localStorage.setItem(storeKey,JSON.stringify(allSched));
     if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+this.curLine+'/'+this.curWKey).set(wk);
     syncOT(this.sys,this.curLine,wk);
@@ -2424,15 +2427,23 @@ const S = {
     const diStr=di;
     if(!sched[dept]) sched[dept]={};
     if(!sched[dept][diStr]) sched[dept][diStr]={morning:[],afternoon:[],night:[]};
-    let added=0;
+    let added=0, blocked=[];
     this._pickedIds.forEach(id=>{
       const emp=emps.find(e=>Number(e.id)===Number(id));
       if(!emp) return;
+      // เช็คพัก 12 ชม.
+      const restCheck = this.checkRestHours(emp.name, di, sh);
+      if(restCheck.blocked) { blocked.push({name:emp.name, reason:restCheck.reason}); return; }
       if(!sched[dept][di][sh].find(w=>w.name===emp.name)){
         sched[dept][di][sh].push({name:emp.name,ot:false,otHrs:4,av:emp.av});
         added++;
       }
     });
+    if(blocked.length) {
+      // แสดง popup รวมคนที่ถูกบล็อก
+      const msg = blocked.map(b=>b.reason).join('\n\n');
+      this.showRestPopup(msg);
+    }
     allSched[this.curWKey]=sched;
     save('fac_sched_'+this.sys+'_'+this.curLine, allSched);
     if(fbDb) fbDb.ref('factory/'+this.sys+'/sched/'+this.curLine+'/'+this.curWKey).set(sched);
