@@ -2282,7 +2282,7 @@ const S = {
               ? `<span style="background:${otBg};color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px;flex-shrink:0">OT ${w.otHrs||4}ชม.</span>`
               : '';
             return `<div class="wtag" style="background:${rowBg};border-color:${w.ot?otBg:'#cbd5e1'};cursor:pointer;display:flex;align-items:center;padding:5px 7px;border-radius:6px;margin-bottom:3px;border:1.5px solid;white-space:nowrap" onclick="S.workerMenu(event,'${dept.replace(/'/g,"\\'")}',${di},'${sh}',${wi})">
-              <span style="font-size:11px;font-weight:700;color:${w.ot?shColor:'#1e293b'};flex:1">${w.name}</span>
+              <span style="font-size:11px;font-weight:700;color:${w.ot?shColor:'#1e293b'};flex:1">${w.name}${w.ot?`<span style="font-size:9px;font-weight:600;color:${shColor};margin-left:3px">${sh==='morning'?'06:00':sh==='afternoon'?'14:00':'22:00'}</span>`:''}</span>
               ${otBadge}${signIcon}
             </div>`;
           }).join('');
@@ -2488,17 +2488,25 @@ const S = {
         style="display:block;width:100%;padding:8px;background:${w.ot?'#fef3c7':'rgba(255,255,255,.08)'};color:${w.ot?'#92400e':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:6px">
         ${w.ot?'🟡 OT '+(w.otHrs||4)+' ชม. (กดปิด)':'+ เพิ่ม OT'}
       </button>
-      ${w.ot?`<div style="display:flex;gap:4px;margin-bottom:6px">
+      ${w.ot?(sh==='afternoon'?`<div style="margin-bottom:6px">
+        <div style="font-size:10px;color:rgba(255,255,255,.6);margin-bottom:4px">ช่วงเวลากะบ่าย</div>
+        <select onchange="S.setAfternoonShift('${dept.replace(/'/g,"\'")}',${di},${wi},this.value)" style="width:100%;padding:6px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:12px;font-weight:700;font-family:inherit">
+          <option value="14-22" ${(w.shiftRange||'14-22')==='14-22'?'selected':''} style="color:#1e293b">14:00 - 22:00 (8ชม.)</option>
+          <option value="10-22" ${w.shiftRange==='10-22'?'selected':''} style="color:#1e293b">10:00 - 22:00 (12ชม.)</option>
+          <option value="14-02" ${w.shiftRange==='14-02'?'selected':''} style="color:#1e293b">14:00 - 02:00 (12ชม.)</option>
+        </select>
+        <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:3px">OT = เวลาเกินกะปกติ 8ชม.</div>
+      </div>`:`<div style="display:flex;gap:4px;margin-bottom:6px">
         ${[2,3,4].map(h=>`<button onclick="S.setOTHrsMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi},${h})"
           style="flex:1;padding:5px;background:${(w.otHrs||4)===h?'#f59e0b':'rgba(255,255,255,.1)'};color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer">${h}ชม.</button>`).join('')}
-      </div>`:''}` : ''}
+      </div>`):''}` : ''}
       ${w.ot ? `<button onclick="S.signOT('${w.name.replace(/'/g,"\'")}','${dept.replace(/'/g,"\'")}',${di},'${sh}')" 
         style="display:block;width:100%;padding:8px;background:${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'rgba(16,185,129,.2)':'rgba(245,158,11,.2)'};color:${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'#10b981':'#f59e0b'};border:1px solid ${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'rgba(16,185,129,.4)':'rgba(245,158,11,.4)'};border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;margin-bottom:6px">
         ${localStorage.getItem('fac_sign_'+S.sys+'_'+S.curLine+'_'+S.curWKey+'_'+w.name+'_'+dept+'_'+di+'_'+sh)?'✅ ยินยอม OT แล้ว':'✍️ ยินยอม OT'}
       </button>` : ''}
       ${(!curUser||curUser.isAdmin===true) ? `
       <button onclick="S.removeWorkerMenu('${dept.replace(/'/g,"\'")}',${di},'${sh}',${wi})"
-        style="display:block;width:100%;padding:8px;background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4);border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left">
+        style="display:block;width:100%;padding:8px;background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3);border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left">
         🗑️ ลบออกจากกะ
       </button>` : ''}
       <button onclick="document.getElementById('worker-menu-popup').remove()"
@@ -2536,6 +2544,26 @@ const S = {
     this.saveSched(this.curLine,sched);
     this.renderSched(); this.updateOTCards();
     toast(w.ot?'🟡 เปิด OT':'ปิด OT แล้ว');
+  },
+
+
+  setAfternoonShift(dept, di, wi, range) {
+    document.getElementById('worker-menu-popup')?.remove();
+    const sched = this.getSched(this.curLine);
+    const w = sched[dept]?.[di]?.['afternoon']?.[wi];
+    if(!w) return;
+    w.shiftRange = range;
+    // คำนวณ OT hrs อัตโนมัติ
+    const otHrs = range === '14-22' ? 0 : 4; // 10-22 = OT 4ชม., 14-02 = OT 4ชม.
+    if(range !== '14-22') {
+      w.ot = true;
+      w.otHrs = otHrs;
+    }
+    this.saveSched(this.curLine, sched);
+    this.renderSched();
+    this.updateOTCards();
+    const labels = {'14-22':'14:00-22:00','10-22':'10:00-22:00 (+4ชม. OT)','14-02':'14:00-02:00 (+4ชม. OT)'};
+    toast('✅ กะบ่าย: '+labels[range]);
   },
 
   setOTHrsMenu(dept,di,sh,wi,hrs) {
