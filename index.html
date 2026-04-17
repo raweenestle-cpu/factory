@@ -3289,22 +3289,37 @@ const S = {
     });
     const items=Object.entries(map).sort((a,b)=>b[1].otHrs-a[1].otHrs);
     const emps=this.getEmps();
+    const maxOTHrs = Math.max(...items.map(([,{otHrs}])=>otHrs), 1);
+    const tgt = this.getTarget();
     document.getElementById('s-ot-people').innerHTML=items.length?
+      `<div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:11px;font-weight:800;color:#475569">👤 พนักงาน</div>
+        <div style="font-size:11px;font-weight:800;color:#475569">ชม. OT</div>
+      </div>`+
       items.map(([name,{totalHrs,otHrs}])=>{
         const pct=totalHrs>0?Math.round(otHrs/totalHrs*100):0;
         const emp=emps.find(e=>e.name===name);
         const avCls=emp?AV_COLS[emp.av%8]:'av0';
         const otDays=otDaysMap[name]||[];
         const nameEsc=name.replace(/'/g,"\'");
-        return `<div onclick="S.showOTDetail('${nameEsc}')" style="display:flex;align-items:center;gap:10px;padding:10px;background:#e8f0ff;border-radius:10px;margin-bottom:8px;cursor:pointer;active:opacity:.8">
-          <div class="wav ${avCls}" style="width:36px;height:36px;font-size:14px">${name.charAt(0)}</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:#1e293b">${name}</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px">${otHrs} ชม. OT · ${otDays.length} วัน</div>
+        const barW = Math.max(Math.round((otHrs/maxOTHrs)*100),2);
+        const barColor = pct>tgt?'#ef4444':'#22c55e';
+        const photo = emp?.photo;
+        return `<div onclick="S.showOTDetail('${nameEsc}')" style="padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            ${photo
+              ?`<img src="${photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+              :`<div class="wav ${avCls}" style="width:28px;height:28px;font-size:11px;flex-shrink:0">${name.charAt(0)}</div>`
+            }
+            <div style="flex:1;font-size:12px;font-weight:800;color:#1e293b">${name}</div>
+            <div style="font-size:12px;font-weight:900;color:${barColor}">${otHrs} ชม.</div>
+            <div style="font-size:10px;font-weight:700;color:${barColor};margin-left:2px">(${pct}%)</div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:20px;font-weight:900;color:${pct>this.getTarget()?'var(--red)':'var(--green)'}">${pct}%</div>
-            <div style="font-size:9px;color:#94a3b8">แตะดูรายละเอียด</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden">
+              <div style="width:${barW}%;height:100%;background:${barColor};border-radius:4px;transition:width .3s"></div>
+            </div>
+            <div style="font-size:9px;color:#94a3b8;white-space:nowrap">${otDays.length} วัน</div>
           </div>
         </div>`;
       }).join(''):
