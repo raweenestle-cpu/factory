@@ -494,70 +494,9 @@ tr.dept-row td{border-top:3px solid #000!important}
         </div>
       </div>
       <div class="mini-wrap" id="h-total-chart" onclick="event.stopPropagation()"></div>
-      <button onclick="(()=>{
-        let moved=[];
-        for(let k in localStorage){
-          if(k.startsWith('fac_sched_')){
-            const raw=JSON.parse(localStorage.getItem(k)||'{}');
-            let changed=false;
-            const newRaw={};
-            Object.keys(raw).forEach(wk=>{
-              const parts=wk.split('-');
-              if(parts.length<3){newRaw[wk]=raw[wk];return;}
-              const d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
-              const dow=d.getDay();
-              if(dow===1){newRaw[wk]=raw[wk];return;}
-              // ย้ายไปวันจันทร์ที่ถูกต้อง
-              const monday=new Date(d);
-              monday.setDate(d.getDate()-(dow===0?6:dow-1));
-              const newKey=monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
-              if(newRaw[newKey]){
-                // merge
-                Object.entries(raw[wk]||{}).forEach(([dept,days])=>{
-                  if(!newRaw[newKey][dept]) newRaw[newKey][dept]=days;
-                });
-              } else {
-                newRaw[newKey]=raw[wk];
-              }
-              changed=true;
-              moved.push(wk+'→'+newKey);
-            });
-            if(changed) localStorage.setItem(k,JSON.stringify(newRaw));
-          }
-        }
-        const el=document.getElementById('h-fix-result');
-        el.style.display='block';
-        el.textContent=moved.length?'ย้าย: '+moved.join(', '):'ไม่พบ key ผิด';
-        if(moved.length) setTimeout(()=>location.reload(),1500);
-      })()" style="width:100%;margin-top:6px;padding:6px;background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);border-radius:8px;color:#fff;font-size:10px;font-family:inherit;cursor:pointer">🔧 ย้าย key ผิด → วันจันทร์</button>
-      <div id="h-fix-result" style="display:none;background:rgba(0,0,0,.4);padding:6px;border-radius:8px;margin-top:4px;font-size:10px;color:#fff;word-break:break-all;user-select:text;-webkit-user-select:text"></div>
 
-      <button onclick="(()=>{
-        const raw=JSON.parse(localStorage.getItem('fac_sched_proc_0')||'{}');
-        const wKeys=Object.keys(raw);
-        if(!wKeys.length){alert('ไม่มีข้อมูล proc_0');return;}
-        const wk=raw[wKeys[0]];
-        const depts=Object.keys(wk);
-        let info='wKey: '+wKeys[0]+'\ndepts: '+depts.join(', ')+'\n';
-        depts.forEach(d=>{
-          const days=Object.keys(wk[d]);
-          info+=d+': days='+days.join(',')+'\n';
-          const d0=wk[d][days[0]]||{};
-          const shifts=Object.keys(d0);
-          info+='  shifts='+shifts.join(',')+'\n';
-          shifts.forEach(s=>{
-            const workers=d0[s]||[];
-            info+='  '+s+': '+workers.length+' คน';
-            const otW=workers.filter(w=>w.ot);
-            if(otW.length) info+=' (OT '+otW.length+')';
-            info+='\n';
-          });
-        });
-        const el=document.getElementById('h-debug-proc');
-        el.style.display='block';
-        el.textContent=info;
-      })()" style="width:100%;margin-top:6px;padding:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:10px;font-family:inherit;cursor:pointer">🔍 Debug proc_0</button>
-      <div id="h-debug-proc" style="display:none;background:rgba(0,0,0,.4);padding:8px;border-radius:8px;margin-top:4px;font-size:10px;color:#fff;word-break:break-all;user-select:text;-webkit-user-select:text"></div>
+
+
       <div id="h-keys-out" style="display:none;background:rgba(0,0,0,.4);padding:8px;border-radius:8px;margin-top:6px;font-size:11px;color:#fff;word-break:break-all;user-select:text;-webkit-user-select:text"></div>
       <button onclick="(()=>{let t='';['proc','fill'].forEach(s=>{const r=JSON.parse(localStorage.getItem('fac_sched_'+s+'_0')||'{}');Object.keys(r).forEach(k=>{t+=s+':'+k+'\n';});});const el=document.getElementById('h-keys-out');el.style.display='block';el.textContent=t||'ไม่มีข้อมูล';})()" style="width:100%;margin-top:8px;padding:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:11px;font-family:inherit;cursor:pointer">🔍 ดู Keys</button>
       <div class="legend" style="margin-top:8px">
