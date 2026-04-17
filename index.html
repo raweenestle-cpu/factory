@@ -4714,10 +4714,10 @@ const S = {
     const currentMembers = new Set(teams[team]||[]);
     const usedAll = new Set();
     Object.values(teams).forEach(ms=>ms.forEach(m=>usedAll.add(m)));
-    const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
-    const ef = JSON.parse(localStorage.getItem('fac_emps_fill')||'[]');
+    // ดึงเฉพาะพนักงานของ sys ปัจจุบัน
+    const empList = JSON.parse(localStorage.getItem('fac_emps_'+sys)||'[]');
     const empMap = new Map();
-    [...ep,...ef].forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
+    empList.forEach(e=>{ if(e&&e.name) empMap.set(e.name,e); });
     const emps = [...empMap.values()];
     const sel = new Set();
 
