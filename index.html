@@ -3054,8 +3054,23 @@ const S = {
       const a=JSON.parse(localStorage.getItem(k)||'{}');
       delete a[S.curWKey];
       localStorage.setItem(k,JSON.stringify(a));
-      try{if(fbDb)fbDb.ref('factory/'+S.sys+'/sched/'+S.curLine+'/'+S.curWKey).remove();}catch(e){}
+      // ลบ ot_summary ใน localStorage ด้วย
+      const _now=new Date();
+      const _yr=_now.getFullYear()+543;
+      for(let _mi=0;_mi<12;_mi++){
+        localStorage.removeItem('fac_ot_'+S.sys+'_'+S.curLine+'_'+_yr+'_'+_mi+'_'+S.curWKey);
+      }
+      try{
+        if(fbDb){
+          fbDb.ref('factory/'+S.sys+'/sched/'+S.curLine+'/'+S.curWKey).remove();
+          // ลบ ot_summary ทุกเดือนของสัปดาห์นี้ใน Firebase ด้วย
+          for(let _mi=0;_mi<12;_mi++){
+            fbDb.ref('ot_summary/'+S.sys+'_'+S.curLine+'/'+_yr+'/'+_mi+'/'+S.curWKey).remove();
+          }
+        }
+      }catch(e){}
       S.renderSched();S.updateOTCards();
+      if(typeof H!=='undefined') setTimeout(()=>H.renderCharts(),400);
       toast('✅ ลบตารางสัปดาห์นี้แล้ว');
     };
     row.appendChild(btnNo);row.appendChild(btnYes);
