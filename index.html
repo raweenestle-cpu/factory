@@ -630,8 +630,9 @@ tr.dept-row td{border-top:3px solid #000!important}
       <div class="graph-card">
         <!-- Sub tabs -->
         <div style="display:flex;gap:6px;margin-bottom:10px">
-          <button id="ot-sub-all" onclick="S.setOTSub('all')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;background:#1e3a5f;color:#fff">📊 ภาพรวม</button>
-          <button id="ot-sub-person" onclick="S.setOTSub('person')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;background:#f1f5f9;color:#64748b">👤 รายบุคคล</button>
+          <button id="ot-sub-all" onclick="S.setOTSub('all')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;background:#1e3a5f;color:#fff">📊 ภาพรวม</button>
+          <button id="ot-sub-person" onclick="S.setOTSub('person')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;background:#f1f5f9;color:#64748b">👤 รายบุคคล</button>
+          <button id="ot-sub-report" onclick="S.setOTSub('report')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;background:#f1f5f9;color:#64748b">📋 รายงาน</button>
         </div>
         <!-- Period selector -->
         <div style="display:flex;gap:6px;margin-bottom:10px" id="ot-period-sel">
@@ -3293,12 +3294,197 @@ const S = {
   _otMonth: new Date().getMonth(),
   _otYear: new Date().getFullYear(),
 
+
+  renderOTReport() {
+    const el = document.getElementById('s-ot-people');
+    if(!el) return;
+    const yr = new Date().getFullYear();
+    const emps = this.getEmps();
+    const allSched = JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+this.curLine)||'{}');
+    const depts = this.getDepts();
+
+    // นับ OT days และ signed days ของแต่ละคนตลอดปี
+    const empData = {};
+    emps.forEach(e=>{ empData[e.name]={otDays:[],signedDays:[],emp:e}; });
+
+    Object.entries(allSched).forEach(([wk,sched])=>{
+      if(!wk||!wk.match(/\d{4}-\d{2}-\d{2}/)) return;
+      const wp=wk.split('-');
+      const ws=new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2]));
+      for(let di=0;di<6;di++){
+        const d=new Date(ws); d.setDate(d.getDate()+di);
+        if(d.getFullYear()!==yr) continue;
+        const dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+(d.getFullYear()+543);
+        ['morning','afternoon','night'].forEach(sh=>{
+          depts.forEach(dept=>{
+            const w=(sched[dept]?.[di]?.[sh]||sched[dept]?.[String(di)]?.[sh]||[]).find(x=>x.ot);
+            if(!w) return;
+            if(!empData[w.name]) empData[w.name]={otDays:[],signedDays:[],emp:emps.find(e=>e.name===w.name)};
+            const dayKey=dateStr+'_'+sh;
+            if(!empData[w.name].otDays.find(x=>x.key===dayKey)){
+              empData[w.name].otDays.push({key:dayKey,dateStr,sh,di,dept,wk});
+              // เช็คว่าเซ็นไหม
+              const signKey='fac_sign_'+this.sys+'_'+this.curLine+'_'+wk+'_'+w.name+'_'+dept+'_'+di+'_'+sh;
+              if(localStorage.getItem(signKey)){
+                empData[w.name].signedDays.push(dayKey);
+              }
+            }
+          });
+        });
+      }
+    });
+
+    // กรองเฉพาะคนที่มี OT
+    const items = Object.entries(empData).filter(([,d])=>d.otDays.length>0)
+      .sort((a,b)=>{
+        const pctA = a[1].otDays.length>0?a[1].signedDays.length/a[1].otDays.length:1;
+        const pctB = b[1].otDays.length>0?b[1].signedDays.length/b[1].otDays.length:1;
+        return pctA - pctB; // เรียงจากน้อยที่สุดก่อน (ยังไม่เซ็น)
+      });
+
+    if(!items.length){
+      el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">ไม่มีข้อมูล OT ปีนี้</div>';
+      return;
+    }
+
+    // Summary ด้านบน
+    const totalOT = items.reduce((a,[,d])=>a+d.otDays.length,0);
+    const totalSigned = items.reduce((a,[,d])=>a+d.signedDays.length,0);
+    const totalUnsigned = totalOT - totalSigned;
+    const summaryPct = totalOT>0?Math.round(totalSigned/totalOT*100):0;
+
+    el.innerHTML = `
+      <div style="background:#1e3a5f;border-radius:12px;padding:12px;margin-bottom:12px;display:flex;gap:12px">
+        <div style="flex:1;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#22c55e">${summaryPct}%</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7)">เซ็นแล้ว</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#fff">${totalSigned}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7)">ครั้งที่เซ็น</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#f87171">${totalUnsigned}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7)">ยังไม่เซ็น</div>
+        </div>
+      </div>` +
+      items.map(([name,data])=>{
+        const total = data.otDays.length;
+        const signed = data.signedDays.length;
+        const unsigned = total - signed;
+        const signedPct = total>0?Math.round(signed/total*100):0;
+        const unsignedPct = 100-signedPct;
+        const photo = data.emp?.photo;
+        const avCls = AV_COLS[(data.emp?.av||0)%8];
+        const nameEsc = name.replace(/'/g,"\'");
+        return `<div style="padding:10px 0;border-bottom:1px solid #f1f5f9">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            ${photo?`<img src="${photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">`:`<div class="wav ${avCls}" style="width:28px;height:28px;font-size:11px;flex-shrink:0">${name.charAt(0)}</div>`}
+            <div style="flex:1;font-size:12px;font-weight:800;color:#1e293b">${name}</div>
+            <div style="font-size:10px;color:#64748b">${signed}/${total} ครั้ง</div>
+            <div style="font-size:12px;font-weight:900;color:${signedPct===100?'#16a34a':signedPct===0?'#dc2626':'#f59e0b'}">${signedPct}%</div>
+          </div>
+          <!-- กราฟ 2 แท่ง -->
+          <div style="display:flex;gap:3px;height:18px;border-radius:6px;overflow:hidden;cursor:pointer" onclick="S.showSignReport('${nameEsc}')">
+            <div style="width:${signedPct}%;background:#22c55e;display:flex;align-items:center;justify-content:center;min-width:${signed>0?'20px':'0'}">
+              ${signed>0?`<span style="font-size:9px;font-weight:800;color:#fff">${signedPct}%</span>`:''}
+            </div>
+            <div style="width:${unsignedPct}%;background:#ef4444;display:flex;align-items:center;justify-content:center;min-width:${unsigned>0?'20px':'0'}">
+              ${unsigned>0?`<span style="font-size:9px;font-weight:800;color:#fff">${unsignedPct}%</span>`:''}
+            </div>
+          </div>
+          ${unsigned>0?`<div style="font-size:9px;color:#ef4444;margin-top:3px">⚠️ ยังไม่เซ็น ${unsigned} ครั้ง — กดดูรายละเอียด</div>`:'<div style="font-size:9px;color:#16a34a;margin-top:3px">✅ เซ็นครบทุกครั้ง</div>'}
+        </div>`;
+      }).join('');
+  },
+
+  showSignReport(name) {
+    const yr = new Date().getFullYear();
+    const allSched = JSON.parse(localStorage.getItem('fac_sched_'+this.sys+'_'+this.curLine)||'{}');
+    const depts = this.getDepts();
+    const SHTH = {morning:'กะเช้า',afternoon:'กะบ่าย',night:'กะดึก'};
+    const unsigned = [], signed = [];
+
+    Object.entries(allSched).forEach(([wk,sched])=>{
+      if(!wk||!wk.match(/\d{4}-\d{2}-\d{2}/)) return;
+      const wp=wk.split('-');
+      const ws=new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2]));
+      for(let di=0;di<6;di++){
+        const d=new Date(ws); d.setDate(d.getDate()+di);
+        if(d.getFullYear()!==yr) continue;
+        const dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+(d.getFullYear()+543);
+        ['morning','afternoon','night'].forEach(sh=>{
+          depts.forEach(dept=>{
+            const w=(sched[dept]?.[di]?.[sh]||sched[dept]?.[String(di)]?.[sh]||[]).find(x=>x.name===name&&x.ot);
+            if(!w) return;
+            const signKey='fac_sign_'+this.sys+'_'+this.curLine+'_'+wk+'_'+name+'_'+dept+'_'+di+'_'+sh;
+            const isSigned = !!localStorage.getItem(signKey);
+            const item = {dateStr, sh:SHTH[sh], dept};
+            if(isSigned) signed.push(item);
+            else unsigned.push(item);
+          });
+        });
+      }
+    });
+
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end';
+    const box=document.createElement('div');
+    box.style.cssText='background:#fff;width:100%;max-height:75vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;overflow:hidden';
+
+    const hdr=document.createElement('div');
+    hdr.style.cssText='padding:14px 16px;background:#1e3a5f;flex-shrink:0;display:flex;justify-content:space-between;align-items:center';
+    hdr.innerHTML=`<div><div style="font-size:15px;font-weight:900;color:#fff">${name}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.6)">รายงานการเซ็น OT ปี ${yr+543}</div></div>`;
+    const closeBtn=document.createElement('button');
+    closeBtn.textContent='✕';
+    closeBtn.style.cssText='background:none;border:none;color:#fff;font-size:20px;cursor:pointer';
+    closeBtn.onclick=()=>overlay.remove();
+    hdr.appendChild(closeBtn);
+    box.appendChild(hdr);
+
+    const body=document.createElement('div');
+    body.style.cssText='overflow-y:auto;flex:1;padding:12px 16px';
+
+    let html='';
+    if(unsigned.length){
+      html+=`<div style="font-size:12px;font-weight:900;color:#dc2626;margin-bottom:8px">⚠️ ยังไม่เซ็น (${unsigned.length} ครั้ง)</div>`;
+      html+=unsigned.map(x=>`<div style="display:flex;justify-content:space-between;padding:8px;background:#fef2f2;border-radius:8px;margin-bottom:4px">
+        <div style="font-size:11px;font-weight:800;color:#1e293b">${x.dateStr}</div>
+        <div style="font-size:11px;color:#64748b">${x.sh}</div>
+        <div style="font-size:11px;color:#ef4444;font-weight:700">❌ ยังไม่เซ็น</div>
+      </div>`).join('');
+    }
+    if(signed.length){
+      html+=`<div style="font-size:12px;font-weight:900;color:#16a34a;margin:12px 0 8px">✅ เซ็นแล้ว (${signed.length} ครั้ง)</div>`;
+      html+=signed.map(x=>`<div style="display:flex;justify-content:space-between;padding:8px;background:#f0fdf4;border-radius:8px;margin-bottom:4px">
+        <div style="font-size:11px;font-weight:800;color:#1e293b">${x.dateStr}</div>
+        <div style="font-size:11px;color:#64748b">${x.sh}</div>
+        <div style="font-size:11px;color:#16a34a;font-weight:700">✅ เซ็นแล้ว</div>
+      </div>`).join('');
+    }
+    if(!unsigned.length&&!signed.length) html='<div style="text-align:center;padding:30px;color:#94a3b8">ไม่มีข้อมูล OT</div>';
+    body.innerHTML=html;
+    box.appendChild(body);
+    overlay.appendChild(box);
+    overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+    document.body.appendChild(overlay);
+  },
+
   setOTSub(sub) {
     this._otSub = sub;
-    const allBtn = document.getElementById('ot-sub-all');
-    const perBtn = document.getElementById('ot-sub-person');
-    if(allBtn) { allBtn.style.background = sub==='all'?'#1e3a5f':'#f1f5f9'; allBtn.style.color = sub==='all'?'#fff':'#64748b'; }
-    if(perBtn) { perBtn.style.background = sub==='person'?'#1e3a5f':'#f1f5f9'; perBtn.style.color = sub==='person'?'#fff':'#64748b'; }
+    ['all','person','report'].forEach(s=>{
+      const btn=document.getElementById('ot-sub-'+s);
+      if(!btn) return;
+      btn.style.background = s===sub?'#1e3a5f':'#f1f5f9';
+      btn.style.color = s===sub?'#fff':'#64748b';
+    });
+    // ซ่อน/แสดง period selector
+    const periodSel = document.getElementById('ot-period-sel');
+    const navBar = document.getElementById('ot-nav-bar');
+    if(periodSel) periodSel.style.display = sub==='report'?'none':'flex';
+    if(navBar) navBar.style.display = sub==='report'?'none':'flex';
+    if(sub==='report') { this.renderOTReport(); return; }
     this.renderOTPeople();
   },
 
