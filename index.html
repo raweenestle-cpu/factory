@@ -1109,42 +1109,39 @@ const H = {
       const parts = id.split('_');
       const sys = parts[0];
       const li = parseInt(parts[1])||0;
-      const allSched = JSON.parse(localStorage.getItem(`fac_sched_${sys}_${li}`)||'{}');
-      const depts = JSON.parse(localStorage.getItem(`fac_depts_${sys}`)||'null') || ['แผนก 1'];
+      const allSched = JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}');
       Object.entries(allSched).forEach(([wKey, wkData]) => {
         if(!wkData) return;
         const wParts = wKey.split('-');
         if(wParts.length<3) return;
-        const wYear = parseInt(wParts[0]);
-        const wMonth = parseInt(wParts[1])-1;
-        const wDay = parseInt(wParts[2]);
-        // หาวันจันทร์จริงๆ ของสัปดาห์นี้ (รองรับทั้ง Sunday และ Monday key)
-        const rawDate = new Date(wYear, wMonth, wDay);
-        const dow = rawDate.getDay(); // 0=อาทิตย์
+        const rawDate = new Date(parseInt(wParts[0]), parseInt(wParts[1])-1, parseInt(wParts[2]));
+        const dow = rawDate.getDay();
         const monday = new Date(rawDate);
-        monday.setDate(rawDate.getDate() - (dow===0?6:dow-1));
-        // เช็ค 6 วัน (จ-ส)
-        let inMonth = false;
+        monday.setDate(rawDate.getDate()-(dow===0?6:dow-1));
+        // เช็คว่าสัปดาห์นี้อยู่ในเดือนที่ต้องการ
+        let inMonth=false;
         for(let dd=0;dd<6;dd++){
-          const d2 = new Date(monday); d2.setDate(monday.getDate()+dd);
-          if(d2.getFullYear()+543===yr && d2.getMonth()===mi){ inMonth=true; break; }
+          const d2=new Date(monday); d2.setDate(monday.getDate()+dd);
+          if(d2.getFullYear()+543===yr && d2.getMonth()===mi){inMonth=true;break;}
         }
         if(!inMonth) return;
-        // วนผ่านทุก dept key ที่มีจริงใน wkData ไม่ใช่แค่ depts list
-        const allDepts = Object.keys(wkData);
-        allDepts.forEach(d => {
-          if(typeof wkData[d] !== 'object') return;
-          for(let di=0;di<6;di++) {
-            const day = wkData[d]?.[di] || wkData[d]?.[String(di)];
+        // นับเฉพาะสัปดาห์ที่มีพนักงานจริงๆ
+        let wTotalH=0, wOtH=0;
+        Object.keys(wkData).forEach(d => {
+          if(typeof wkData[d]!=='object') return;
+          for(let di=0;di<6;di++){
+            const day=wkData[d]?.[di]||wkData[d]?.[String(di)];
             if(!day) return;
-            ['morning','afternoon','night'].forEach(sh => {
-              (day[sh]||[]).forEach(w => {
-                const hrs = w.ot?(w.otHrs||4):0;
-                totalH += 8+hrs; otH += hrs;
+            ['morning','afternoon','night'].forEach(sh=>{
+              (day[sh]||[]).forEach(w=>{
+                const hrs=w.ot?(w.otHrs||4):0;
+                wTotalH+=8+hrs; wOtH+=hrs;
               });
             });
           }
         });
+        // ถ้ามีพนักงานจริงถึงนำมารวม
+        if(wTotalH>0){ totalH+=wTotalH; otH+=wOtH; }
       });
     });
     return totalH>0 ? Math.round(otH/totalH*100) : null;
