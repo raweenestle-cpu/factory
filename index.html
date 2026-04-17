@@ -1428,15 +1428,17 @@ const H = {
 
         shiftArr.forEach(sh => {
           const workers = [];
-          depts.forEach(dept => {
-            diRange.forEach(di => {
+          // วน di ก่อนเพื่อให้เรียงตามวันที่
+          diRange.forEach(di => {
+            const d2 = new Date(ws); d2.setDate(d2.getDate()+di);
+            const dateStr2 = d2.getDate()+'/'+(d2.getMonth()+1)+'/'+(d2.getFullYear()+543);
+            depts.forEach(dept => {
               const dayData = sched[dept]?.[di] || sched[dept]?.[String(di)];
               (dayData?.[sh]||[]).forEach(w => {
                 if(!w.ot) return;
                 hasOT = true;
-                const ex = workers.find(x=>x.name===w.name&&x.dept===dept);
-                if(ex) { ex.days++; ex.hrs+=w.otHrs||4; }
-                else workers.push({name:w.name,dept,days:1,hrs:w.otHrs||4});
+                // แยกแถวตามวัน ไม่รวม
+                workers.push({name:w.name, dept, di, dateStr:dateStr2, hrs:w.otHrs||4});
               });
             });
           });
@@ -1447,8 +1449,8 @@ const H = {
               <th style="width:24px">#</th>
               <th>ชื่อพนักงาน</th>
               <th>แผนก</th>
-              <th style="width:70px">ชม. OT</th>
-              <th style="width:60px">จำนวนวัน</th>
+              <th style="width:80px">วันที่ทำ OT</th>
+              <th style="width:50px">ชม.</th>
               <th class="pr-sign">ลายมือชื่อ</th>
             </tr></thead>
             <tbody>
