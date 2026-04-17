@@ -491,6 +491,28 @@ tr.dept-row td{border-top:3px solid #000!important}
         </div>
       </div>
       <div class="mini-wrap" id="h-total-chart" onclick="event.stopPropagation()"></div>
+      <button onclick="(()=>{
+        let deleted=[];
+        for(let k in localStorage){
+          if(k.startsWith('fac_sched_')){
+            const raw=JSON.parse(localStorage.getItem(k)||'{}');
+            let changed=false;
+            Object.keys(raw).forEach(wk=>{
+              // ลบ key ที่ไม่ใช่วันจันทร์
+              const parts=wk.split('-');
+              if(parts.length<3) return;
+              const d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+              if(d.getDay()!==1){delete raw[wk];changed=true;deleted.push(wk);}
+            });
+            if(changed) localStorage.setItem(k,JSON.stringify(raw));
+          }
+        }
+        const el=document.getElementById('h-fix-result');
+        el.style.display='block';
+        el.textContent=deleted.length?'ลบ keys: '+deleted.join(', ')+' — refresh หน้าเพจ':'ไม่พบ key ผิด';
+        if(deleted.length) setTimeout(()=>location.reload(),1500);
+      })()" style="width:100%;margin-top:6px;padding:6px;background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);border-radius:8px;color:#fff;font-size:10px;font-family:inherit;cursor:pointer">🔧 แก้ key ผิด (ไม่ใช่วันจันทร์)</button>
+      <div id="h-fix-result" style="display:none;background:rgba(0,0,0,.4);padding:6px;border-radius:8px;margin-top:4px;font-size:10px;color:#fff;word-break:break-all;user-select:text;-webkit-user-select:text"></div>
 
       <button onclick="(()=>{
         const raw=JSON.parse(localStorage.getItem('fac_sched_proc_0')||'{}');
@@ -1125,6 +1147,7 @@ const H = {
           if(d2.getFullYear()+543===yr && d2.getMonth()===mi){inMonth=true;break;}
         }
         if(!inMonth) return;
+        // นับ OT ของสัปดาห์นี้
         let wTotalH=0, wOtH=0;
         Object.keys(wkData).forEach(d => {
           if(typeof wkData[d]!=='object') return;
@@ -1139,7 +1162,7 @@ const H = {
             });
           }
         });
-        // นับเฉพาะสัปดาห์ที่มี OT จริงๆ เท่านั้น
+        // นับเฉพาะสัปดาห์ที่มี OT จริงๆ เท่านั้น ไม่นับสัปดาห์ว่างหรือไม่มี OT
         if(wOtH>0){ totalH+=wTotalH; otH+=wOtH; }
       });
     });
@@ -3629,7 +3652,7 @@ const S = {
         const wn=this.getWN(ws);
         navLbl.textContent='สัปดาห์ที่ '+wn+' ('+ws.getDate()+'/'+(ws.getMonth()+1)+' – '+we.getDate()+'/'+(we.getMonth()+1)+')';
       } else if(this._otPeriod==='month') {
-        navLbl.textContent=MON_TH2[this._otMonth||new Date().getMonth()]+' '+(this._otYear||new Date().getFullYear())+543;
+        navLbl.textContent=MON_TH2[this._otMonth||new Date().getMonth()]+' '+((this._otYear||new Date().getFullYear())+543);
       } else {
         navLbl.textContent='ปี '+((this._otYear||new Date().getFullYear())+543);
       }
@@ -5218,25 +5241,7 @@ if(document.readyState === 'loading') {
       if(link) link.href = URL.createObjectURL(blob);
     } catch(e){}
 
-    // Service Worker
-    if('serviceWorker' in navigator) {
-      const sw = `const CACHE='factory-v3';
-self.addEventListener('install',e=>{self.skipWaiting();});
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET') return;
-  e.respondWith(caches.open(CACHE).then(c=>c.match(e.request).then(r=>{
-    return r||fetch(e.request).then(res=>{c.put(e.request,res.clone());return res;});
-  })));
-});`;
-      try {
-        const swBlob = new Blob([sw],{type:'application/javascript'});
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
-      } catch(e){}
-    }
+
   }
 
   if(document.readyState==='complete') initPWA();
