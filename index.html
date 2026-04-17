@@ -2684,14 +2684,15 @@ const S = {
     const shiftData = {morning:[], afternoon:[], night:[]};
     const shiftTH = {morning:'กะเช้า',afternoon:'กะบ่าย',night:'กะดึก'};
 
-    const DAYS_TH_P = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
     depts.forEach(dept => {
       for(let di=0;di<6;di++) {
         SHIFTS.forEach(sh => {
           (sched[dept]?.[di]?.[sh] || sched[dept]?.[String(di)]?.[sh] || []).forEach(w => {
             if(!w.ot) return;
-            // แยกแถวตามวัน ไม่รวม
-            shiftData[sh].push({name:w.name, dept, di, dayTH:DAYS_TH_P[di], totalOTHrs:w.otHrs||4});
+            const d = new Date(this.curWeekStart);
+            d.setDate(d.getDate()+di);
+            const dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+(d.getFullYear()+543);
+            shiftData[sh].push({name:w.name, dept, di, dateStr, totalOTHrs:w.otHrs||4});
           });
         });
       }
@@ -2730,23 +2731,24 @@ const S = {
           </tr>
         </thead>
         <tbody>
-          ${workers.map((w,i)=>`
-          <tr>
-            <td style="text-align:center">${i+1}</td>
-            <td>${w.name}</td>
-            <td>${w.dept}</td>
-            <td style="text-align:center">${w.totalOTHrs} ชม.</td>
-            <td style="text-align:center">${w.days} วัน</td>
-            <td style="text-align:center"><span class="signature">${(()=>{
-              const prefix='fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+w.name+'_';
-              const key=Object.keys(localStorage).find(k=>k.startsWith(prefix));
-              return key?JSON.parse(localStorage.getItem(key)).name:'';
-            }).call(this)}</span></td>
-          </tr>`).join('')}
+          ${workers.map((w,i)=>{
+            const signKey='fac_sign_'+this.sys+'_'+this.curLine+'_'+this.curWKey+'_'+w.name+'_'+w.dept+'_'+w.di+'_'+sh;
+            const signed=localStorage.getItem(signKey);
+            const sig=signed?JSON.parse(signed).name:'';
+            return `<tr>
+              <td style="text-align:center">${i+1}</td>
+              <td>${w.name}</td>
+              <td>${w.dept}</td>
+              <td style="text-align:center">${w.dateStr}</td>
+              <td style="text-align:center">${w.totalOTHrs} ชม.</td>
+              <td style="text-align:center"><span class="signature">${sig}</span></td>
+            </tr>`;
+          }).join('')}
           <tr style="font-weight:700;background:#f0f0f0">
             <td colspan="3" style="text-align:right">รวม</td>
+            <td></td>
             <td style="text-align:center">${workers.reduce((a,w)=>a+w.totalOTHrs,0)} ชม.</td>
-            <td></td><td></td>
+            <td></td>
           </tr>
         </tbody>
       </table>`;
