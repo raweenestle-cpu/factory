@@ -950,17 +950,6 @@ function initFB() {
           // local ว่าง → ดึงจาก Firebase
           save(`fac_emps_${sys}`, v);
           if(S.sys===sys) { S.renderEmp(); toast('✅ โหลดพนักงาน '+v.length+' คน'); }
-        } else if(sys==='fill') {
-          // fill ว่าง → ลองดึงจาก filling_v2 (ข้อมูลระบบเก่า)
-          fbDb.ref('filling_v2/emps').once('value', snap2 => {
-            const v2 = snap2.val();
-            if(!v2) return;
-            const arr = Array.isArray(v2) ? v2 : Object.values(v2);
-            if(!arr.length) return;
-            save('fac_emps_fill', arr);
-            fbDb.ref('factory/fill/emps').set(arr).catch(()=>{});
-            if(S.sys==='fill') { S.renderEmp(); toast('✅ โหลดพนักงาน '+arr.length+' คน (จากข้อมูลเก่า)'); }
-          });
         }
       });
 
