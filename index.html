@@ -2684,18 +2684,14 @@ const S = {
     const shiftData = {morning:[], afternoon:[], night:[]};
     const shiftTH = {morning:'กะเช้า',afternoon:'กะบ่าย',night:'กะดึก'};
 
+    const DAYS_TH_P = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
     depts.forEach(dept => {
-      for(let di=0;di<7;di++) {
+      for(let di=0;di<6;di++) {
         SHIFTS.forEach(sh => {
-          (sched[dept]?.[di]?.[sh]||[]).forEach(w => {
+          (sched[dept]?.[di]?.[sh] || sched[dept]?.[String(di)]?.[sh] || []).forEach(w => {
             if(!w.ot) return;
-            const existing = shiftData[sh].find(x=>x.name===w.name&&x.dept===dept);
-            if(existing) {
-              existing.days++;
-              existing.totalOTHrs += w.otHrs||4;
-            } else {
-              shiftData[sh].push({name:w.name, dept, days:1, totalOTHrs:w.otHrs||4});
-            }
+            // แยกแถวตามวัน ไม่รวม
+            shiftData[sh].push({name:w.name, dept, di, dayTH:DAYS_TH_P[di], totalOTHrs:w.otHrs||4});
           });
         });
       }
