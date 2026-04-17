@@ -2233,11 +2233,23 @@ const S = {
     const dayPct=tTotalHrs>0?Math.round(tOtHrs/tTotalHrs*100):0;
     document.getElementById('s-ot-day').textContent=dayPct+'%';
     document.getElementById('s-ot-day').style.color=dayPct>tgt?'var(--red)':'var(--green)';
-    // Month
+    // Month — กรองเฉพาะสัปดาห์ที่ตกในเดือนปัจจุบันเท่านั้น
     let mTotalHrs=0,mOtHrs=0;
-    const thisYr=new Date().getFullYear()+543;
+    const now=new Date();
+    const thisMonth=now.getMonth();
+    const thisYear=now.getFullYear();
     const allSched=load(`fac_sched_${this.sys}_${this.curLine}`,{});
-    Object.values(allSched).forEach(ws=>{
+    Object.entries(allSched).forEach(([wk,ws])=>{
+      // wk format: YYYY-MM-DD (วันจันทร์ต้นสัปดาห์)
+      const wkDate=new Date(wk);
+      if(isNaN(wkDate)) return;
+      // เช็คว่าสัปดาห์นั้นตกในเดือนนี้ (เช็คจากวันจันทร์ถึงวันอาทิตย์)
+      let hasThisMonth=false;
+      for(let d=0;d<7;d++){
+        const dd=new Date(wkDate); dd.setDate(dd.getDate()+d);
+        if(dd.getMonth()===thisMonth && dd.getFullYear()===thisYear){ hasThisMonth=true; break; }
+      }
+      if(!hasThisMonth) return;
       this.getDepts().forEach(d=>{
         for(let di=0;di<7;di++) {
           SHIFTS.forEach(sh=>{
