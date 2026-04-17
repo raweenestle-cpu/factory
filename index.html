@@ -1100,7 +1100,10 @@ const H = {
           if(d2.getFullYear()+543===yr && d2.getMonth()===mi){ inMonth=true; break; }
         }
         if(!inMonth) return;
-        depts.forEach(d => {
+        // วนผ่านทุก dept key ที่มีจริงใน wkData ไม่ใช่แค่ depts list
+        const allDepts = Object.keys(wkData);
+        allDepts.forEach(d => {
+          if(typeof wkData[d] !== 'object') return;
           for(let di=0;di<6;di++) {
             const day = wkData[d]?.[di] || wkData[d]?.[String(di)];
             if(!day) return;
