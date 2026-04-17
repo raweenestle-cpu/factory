@@ -4605,9 +4605,9 @@ const S = {
       const wn = this.getWN(this.curWeekStart);
       const rot = Math.floor(Math.max(0,wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
       const shiftTeams = {
-        morning: ['A','B','C'][rot%3],
+        night: ['A','B','C'][rot%3],
         afternoon: ['A','B','C'][(rot+1)%3],
-        night: ['A','B','C'][(rot+2)%3]
+        morning: ['A','B','C'][(rot+2)%3]
       };
 
       ['morning','afternoon','night'].forEach(sh => {
@@ -4861,9 +4861,9 @@ const S = {
     const wn = this.getWN(this.curWeekStart);
     const rot = Math.floor(Math.max(0,wn-(cfg.startWeek||1))/(cfg.rotateSW||2));
     const shiftTeams = {
-      morning: ['A','B','C'][rot%3],
+      night: ['A','B','C'][rot%3],
       afternoon: ['A','B','C'][(rot+1)%3],
-      night: ['A','B','C'][(rot+2)%3]
+      morning: ['A','B','C'][(rot+2)%3]
     };
 
     const ep = JSON.parse(localStorage.getItem('fac_emps_proc')||'[]');
