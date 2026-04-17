@@ -5000,7 +5000,6 @@ function updateEmpCount() {
 }
 
 function migrateWeekKeys() {
-  // แปลง UTC week keys (อาทิตย์) เป็น local week keys (จันทร์)
   ['proc','fill'].forEach(sys => {
     for(let li=0;li<14;li++) {
       const storeKey = 'fac_sched_'+sys+'_'+li;
@@ -5008,27 +5007,44 @@ function migrateWeekKeys() {
       const newRaw = {};
       let changed = false;
       Object.entries(raw).forEach(([wk, data]) => {
-        // แปลง key ให้เป็น local date ที่เป็นวันจันทร์จริงๆ
         const parts = wk.split('-');
         const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
         const day = d.getDay();
         const monday = new Date(d);
         monday.setDate(d.getDate() - (day===0?6:day-1));
         const newKey = monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
-        if(newKey !== wk) { changed = true; }
-        // ถ้ามี key ใหม่อยู่แล้ว ให้ merge
-        if(newRaw[newKey]) {
-          // merge data
-          Object.entries(data||{}).forEach(([dept, days]) => {
-            if(!newRaw[newKey][dept]) newRaw[newKey][dept] = days;
-          });
+        if(newKey !== wk) changed = true;
+        if(!newRaw[newKey]) {
+          newRaw[newKey] = JSON.parse(JSON.stringify(data||{}));
         } else {
-          newRaw[newKey] = data;
+          // deep merge: dept -> di -> shift -> workers
+          Object.entries(data||{}).forEach(([dept, days]) => {
+            if(!newRaw[newKey][dept]) {
+              newRaw[newKey][dept] = JSON.parse(JSON.stringify(days));
+            } else {
+              Object.entries(days||{}).forEach(([di, shifts]) => {
+                if(!newRaw[newKey][dept][di]) {
+                  newRaw[newKey][dept][di] = JSON.parse(JSON.stringify(shifts));
+                } else {
+                  ['morning','afternoon','night'].forEach(sh => {
+                    if(!newRaw[newKey][dept][di][sh]) {
+                      newRaw[newKey][dept][di][sh] = shifts[sh]||[];
+                    } else {
+                      // merge workers ไม่ซ้ำ
+                      (shifts[sh]||[]).forEach(w => {
+                        if(!newRaw[newKey][dept][di][sh].find(x=>x.name===w.name)) {
+                          newRaw[newKey][dept][di][sh].push(w);
+                        }
+                      });
+                    }
+                  });
+                }
+              });
+            }
+          });
         }
       });
-      if(changed) {
-        localStorage.setItem(storeKey, JSON.stringify(newRaw));
-      }
+      if(changed) localStorage.setItem(storeKey, JSON.stringify(newRaw));
     }
   });
 }
