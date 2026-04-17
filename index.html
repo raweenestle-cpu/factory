@@ -950,6 +950,17 @@ function initFB() {
           // local ว่าง → ดึงจาก Firebase
           save(`fac_emps_${sys}`, v);
           if(S.sys===sys) { S.renderEmp(); toast('✅ โหลดพนักงาน '+v.length+' คน'); }
+        } else if(sys==='fill') {
+          // fill ว่าง → ลองดึงจาก filling_v2 (ข้อมูลระบบเก่า)
+          fbDb.ref('filling_v2/emps').once('value', snap2 => {
+            const v2 = snap2.val();
+            if(!v2) return;
+            const arr = Array.isArray(v2) ? v2 : Object.values(v2);
+            if(!arr.length) return;
+            save('fac_emps_fill', arr);
+            fbDb.ref('factory/fill/emps').set(arr).catch(()=>{});
+            if(S.sys==='fill') { S.renderEmp(); toast('✅ โหลดพนักงาน '+arr.length+' คน (จากข้อมูลเก่า)'); }
+          });
         }
       });
 
@@ -970,10 +981,9 @@ function initFB() {
           const v = snap.val();
           if(!v) return;
           const existing = load(`fac_sched_${sys}_${li}`,{});
-          const deleted = load(`fac_deleted_weeks_${sys}_${li}`,[]);
           let changed = false;
           Object.entries(v).forEach(([wk, wkData]) => {
-            if(!existing[wk] && !deleted.includes(wk)) { existing[wk] = wkData; changed = true; }
+            if(!existing[wk]) { existing[wk] = wkData; changed = true; }
           });
           if(changed) {
             save(`fac_sched_${sys}_${li}`, existing);
@@ -2234,23 +2244,11 @@ const S = {
     const dayPct=tTotalHrs>0?Math.round(tOtHrs/tTotalHrs*100):0;
     document.getElementById('s-ot-day').textContent=dayPct+'%';
     document.getElementById('s-ot-day').style.color=dayPct>tgt?'var(--red)':'var(--green)';
-    // Month — กรองเฉพาะสัปดาห์ที่ตกในเดือนปัจจุบันเท่านั้น
+    // Month
     let mTotalHrs=0,mOtHrs=0;
-    const now=new Date();
-    const thisMonth=now.getMonth();
-    const thisYear=now.getFullYear();
+    const thisYr=new Date().getFullYear()+543;
     const allSched=load(`fac_sched_${this.sys}_${this.curLine}`,{});
-    Object.entries(allSched).forEach(([wk,ws])=>{
-      // wk format: YYYY-MM-DD (วันจันทร์ต้นสัปดาห์)
-      const wkDate=new Date(wk);
-      if(isNaN(wkDate)) return;
-      // เช็คว่าสัปดาห์นั้นตกในเดือนนี้ (เช็คจากวันจันทร์ถึงวันอาทิตย์)
-      let hasThisMonth=false;
-      for(let d=0;d<7;d++){
-        const dd=new Date(wkDate); dd.setDate(dd.getDate()+d);
-        if(dd.getMonth()===thisMonth && dd.getFullYear()===thisYear){ hasThisMonth=true; break; }
-      }
-      if(!hasThisMonth) return;
+    Object.values(allSched).forEach(ws=>{
       this.getDepts().forEach(d=>{
         for(let di=0;di<7;di++) {
           SHIFTS.forEach(sh=>{
@@ -3055,25 +3053,8 @@ const S = {
       const a=JSON.parse(localStorage.getItem(k)||'{}');
       delete a[S.curWKey];
       localStorage.setItem(k,JSON.stringify(a));
-      // บันทึกว่าสัปดาห์นี้ถูกลบแล้ว เพื่อกัน Firebase sync กลับมา
-      const _delKey='fac_deleted_weeks_'+S.sys+'_'+S.curLine;
-      const _delList=JSON.parse(localStorage.getItem(_delKey)||'[]');
-      if(!_delList.includes(S.curWKey)) _delList.push(S.curWKey);
-      localStorage.setItem(_delKey,JSON.stringify(_delList));
-      // ลบ ot_summary ของสัปดาห์นี้ใน localStorage (เฉพาะเดือนที่ถูกต้อง)
-      const _wkDate=new Date(S.curWKey);
-      const _fbKey=S.sys+'_'+S.curLine;
-      const _yr=isNaN(_wkDate)?new Date().getFullYear()+543:_wkDate.getFullYear()+543;
-      const _mi=isNaN(_wkDate)?new Date().getMonth():_wkDate.getMonth();
-      localStorage.removeItem('fac_ot_'+_fbKey+'_'+_yr+'_'+_mi+'_'+S.curWKey);
-      try{
-        if(fbDb){
-          fbDb.ref('factory/'+S.sys+'/sched/'+S.curLine+'/'+S.curWKey).remove();
-          fbDb.ref('ot_summary/'+_fbKey+'/'+_yr+'/'+_mi+'/'+S.curWKey).remove();
-        }
-      }catch(e){}
+      try{if(fbDb)fbDb.ref('factory/'+S.sys+'/sched/'+S.curLine+'/'+S.curWKey).remove();}catch(e){}
       S.renderSched();S.updateOTCards();
-      if(typeof H!=='undefined') setTimeout(()=>H.renderCharts(),400);
       toast('✅ ลบตารางสัปดาห์นี้แล้ว');
     };
     row.appendChild(btnNo);row.appendChild(btnYes);
