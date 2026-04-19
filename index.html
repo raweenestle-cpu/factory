@@ -543,7 +543,7 @@ tr.dept-row td{border-top:3px solid #000!important}
       <button class="nav-tab" data-tab="emp" onclick="S.goTab(this)">👥 พนักงาน</button>
       <button class="nav-tab" data-tab="log" onclick="S.goTab(this)">📋 ประวัติ</button>
       <button class="nav-tab" data-tab="team" onclick="S.goTab(this)">👥 ทีม</button>
-      <button class="nav-tab" data-tab="settings" onclick="S.goTab(this)">⚙️ ตั้งค่า</button>
+      <button class="nav-tab" data-tab="settings" onclick="if(!curUser||!curUser.isAdmin){toast('❌ เฉพาะ Admin เท่านั้น');return;}S.goTab(this)">⚙️ ตั้งค่า</button>
 
       <button onclick="S.goHome()" style="padding:8px 14px;background:#2563eb;color:#fff;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:52px" title="กลับหน้าหลัก">🏠<span style="font-size:9px;font-weight:800;line-height:1">HOME</span></button>
     </div>
