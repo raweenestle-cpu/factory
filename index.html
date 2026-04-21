@@ -949,37 +949,32 @@ function initFB() {
     // Sync ข้อมูลแต่ละ sys
     ['proc','fill'].forEach(sys => {
 
-      // Lines
+      // Lines — Firebase เป็น master
       fbDb.ref(`factory/${sys}/lines`).on('value', snap => {
         const v = snap.val();
-        if(!v) return;
+        if(!v || !v.length) return;
         save(sys==='proc'?'fac_proc_lines':'fac_fill_lines', v);
         if(S.sys===sys) S.renderLineTabs();
       });
 
-      // Depts
+      // Depts — Firebase เป็น master
       fbDb.ref(`factory/${sys}/depts`).on('value', snap => {
         const v = snap.val();
         if(!v || !v.length) return;
         save(`fac_depts_${sys}`, v);
-        if(S.sys===sys) S.renderSched();
+        if(S.sys===sys) { S.renderSched(); H.renderCharts(); }
       });
 
-      // Emps — real-time sync, Firebase เป็น master
+      // Emps — Firebase เป็น master
       fbDb.ref(`factory/${sys}/emps`).on('value', snap => {
         const v = snap.val();
-        const local = load(`fac_emps_${sys}`,[]);
-        if(v && v.length) {
-          // Firebase มีข้อมูล → ใช้ Firebase เสมอ
-          save(`fac_emps_${sys}`, v);
-          if(S.sys===sys) S.renderEmp();
-        } else if(local.length) {
-          // Firebase ว่าง แต่ local มี → push ขึ้น Firebase
-          fbDb.ref(`factory/${sys}/emps`).set(local).catch(()=>{});
-        }
+        if(!v || !v.length) return;
+        save(`fac_emps_${sys}`, v);
+        if(S.sys===sys) S.renderEmp();
+        updateEmpCount();
       });
 
-      // Target
+      // Target — Firebase เป็น master
       fbDb.ref(`factory/${sys}/target`).on('value', snap => {
         const v = snap.val();
         if(v == null) return;
@@ -992,9 +987,15 @@ function initFB() {
         fbDb.ref(`factory/${sys}/sched/${li}`).on('value', snap => {
           const v = snap.val();
           if(!v) return;
-          // Always sync from Firebase (real-time)
-          save(`fac_sched_${sys}_${li}`, v);
-          if(S.sys===sys && S.curLine===li) { S.renderSched(); S.updateOTCards(); }
+          const existing = load(`fac_sched_${sys}_${li}`,{});
+          let changed = false;
+          Object.entries(v).forEach(([wk, wkData]) => {
+            if(!existing[wk]) { existing[wk] = wkData; changed = true; }
+          });
+          if(changed) {
+            save(`fac_sched_${sys}_${li}`, existing);
+            if(S.sys===sys && S.curLine===li) { S.renderSched(); S.updateOTCards(); }
+          }
         });
 
         // Comments
@@ -1100,6 +1101,9 @@ const H = {
       const parts = id.split('_');
       const sys = parts[0];
       const li = parseInt(parts[1])||0;
+      // ถ้าไม่มีแผนก แสดงว่าข้อมูลไม่ครบ ข้ามไป
+      const deptCheck = JSON.parse(localStorage.getItem('fac_depts_'+sys)||'null');
+      if(!deptCheck || !deptCheck.length) return;
       const allSched = JSON.parse(localStorage.getItem('fac_sched_'+sys+'_'+li)||'{}');
       Object.entries(allSched).forEach(([wKey, wkData]) => {
         if(!wkData) return;
