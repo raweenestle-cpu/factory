@@ -4370,6 +4370,7 @@ const S = {
     document.getElementById('s-dept-list').innerHTML=depts.map((d,i)=>
       `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8faff;border-radius:10px;margin-bottom:6px;border:1.5px solid #e2e8f0">
         <span style="flex:1;font-size:13px;font-weight:700;color:#1e293b">${d}</span>
+        <button onclick="S.editDept(${i})" style="padding:4px 8px;border-radius:6px;border:1.5px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700">✏️</button>
         <button onclick="S.deleteDept(${i})" style="padding:4px 8px;border-radius:6px;border:1.5px solid #dc2626;background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700">✕</button>
       </div>`
     ).join('');
@@ -4415,6 +4416,16 @@ const S = {
     document.getElementById('s-new-dept').value='';
     this.renderSettings();
     toast('✅ เพิ่มแผนก '+name);
+  },
+  editDept(i) {
+    const depts=this.getDepts();
+    const name=prompt('แก้ไขชื่อแผนก:',depts[i]);
+    if(!name||!name.trim()) return;
+    depts[i]=name.trim();
+    this.saveDepts(depts);
+    this.renderSettings();
+    this.renderSched();
+    toast('✅ แก้ไขแผนกแล้ว');
   },
   deleteDept(i) {
     const depts=this.getDepts();
