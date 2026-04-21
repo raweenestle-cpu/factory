@@ -953,35 +953,29 @@ function initFB() {
       fbDb.ref(`factory/${sys}/lines`).on('value', snap => {
         const v = snap.val();
         if(!v) return;
-        const local = load(sys==='proc'?'fac_proc_lines':'fac_fill_lines',[]);
-        if(!local.length) {
-          save(sys==='proc'?'fac_proc_lines':'fac_fill_lines', v);
-          if(S.sys===sys) S.renderLineTabs();
-        }
+        save(sys==='proc'?'fac_proc_lines':'fac_fill_lines', v);
+        if(S.sys===sys) S.renderLineTabs();
       });
 
       // Depts
       fbDb.ref(`factory/${sys}/depts`).on('value', snap => {
         const v = snap.val();
         if(!v || !v.length) return;
-        const local = load(`fac_depts_${sys}`,[]);
-        if(!local.length) {
-          save(`fac_depts_${sys}`, v);
-          if(S.sys===sys) S.renderSched();
-        }
+        save(`fac_depts_${sys}`, v);
+        if(S.sys===sys) S.renderSched();
       });
 
-      // Emps — ไม่ทับ local เด็ดขาด local เป็น master เสมอ
-      fbDb.ref(`factory/${sys}/emps`).once('value', snap => {
+      // Emps — real-time sync, Firebase เป็น master
+      fbDb.ref(`factory/${sys}/emps`).on('value', snap => {
         const v = snap.val();
         const local = load(`fac_emps_${sys}`,[]);
-        if(local.length) {
-          // local มีข้อมูล → push ขึ้น Firebase แทน
-          fbDb.ref(`factory/${sys}/emps`).set(local).catch(()=>{});
-        } else if(v && v.length) {
-          // local ว่าง → ดึงจาก Firebase
+        if(v && v.length) {
+          // Firebase มีข้อมูล → ใช้ Firebase เสมอ
           save(`fac_emps_${sys}`, v);
-          if(S.sys===sys) { S.renderEmp(); toast('✅ โหลดพนักงาน '+v.length+' คน'); }
+          if(S.sys===sys) S.renderEmp();
+        } else if(local.length) {
+          // Firebase ว่าง แต่ local มี → push ขึ้น Firebase
+          fbDb.ref(`factory/${sys}/emps`).set(local).catch(()=>{});
         }
       });
 
@@ -989,11 +983,8 @@ function initFB() {
       fbDb.ref(`factory/${sys}/target`).on('value', snap => {
         const v = snap.val();
         if(v == null) return;
-        const local = load(`fac_target_${sys}`, null);
-        if(local == null) {
-          save(`fac_target_${sys}`, v);
-          if(S.sys===sys) S.updateOTCards();
-        }
+        save(`fac_target_${sys}`, v);
+        if(S.sys===sys) S.updateOTCards();
       });
 
       // Sched
@@ -1001,15 +992,9 @@ function initFB() {
         fbDb.ref(`factory/${sys}/sched/${li}`).on('value', snap => {
           const v = snap.val();
           if(!v) return;
-          const existing = load(`fac_sched_${sys}_${li}`,{});
-          let changed = false;
-          Object.entries(v).forEach(([wk, wkData]) => {
-            if(!existing[wk]) { existing[wk] = wkData; changed = true; }
-          });
-          if(changed) {
-            save(`fac_sched_${sys}_${li}`, existing);
-            if(S.sys===sys && S.curLine===li) { S.renderSched(); S.updateOTCards(); }
-          }
+          // Always sync from Firebase (real-time)
+          save(`fac_sched_${sys}_${li}`, v);
+          if(S.sys===sys && S.curLine===li) { S.renderSched(); S.updateOTCards(); }
         });
 
         // Comments
