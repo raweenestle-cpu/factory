@@ -4199,7 +4199,9 @@ const S = {
             <div class="emp-name">${e.name}</div>
             <div class="emp-dept">${e.dept}</div>
             <div style="font-size:10px;color:#94a3b8;margin-top:2px">PIN: ••••</div>
+            ${e.lockShift?`<div style="font-size:9px;font-weight:800;color:#16a34a;margin-top:2px">🔒 Lock ${e.lockShift==='morning'?'กะเช้า':e.lockShift==='afternoon'?'กะบ่าย':'กะดึก'}</div>`:''}
           </div>
+          <button onclick="S.toggleLockShift(${i})" style="width:32px;height:32px;border-radius:50%;border:1.5px solid ${e.lockShift?'#16a34a':'#e2e8f0'};background:${e.lockShift?'#dcfce7':'#f8faff'};color:${e.lockShift?'#16a34a':'#94a3b8'};font-size:14px;margin-right:4px" title="Lock กะ">🔒</button>
           <button onclick="S.openEditEmp(${i})" style="width:32px;height:32px;border-radius:50%;border:1.5px solid #2563eb;background:#dbeafe;color:#1d4ed8;font-size:14px;margin-right:6px">✏️</button>
           <button class="emp-del" onclick="S.deleteEmp(${i})">✕</button>
         </div>`;
@@ -4320,6 +4322,21 @@ const S = {
       input.value = '';
     };
     reader.readAsText(file);
+  },
+
+  toggleLockShift(i) {
+    const emps = this.getEmps();
+    const e = emps[i];
+    if(!e) return;
+    // toggle: ไม่มี → เช้า → บ่าย → ดึก → ไม่มี
+    const shifts = [undefined, 'morning', 'afternoon', 'night'];
+    const cur = shifts.indexOf(e.lockShift);
+    const next = shifts[(cur+1) % shifts.length];
+    emps[i].lockShift = next;
+    this.saveEmps(emps);
+    this.renderEmp();
+    const label = next ? (next==='morning'?'กะเช้า':next==='afternoon'?'กะบ่าย':'กะดึก') : 'ปลด Lock';
+    toast(next ? `🔒 Lock ${emps[i].name} → ${label}` : `🔓 ปลด Lock ${emps[i].name}`);
   },
 
   deleteEmp(i) {
@@ -4634,8 +4651,12 @@ const S = {
       ['morning','afternoon','night'].forEach(sh => {
         const shTeam = shiftTeams[sh];
         const shMembers = teams[shTeam]||[];
-        shMembers.forEach(name => {
-          const emp = empMap.get(name);
+        // เพิ่มพนักงาน lock กะนี้เข้าด้วย
+        const lockEmps = this.getEmps().filter(e=>e.lockShift===sh);
+        // รวม lock emps
+        const allMembers = [...new Set([...shMembers, ...lockEmps.map(e=>e.name)])];
+        allMembers.forEach(name => {
+          const emp = empMap.get(name) || lockEmps.find(e=>e.name===name);
           if(!emp) return;
           const empDept = (emp.dept||'').trim();
           const dept = depts.find(d=>d.trim()===empDept) || depts[0];
