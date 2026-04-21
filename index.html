@@ -683,6 +683,32 @@ tr.dept-row td{border-top:3px solid #000!important}
   <!-- TAB: SETTINGS -->
   <div class="sch-page" id="tab-settings">
     <div class="settings-section">
+      <!-- Sync -->
+      <div class="setting-card">
+        <div class="setting-title">🔄 Sync ข้อมูลขึ้น Firebase</div>
+        <p style="font-size:12px;color:#64748b;margin-bottom:10px">กดเพื่อ push ข้อมูลทั้งหมดในเครื่องนี้ขึ้น Firebase ให้ทุกคนเห็น</p>
+        <button onclick="(()=>{
+          if(!fbDb){toast('❌ ไม่ได้เชื่อมต่อ Firebase');return;}
+          try {
+            fbSync(S.sys);
+            // sync teams ทุก line
+            const lines = S.getLines();
+            lines.forEach((_,li)=>{
+              const teams = JSON.parse(localStorage.getItem('fac_teams_'+S.sys+'_'+li)||'{}');
+              if(Object.keys(teams).length) fbDb.ref('factory/'+S.sys+'/teams/'+li).set(teams);
+              const sched = JSON.parse(localStorage.getItem('fac_sched_'+S.sys+'_'+li)||'{}');
+              if(Object.keys(sched).length) fbDb.ref('factory/'+S.sys+'/sched/'+li).set(sched);
+            });
+            // sync signs
+            const signs = Object.keys(localStorage).filter(k=>k.startsWith('fac_sign_'+S.sys));
+            signs.forEach(k=>{
+              const val = localStorage.getItem(k);
+              if(val) fbDb.ref('signs/'+k).set(JSON.parse(val));
+            });
+            toast('✅ Sync ข้อมูลขึ้น Firebase แล้ว!');
+          } catch(e){ toast('❌ Sync ผิดพลาด: '+e.message); }
+        })()" style="width:100%;padding:12px;background:#1e3a5f;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">🔄 Sync ทุกอย่างขึ้น Firebase</button>
+      </div>
       <!-- Target -->
       <div class="setting-card">
         <div class="setting-title">🔍 Debug Info</div>
