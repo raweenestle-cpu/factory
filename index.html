@@ -774,6 +774,28 @@ tr.dept-row td{border-top:3px solid #000!important}
       <div class="setting-card">
         <div class="setting-title">🏭 จัดการไลน์</div>
         <button onclick="(()=>{
+          if(!confirm('ล้างตารางกะและ OT ทั้งหมด? ข้อมูลจะหายถาวร')) return;
+          // ล้าง localStorage
+          Object.keys(localStorage).forEach(k=>{
+            if(k.startsWith('fac_sched_')||k.startsWith('fac_sign_')||k.startsWith('fac_ot_')||k.startsWith('fac_gcmt_')) {
+              localStorage.removeItem(k);
+            }
+          });
+          // ล้าง Firebase
+          if(fbDb){
+            ['proc','fill'].forEach(sys=>{
+              for(let li=0;li<14;li++){
+                fbDb.ref('factory/'+sys+'/sched/'+li).remove();
+              }
+              fbDb.ref('ot_summary/'+sys+'_0').remove();
+              fbDb.ref('signs').remove();
+            });
+          }
+          H.renderCharts();
+          S.renderSched();
+          toast('✅ ล้างตารางกะทั้งหมดแล้ว');
+        })()" style="width:100%;padding:10px;background:#fee2e2;border:1.5px solid #dc2626;border-radius:10px;font-size:12px;font-weight:800;color:#991b1b;font-family:inherit;cursor:pointer;margin-bottom:10px">🗑️ ล้างตารางกะและ OT ทั้งหมด</button>
+        <button onclick="(()=>{
           if(!confirm('รีเซ็ต Lines และแผนกเป็นค่าเริ่มต้น?')) return;
           const procLines = ['Process'];
           const fillLines = ['Filling'];
