@@ -987,6 +987,7 @@ function initFB() {
         fbDb.ref(`factory/${sys}/sched/${li}`).on('value', snap => {
           const v = snap.val();
           if(!v) return;
+          // Sched — merge Firebase กับ local (ไม่ทับข้อมูล local ที่ใหม่กว่า)
           const existing = load(`fac_sched_${sys}_${li}`,{});
           let changed = false;
           Object.entries(v).forEach(([wk, wkData]) => {
@@ -996,6 +997,13 @@ function initFB() {
             save(`fac_sched_${sys}_${li}`, existing);
             if(S.sys===sys && S.curLine===li) { S.renderSched(); S.updateOTCards(); }
           }
+        });
+
+        // Teams — Firebase เป็น master
+        fbDb.ref(`factory/${sys}/teams/${li}`).on('value', snap => {
+          const v = snap.val();
+          if(!v) return;
+          save(`fac_teams_${sys}_${li}`, v);
         });
 
         // Comments
