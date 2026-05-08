@@ -1397,7 +1397,7 @@ const APP={
       FB.on(sys+'/products',v=>{if(v){LS.set('prods_'+sys,v);if(sys===S.sys){PLAN.render();SET.render();}}});
       FB.on(sys+'/plan',v=>{if(v){LS.set('plan_'+sys,v);if(sys===S.sys)PLAN.render();}});
       FB.on(sys+'/sched',v=>{
-        if(v){
+        if(v&&!window._autoLoading){
           LS.set('sched_'+sys,v);
           if(sys===S.sys){SCHED.render();DASH.render();}
         }
@@ -2198,11 +2198,13 @@ const PLAN={
     });
   },
   autoLoad(){
+    window._autoLoading=true;
     // แสดงสถานะกำลังโหลด — define ก่อนเสมอ
     const autoBtn=S.sys==='fill'?document.getElementById('plan-load-emp-fill-btn'):document.getElementById('plan-load-emp-proc-btn');
     const origText=autoBtn?.textContent;
     if(autoBtn){autoBtn.textContent='⏳ กำลังโหลด...';autoBtn.disabled=true;autoBtn.style.opacity='0.6';}
     const doneLoad=(ok,msg)=>{
+      window._autoLoading=false;
       if(ok){
         toast('✅ โหลดพนักงานสำเร็จ');
       } else {
