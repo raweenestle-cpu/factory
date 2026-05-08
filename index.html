@@ -1020,7 +1020,7 @@ const D={
     const obj={};clean.forEach(emp=>{obj[emp.name.replace(/[.#$\[\]]/g,'_')]=emp;});
     FB.set(sys+'/emps',obj);
   },
-  getTarget(sys=S.sys){return LS.get('target_'+sys,null)||null;},
+  getTarget(sys=S.sys){return parseFloat(LS.get('target_'+sys,0))||0;},
   saveTarget(v,sys=S.sys){LS.set('target_'+sys,v);FB.set(sys+'/target',v);},
   getMaxOT(){return LS.get('max_ot',3);},
   saveMaxOT(v){LS.set('max_ot',v);FB.set('config/max_ot',v);},
