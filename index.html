@@ -2461,8 +2461,10 @@ const PLAN={
             if(existing.length>=1)return; // มีคนอยู่แล้ว (ต้องการแค่ 1 คน/กะ)
             // หาคนที่มี sub1=Oreo Coating หรือ sub2=Oreo Coating มาเพิ่ม
             const allAvail=procEmps.filter(e=>!(leaveData2[e.name]||[]).includes(dk2));
+            const _oreoProtected=['CIP Man','Leadman','Flavor','Mixing'];
             const subForOreo=allAvail.find(e=>{
               if((sched2['Oreo Coating'][di2]||{})[sh2]?.find(w=>w.name===e.name))return false;
+              if(_oreoProtected.some(d=>d.toLowerCase()===(e.mainDept||'').toLowerCase()))return false;
               const alreadyInSched=procDepts.some(d=>SHS.some(s=>(sched2[d]?.[di2]?.[s]||[]).find(w=>w.name===e.name&&!w.ot)));
               if(alreadyInSched)return false;
               return e.sub1==='Oreo Coating'||e.sub2==='Oreo Coating';
@@ -2562,19 +2564,13 @@ const PLAN={
             (e.mainDept||e.dept)===dept&&!usedEmps.has(e.name)
           );
 
-          // 2. หามือสำรอง (sub1 หรือ sub2 === dept) ที่ยังไม่ถูกใช้
-          const subPool=byShift[sh].filter(e=>
-            (e.sub1===dept||e.sub2===dept)&&!usedEmps.has(e.name)&&
-            !(e.mainDept===dept||e.dept===dept)
-          );
-
-          // รวม pool: คนหลักก่อน มือสำรองตาม
-          const pool=[...mainPool,...subPool];
+          // ใช้แค่มือหลัก ไม่ดึงมือรอง
+          const pool=[...mainPool];
           let assigned=0;
           pool.forEach(e=>{
             if(assigned>=need)return;
-            sched[dept][di][sh].push({name:e.name,ot:false,otHrs:4,av:e.av||0,
-              isSub:!mainPool.find(m=>m.name===e.name)});
+            if(usedEmps.has(e.name))return;
+            sched[dept][di][sh].push({name:e.name,ot:false,av:e.av||0,isSub:false});
             usedEmps.add(e.name);
             assigned++;
           });
