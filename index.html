@@ -2357,14 +2357,8 @@ const PLAN={
             (e.mainDept||e.dept)===dept&&!usedEmps.has(e.name)
           );
 
-          // 2. หามือสำรอง (sub1 หรือ sub2 === dept) ที่ยังไม่ถูกใช้
-          const subPool=byShift[sh].filter(e=>
-            (e.sub1===dept||e.sub2===dept)&&!usedEmps.has(e.name)&&
-            !(e.mainDept===dept||e.dept===dept)
-          );
-
-          // รวม pool: คนหลักก่อน มือสำรองตาม
-          const pool=[...mainPool,...subPool];
+          // ใช้แค่มือหลัก — ไม่ดึงมือรองอัตโนมัติ
+          const pool=[...mainPool];
           let assigned=0;
           pool.forEach(e=>{
             if(assigned>=need)return;
