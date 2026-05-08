@@ -2236,7 +2236,9 @@ const PLAN={
       const leaveData2=D.getLeave();
       const teamShifts=TEAM.getCurShifts();
       const shMap={morning:'morning',afternoon:'afternoon',night:'night'};
-      const procEmps=emps.filter(e=>(e.sys||'proc')==='proc');
+      const _rawProc=D.getEmps('proc').filter(e=>e&&e.name);
+      const _seenProc=new Set();
+      const procEmps=_rawProc.filter(e=>{if(_seenProc.has(e.name))return false;_seenProc.add(e.name);return true;});
       const hasTeam=procEmps.some(e=>e.team);
       if(!hasTeam){doneLoad(false,'ยังไม่ได้กำหนดทีม');alert2('⚠️ กรุณาไปที่หน้า 🔄 ทีม แล้วกำหนดทีม A/B/C ก่อนครับ','❌');return;}
 
@@ -2291,11 +2293,14 @@ const PLAN={
     }
     const fillDepts=D.getDepts('fill').filter(d=>d!==AL&&d!=='__IDLE__');
     const leaveData=D.getLeave();
+    // dedup emps
+    const _seenFill=new Set();
+    const fillEmps=D.getEmps('fill').filter(e=>{if(!e||!e.name)return false;if(_seenFill.has(e.name))return false;_seenFill.add(e.name);return true;});
     const teamShifts=TEAM.getCurShifts(); // {A:'morning',B:'afternoon',C:'night'}
     const shMap={morning:'morning',afternoon:'afternoon',night:'night'};
 
     // ตรวจว่ามี team ไหม
-    const hasTeam=emps.some(e=>e.team);
+    const hasTeam=fillEmps.some(e=>e.team);
     if(!hasTeam){doneLoad(false,'ยังไม่ได้กำหนดทีม');alert2('⚠️ กรุณาไปที่หน้า 🔄 ทีม แล้วกำหนดทีม A/B/C ให้พนักงานก่อนครับ','❌');return;}
 
     // init sched structure
@@ -2318,8 +2323,11 @@ const PLAN={
       const d2=new Date(S.wkStart);d2.setDate(S.wkStart.getDate()+di);
       const dk=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
 
+      // usedEmps: 1 คน 1 วัน — reset ทุกวัน
+      const usedEmps=new Set();
+
       // คนลาวันนี้ → AL
-      emps.forEach(e=>{
+      fillEmps.forEach(e=>{
         if((leaveData[e.name]||[]).includes(dk)){
           const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
           if(!sched[AL][di][sh].find(w=>w.name===e.name)&&!usedEmps.has(e.name)){
@@ -2328,12 +2336,9 @@ const PLAN={
         }
       });
 
-      // usedEmps: 1 คน 1 กะ ต่อวัน
-      const usedEmps=new Set();
-
       // แยกพนักงานตามกะ (กรอง AL และลา)
       const byShift={morning:[],afternoon:[],night:[]};
-      emps.forEach(e=>{
+      fillEmps.forEach(e=>{
         if((leaveData[e.name]||[]).includes(dk))return;
         const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
         if(byShift[sh])byShift[sh].push(e);
