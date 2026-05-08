@@ -1398,10 +1398,7 @@ const APP={
       FB.on(sys+'/plan',v=>{if(v){LS.set('plan_'+sys,v);if(sys===S.sys)PLAN.render();}});
       FB.on(sys+'/sched',v=>{
         if(v){
-          // merge กับข้อมูลที่มีอยู่แล้วใน LS
-          const existing=LS.get('sched_'+sys,{});
-          const merged=Object.assign({},existing,v);
-          LS.set('sched_'+sys,merged);
+          LS.set('sched_'+sys,v);
           if(sys===S.sys){SCHED.render();DASH.render();}
         }
       });
@@ -2456,10 +2453,15 @@ const PLAN={
             if(existing.length>=1)return; // มีคนอยู่แล้ว (ต้องการแค่ 1 คน/กะ)
             // หาคนที่มี sub1=Oreo Coating หรือ sub2=Oreo Coating มาเพิ่ม
             const allAvail=procEmps.filter(e=>!(leaveData2[e.name]||[]).includes(dk2));
+            const protectedDepts=['CIP Man','Leadman','Flavor','cip man','leadman','flavor'];
             const subForOreo=allAvail.find(e=>{
               if((sched2['Oreo Coating'][di2]||{})[sh2]?.find(w=>w.name===e.name))return false;
+              // ห้ามดึงมือหลักของ CIP Man, Leadman, Flavor
+              if(protectedDepts.some(d=>d.toLowerCase()===(e.mainDept||'').toLowerCase()))return false;
               const alreadyInSched=procDepts.some(d=>SHS.some(s=>(sched2[d]?.[di2]?.[s]||[]).find(w=>w.name===e.name&&!w.ot)));
               if(alreadyInSched)return false;
+              const protectedDepts=['CIP Man','Leadman','Flavor','CIP man','cip man','flavor'];
+              if(protectedDepts.some(d=>d.toLowerCase()===(e.mainDept||'').toLowerCase()))return false;
               return e.sub1==='Oreo Coating'||e.sub2==='Oreo Coating';
             });
             if(subForOreo){
@@ -2587,6 +2589,20 @@ const PLAN={
     }
 
     allSched[wk]=sched;
+    // dedup fill — ป้องกันชื่อซ้ำในวันเดียวกัน
+    const schedFill=allSched[wk]||{};
+    Object.keys(schedFill).forEach(dept=>{
+      for(let di=0;di<6;di++){
+        const seen=new Set();
+        ['morning','afternoon','night'].forEach(sh=>{
+          if(!schedFill[dept]?.[di])return;
+          schedFill[dept][di][sh]=(schedFill[dept][di][sh]||[]).filter(w=>{
+            if(seen.has(w.name))return false;
+            seen.add(w.name);return true;
+          });
+        });
+      }
+    });
     D.saveSched(allSched);
     FB.set(S.sys+'/sched/'+wk,sched);
     markUnsaved();SCHED.render();DASH.render();
