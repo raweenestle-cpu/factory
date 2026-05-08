@@ -2435,7 +2435,7 @@ const SET={
         <div style="font-size:13px;font-weight:800;margin-bottom:10px">⚡ OT Settings</div>
         <div class="fg"><label class="fl">OT Target (%)</label>
           <input type="number" class="fi" value="${tgt}" min="0" max="50"
-            onchange="D.saveTarget(parseInt(this.value)||15);toast('✅')"></div>
+            onchange="D.saveTarget(parseInt(this.value)||0);DASH.render();toast('✅')"></div>
         <div class="fg"><label class="fl">OT สูงสุด/คน (ครั้ง/สัปดาห์)</label>
           <input type="number" class="fi" value="${maxOT}" min="1" max="7"
             onchange="D.saveMaxOT(parseInt(this.value)||3);toast('✅')"></div>
