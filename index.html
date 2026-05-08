@@ -2345,7 +2345,7 @@ const PLAN={
             const deptAfPre=byShift.afternoon.filter(e=>effectiveDept(e)===dept&&!usedEmps.has(e.name));
             deptAfPre.forEach(e=>{
               if(preOTCount>=shortfall)return;
-              sched2[dept][di].morning.push({name:e.name,ot:true,otHrs:4,otBefore:true,av:e.av||0});
+              sched2[dept][di].morning.push({name:e.name,ot:false,otHrs:4,otBefore:true,av:e.av||0});
               morningAssigned.push(e);preOTFromAfternoon.add(e.name);
               usedEmps.add(e.name);preOTCount++;
             });
@@ -2433,7 +2433,8 @@ const PLAN={
               if(!dept||!nonOreoDepts.includes(dept))return;
               const w=sched2[dept][di].night.find(x=>x.name===e.name);
               if(w&&!w.ot){
-                w.ot=true;w.otBefore=true;w.otHrs=4;
+                // no auto OT
+                w.otBefore=true;w.otHrs=4;
                 preOTCount++;
               }
             });
@@ -2517,22 +2518,27 @@ const PLAN={
       const d2=new Date(S.wkStart);d2.setDate(S.wkStart.getDate()+di);
       const dk=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
 
+      // usedEmps: reset ทุกวัน
+      const usedEmps=new Set();
+
       // คนลาวันนี้ → AL
       emps.forEach(e=>{
         if((leaveData[e.name]||[]).includes(dk)){
           const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
-          if(!sched[AL][di][sh].find(w=>w.name===e.name))
-            sched[AL][di][sh].push({name:e.name,ot:false,otHrs:4,av:e.av||0,isLeave:true});
+          if(!usedEmps.has(e.name)&&!sched[AL][di][sh].find(w=>w.name===e.name)){
+            sched[AL][di][sh].push({name:e.name,ot:false,av:e.av||0,isLeave:true});
+            usedEmps.add(e.name);
+          }
         }
       });
 
-      // usedEmps: 1 คน 1 กะ ต่อวัน
-      const usedEmps=new Set();
-
-      // แยกพนักงานตามกะ (กรอง AL และลา)
+      // แยกพนักงานตามกะ (กรอง AL และลา) — dedup ด้วย
       const byShift={morning:[],afternoon:[],night:[]};
+      const _seenShift=new Set();
       emps.forEach(e=>{
         if((leaveData[e.name]||[]).includes(dk))return;
+        if(_seenShift.has(e.name))return;
+        _seenShift.add(e.name);
         const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
         if(byShift[sh])byShift[sh].push(e);
       });
