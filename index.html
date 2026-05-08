@@ -2143,8 +2143,8 @@ const PLAN={
                 <span style="font-size:13px;font-weight:800;color:var(--text)">${d.hoursNeeded}<span style="font-size:10px;font-weight:400"> ชม.</span></span>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:11px;color:var(--text3)">👷 คน</span>
-                <span style="font-size:13px;font-weight:800;color:var(--green2)">${d.totalP} คน</span>
+                <span style="font-size:11px;color:var(--text3)">👷 คน/กะ</span>
+                <span style="font-size:13px;font-weight:800;color:var(--green2)">${d.shiftPeople?`เช้า ${d.shiftPeople.morning} บ่าย ${d.shiftPeople.afternoon} ดึก ${d.shiftPeople.night}`:d.totalP+' คน'}</span>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <span style="font-size:11px;color:var(--text3)">💧 ต้องการ</span>
