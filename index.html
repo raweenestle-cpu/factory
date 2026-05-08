@@ -4264,12 +4264,12 @@ function checkRest(name,di,sh,sched){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  // รอ Firebase SDK โหลดครบก่อน
+  // เริ่ม app ก่อนเลย ไม่รอ Firebase
+  APP.init();
   function tryInit(retry=0){
-    // เช็คว่า Firebase SDK โหลดครบทั้ง app และ database
     if(typeof firebase==='undefined'||!firebase.initializeApp||!firebase.database){
       if(retry<60){setTimeout(()=>tryInit(retry+1),500);}
-      else{toast('⚠️ Firebase โหลดไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต');console.error('Firebase SDK not loaded after retries');}
+      else{console.warn('Firebase offline mode');}
       return;
     }
     initFB();
