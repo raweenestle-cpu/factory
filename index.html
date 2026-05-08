@@ -2230,36 +2230,51 @@ const PLAN={
       const leaveData2=D.getLeave();
       const teamShifts=TEAM.getCurShifts();
       const shMap={morning:'morning',afternoon:'afternoon',night:'night'};
-      const procEmps=D.getEmps('proc').filter(e=>e&&e.name);
-      const hasTeam=procEmps.some(e=>e.team);
-      if(!hasTeam){doneLoad(false,'ยังไม่ได้กำหนดทีม');alert2('⚠️ กรุณาไปที่หน้า 🔄 ทีม แล้วกำหนดทีม A/B/C ก่อนครับ','❌');return;}
+      // dedup emps
+      const _rawProc=D.getEmps('proc').filter(e=>e&&e.name);
+      const _seenP=new Set();
+      const procEmps=_rawProc.filter(e=>{if(_seenP.has(e.name))return false;_seenP.add(e.name);return true;});
+      if(!procEmps.some(e=>e.team)){doneLoad(false,'ยังไม่ได้กำหนดทีม');alert2('⚠️ กรุณาไปที่หน้า 🔄 ทีม แล้วกำหนดทีม A/B/C ก่อนครับ','❌');return;}
+      // init
       procDepts.forEach(dept=>{sched2[dept]={};for(let di=0;di<6;di++)sched2[dept][di]={morning:[],afternoon:[],night:[]};});
-      sched2[AL]={};for(let di=0;di<6;di++)sched2[AL][di]={morning:[],afternoon:[],night:[]};
+      sched2[AL]={};
+      for(let di=0;di<6;di++)sched2[AL][di]={morning:[],afternoon:[],night:[]};
+      // โหลดตามทีม
       for(let di=0;di<6;di++){
         const d2=new Date(S.wkStart);d2.setDate(S.wkStart.getDate()+di);
         const dk=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
         const leaveApproved=leaveData2[dk]||[];
-        const usedEmps=new Set();
-        const seenEmps=new Set();
+        const usedToday=new Set();
         procEmps.forEach(e=>{
-          if(seenEmps.has(e.name))return;
-          seenEmps.add(e.name);
+          if(usedToday.has(e.name))return;
           const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
           const dept=procDepts.includes(e.mainDept)?e.mainDept:procDepts[0];
           if(!dept||!sched2[dept])return;
-          if(usedEmps.has(e.name))return;
+          usedToday.add(e.name);
           if(leaveApproved.includes(e.name)){
             sched2[AL][di][sh].push({name:e.name,ot:false,leaveStatus:'approved'});
-            usedEmps.add(e.name);
           } else {
             sched2[dept][di][sh].push({name:e.name,ot:false});
-            usedEmps.add(e.name);
           }
         });
       }
-      // dedup proc
-      Object.keys(sched2).forEach(dept=>{for(let di=0;di<6;di++){const seen=new Set();['morning','afternoon','night'].forEach(sh=>{if(!sched2[dept][di])return;sched2[dept][di][sh]=(sched2[dept][di][sh]||[]).filter(w=>{if(seen.has(w.name))return false;seen.add(w.name);return true;});});}});
-      allSched2[wk2]=sched2;D.saveSched(allSched2);FB.set(S.sys+'/sched/'+wKey(S.wkStart),sched2);markUnsaved();SCHED.render();DASH.render();
+      // dedup sched
+      Object.keys(sched2).forEach(dept=>{
+        for(let di=0;di<6;di++){
+          const seen=new Set();
+          ['morning','afternoon','night'].forEach(sh=>{
+            if(!sched2[dept]?.[di])return;
+            sched2[dept][di][sh]=(sched2[dept][di][sh]||[]).filter(w=>{
+              if(seen.has(w.name))return false;
+              seen.add(w.name);return true;
+            });
+          });
+        }
+      });
+      allSched2[wk2]=sched2;
+      D.saveSched(allSched2);
+      FB.set(S.sys+'/sched/'+wKey(S.wkStart),sched2);
+      markUnsaved();SCHED.render();DASH.render();
       doneLoad(true);
     }
         const fillDepts=D.getDepts('fill').filter(d=>d!==AL&&d!=='__IDLE__');
@@ -2295,14 +2310,16 @@ const PLAN={
       emps.forEach(e=>{
         if((leaveData[e.name]||[]).includes(dk)){
           const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
-          if(!sched[AL][di][sh].find(w=>w.name===e.name)&&!usedEmps.has(e.name)){sched[AL][di][sh].push({name:e.name,ot:false,av:e.av||0,isLeave:true});usedEmps.add(e.name);}
+          if(!sched[AL][di][sh].find(w=>w.name===e.name)&&!usedEmps.has(e.name)){
+            sched[AL][di][sh].push({name:e.name,ot:false,av:e.av||0,isLeave:true});
+            usedEmps.add(e.name);}
         }
       });
 
       // usedEmps: 1 คน 1 กะ ต่อวัน
       const usedEmps=new Set();
 
-      // แยกพนักงานตามกะ — dedup ด้วย
+      // แยกพนักงานตามกะ — dedup
       const byShift={morning:[],afternoon:[],night:[]};
       const _seenShift=new Set();
       emps.forEach(e=>{
@@ -2346,6 +2363,19 @@ const PLAN={
     }
 
     allSched[wk]=sched;
+    // dedup fill
+    Object.keys(sched).forEach(dept=>{
+      for(let di=0;di<6;di++){
+        const seen=new Set();
+        ['morning','afternoon','night'].forEach(sh=>{
+          if(!sched[dept]?.[di])return;
+          sched[dept][di][sh]=(sched[dept][di][sh]||[]).filter(w=>{
+            if(seen.has(w.name))return false;
+            seen.add(w.name);return true;
+          });
+        });
+      }
+    });
     D.saveSched(allSched);
     FB.set(S.sys+'/sched/'+wk,sched);
     markUnsaved();SCHED.render();DASH.render();
