@@ -2322,8 +2322,9 @@ const PLAN={
       emps.forEach(e=>{
         if((leaveData[e.name]||[]).includes(dk)){
           const sh=e.lockShift||(e.team?shMap[teamShifts[e.team]]:null)||'morning';
-          if(!sched[AL][di][sh].find(w=>w.name===e.name))
+          if(!sched[AL][di][sh].find(w=>w.name===e.name)&&!usedEmps.has(e.name)){
             sched[AL][di][sh].push({name:e.name,ot:false,av:e.av||0,isLeave:true});
+            usedEmps.add(e.name);}
         }
       });
 
@@ -2362,6 +2363,7 @@ const PLAN={
           let assigned=0;
           pool.forEach(e=>{
             if(assigned>=need)return;
+            if(usedEmps.has(e.name))return;
             sched[dept][di][sh].push({name:e.name,ot:false,av:e.av||0,
               isSub:!mainPool.find(m=>m.name===e.name)});
             usedEmps.add(e.name);
