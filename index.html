@@ -341,7 +341,7 @@ input,select,textarea{font-family:'Sarabun',sans-serif}
 .pr-title, #print-area .pr-title{font-size:18pt;font-weight:900;color:#1e3a5f;margin-bottom:3px}
 .pr-sub, #print-area .pr-sub{font-size:11pt;color:#555;margin-bottom:2px}
 .pr-header-right, #print-area .pr-header-right{text-align:right;font-size:10pt;color:#666}
-.pr-section, #print-area .pr-section{margin-bottom:18px;page-break-inside:avoid}
+.pr-section, #print-area .pr-section{margin-bottom:18px;page-break-inside:avoid;break-inside:avoid}
 .pr-sec-title, #print-area .pr-sec-title{
   font-size:12pt;font-weight:900;
   background:#1e3a5f;color:#fff;
@@ -3064,7 +3064,7 @@ const PRINT={
     doc.write('html,body{width:289mm;font-family:Sarabun,sans-serif;font-size:6.5pt;color:#000;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}');
     doc.write('.day-header{font-size:7pt;font-weight:900;color:#1e3a5f;margin:3px 0 1px;padding:2px 6px;background:#e8eeff;border-left:3px solid #2563eb;}');
     doc.write('.day-block{margin-bottom:3px;}');
-    doc.write('.day-page{margin-bottom:8px;}');
+    doc.write('.day-page{margin-bottom:8px;page-break-inside:avoid;}');
     
     doc.write('table{width:100%;border-collapse:collapse;margin-bottom:1px;table-layout:auto;}');
     doc.write('thead{display:table-header-group;}');
