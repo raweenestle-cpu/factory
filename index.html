@@ -4268,7 +4268,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function tryInit(retry=0){
     // เช็คว่า Firebase SDK โหลดครบทั้ง app และ database
     if(typeof firebase==='undefined'||!firebase.initializeApp||!firebase.database){
-      if(retry<40){setTimeout(()=>tryInit(retry+1),500);}
+      if(retry<60){setTimeout(()=>tryInit(retry+1),500);}
       else{toast('⚠️ Firebase โหลดไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต');console.error('Firebase SDK not loaded after retries');}
       return;
     }
