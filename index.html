@@ -69,13 +69,13 @@ input,select,textarea{font-family:'Sarabun',sans-serif}
 .dash-header h2{font-size:18px;font-weight:900}
 .dash-header p{font-size:12px;color:var(--text2);margin-top:2px}
 .dash-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
-.dash-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:visible;cursor:pointer}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:hidden;cursor:pointer}
 .dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--blue))}
 .dash-card.full{grid-column:1/-1}
 .dc-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
 .dc-val{font-size:28px;font-weight:900;margin:4px 0;line-height:1}
 .dc-sub{font-size:11px;color:var(--text2)}
-.dc-chart{margin-top:10px;height:60px;position:relative}
+.dc-chart{margin-top:10px;height:64px;position:relative;overflow:visible}
 .mini-bars{display:block;width:100%;overflow:visible}
 .mini-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px}
 .mini-bar.over{background:var(--red2)}
@@ -1610,15 +1610,15 @@ const DASH={
     const validData=data.filter(v=>v!=null);
     if(!validData.length){ce.innerHTML='';return;}
     const mx=Math.max(...validData,tgt||1)*1.1;
-    const H=50;
+    const H=40;
 
-    let html='<div style="display:flex;align-items:flex-end;gap:2px;height:'+(H+14)+'px">';
+    let html='<div style="display:flex;align-items:flex-end;gap:2px;height:'+H+'px">';
     data.forEach((v,mi)=>{
       const isCur=mi===curIdx;
       const col=v==null?'#334155':v>tgt?'#EF4444':'#22C55E';
       const bh=v==null?2:Math.max(Math.round(v/mx*H),3);
       const label=labels[mi]||'';
-      html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:'+(H+14)+'px">';
+      html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:'+H+'px">';
       if(v!=null)html+='<div style="font-size:6px;color:'+col+';font-weight:800;line-height:1;margin-bottom:1px">'+v+'%</div>';
       html+='<div style="width:100%;height:'+bh+'px;background:'+col+';border-radius:1px 1px 0 0;flex-shrink:0"></div>';
       html+='<div style="font-size:6px;color:'+(isCur?'#3B82F6':'#64748B')+';line-height:1.2;margin-top:1px;flex-shrink:0">'+label+'</div>';
