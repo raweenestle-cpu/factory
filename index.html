@@ -1386,7 +1386,8 @@ const APP={
     ];
     renders.forEach(fn=>{try{fn();}catch(e){console.log('render error:',e.message);}});
     // re-render หลัง Firebase sync เสร็จ
-    setTimeout(function(){try{SCHED.render();DASH.render();EMP.render();}catch(e){}},2000);
+    setTimeout(function(){try{SCHED.render();DASH.render();EMP.render();LSVC.render();}catch(e){}},2000);
+    setTimeout(function(){try{LSVC.render();DASH.render();}catch(e){}},4000);
   },
   syncFB(){
     const wk=wKey(S.wkStart);
