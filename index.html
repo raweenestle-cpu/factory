@@ -75,8 +75,8 @@ input,select,textarea{font-family:'Sarabun',sans-serif}
 .dc-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
 .dc-val{font-size:28px;font-weight:900;margin:4px 0;line-height:1}
 .dc-sub{font-size:11px;color:var(--text2)}
-.dc-chart{margin-top:10px;height:60px;position:relative;overflow:visible}
-.mini-bars{display:flex;align-items:flex-end;gap:2px;height:100%;overflow:visible}
+.dc-chart{margin-top:10px;height:60px;position:relative}
+.mini-bars{display:flex;align-items:flex-end;gap:2px;height:100%}
 .mini-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px}
 .mini-bar.over{background:var(--red2)}
 .mini-bar.ok{background:var(--green2)}
@@ -470,7 +470,7 @@ table.pr-tbl, #print-area table.pr-tbl td.center{text-align:center}
       <div class="dash-card" onclick="DASH.openChart('lsvc')" style="--accent:var(--amber)">
         <div class="dc-val ot-none" id="lsp">-</div>
         <div class="dc-label">Line Service OT%</div>
-        <div class="dc-chart"><div id="lschart" style="flex:1;position:relative;overflow:visible;height:60px"></div></div>
+        <div class="dc-chart"><div id="lschart" style="flex:1;position:relative;overflow:hidden;height:60px"></div></div>
       </div>
       <div class="dash-card full" style="--accent:var(--teal)" onclick="DASH.openChart('total')">
         <div class="dc-val ot-none" id="tp">-</div>
@@ -1565,8 +1565,7 @@ const DASH={
     const ids={proc:'pp',fill:'fp',lsvc:'lsp',total:'tp'};
     const cids={proc:'pch',fill:'fch',lsvc:'lschart',total:'tch'};
     const pe=document.getElementById(ids[type]);if(!pe)return;
-    const ceInner=document.getElementById(cids[type]);if(!ceInner)return;
-    const ce=ceInner.parentElement||ceInner; // ใช้ .dc-chart parent
+    const ce=document.getElementById(cids[type]);if(!ce)return;
     const periodEl=document.getElementById('chart-period');
     const mode=periodEl?periodEl.value:'year';
     let data=[],labels=[],curIdx=0;
@@ -1589,47 +1588,71 @@ const DASH={
       if(type==='proc')data=wkKeys.map(wk=>this.getOTWeek('proc',wk));
       else if(type==='fill')data=wkKeys.map(wk=>this.getOTWeek('fill',wk));
       else if(type==='lsvc')data=wkKeys.map(wk=>this.getLSVCOTWeek(wk));
-      else data=wkKeys.map(wk=>{const vals=[this.getOTWeek('proc',wk),this.getOTWeek('fill',wk),this.getLSVCOTWeek(wk)].filter(v=>v!=null);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;});
+      else data=wkKeys.map(wk=>{
+        const vals=[this.getOTWeek('proc',wk),this.getOTWeek('fill',wk),this.getLSVCOTWeek(wk)].filter(v=>v!=null);
+        return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+      });
     } else {
       labels=MONTHS;curIdx=curMo;
       if(type==='proc')data=Array.from({length:12},(_,mi)=>this.getOT('proc',yr,mi));
       else if(type==='fill')data=Array.from({length:12},(_,mi)=>this.getOT('fill',yr,mi));
       else if(type==='lsvc')data=Array.from({length:12},(_,mi)=>LSVC.getOT(yr,mi));
-      else{data=Array.from({length:12},(_,mi)=>{const vals=[this.getOT('proc',yr,mi),this.getOT('fill',yr,mi),LSVC.getOT(yr,mi)].filter(v=>v!=null);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;});}
+      else data=Array.from({length:12},(_,mi)=>{
+        const vals=[this.getOT('proc',yr,mi),this.getOT('fill',yr,mi),LSVC.getOT(yr,mi)].filter(v=>v!=null);
+        return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+      });
     }
 
     const cur=data[curIdx];
     pe.textContent=cur!=null?cur+'%':'-';
     pe.className='dc-val'+(cur==null?' ot-none':cur>tgt?' ot-hi':' ot-ok');
 
-    // วาดกราฟด้วย inline-block div — วิธีที่ทำงานได้ทุก browser
+    // วาดกราฟใหม่ทั้งหมด
     const validData=data.filter(v=>v!=null);
-    const mx=Math.max(...validData,tgt*1.2,1);
-    const TOTAL_H=50; // px ความสูงรวม
+    if(!validData.length){ce.innerHTML='';return;}
+    const mx=Math.max(...validData,tgt||1)*1.2;
+    const H=44; // ความสูงแท่ง px
+    const n=data.length;
 
-    // ✅ inject กราฟเข้า .dc-chart โดยตรง ด้วย fixed px ทั้งหมด
-    const H=46,LH=12; // chart area height, label height
-    const tgtY=tgt>0?Math.round((1-tgt/mx)*H):null;
-    let html='<div style="position:relative;width:100%;height:'+(H+LH)+'px;display:flex;align-items:flex-end;gap:1px">';
-    // เส้น target
-    if(tgtY!=null){
-      html+=`<div style="position:absolute;left:0;right:0;top:${tgtY}px;border-top:1.5px dashed #F59E0B;z-index:3;pointer-events:none">`;
-      html+=`<span style="position:absolute;right:0;top:-9px;font-size:6px;color:#F59E0B;font-weight:900;white-space:nowrap;background:#1E293B;padding:0 2px">Target ${tgt}%</span></div>`;
-    }
-    // แท่ง
+    // สร้าง table — row บนคือพื้นที่ว่าง, row ล่างคือแท่ง+label
+    // วิธีนี้ไม่ขึ้นกับ parent height เลย
+    let html='<table style="width:100%;border-collapse:collapse;height:'+H+'px;table-layout:fixed"><tbody>';
+    
+    // row 1: เส้น target + พื้นที่ว่างเหนือแท่ง
+    html+='<tr>';
     data.forEach((v,mi)=>{
       const isCur=mi===curIdx;
-      const col=v==null?'#334155':v>tgt?'#EF4444':'#22C55E';
-      const bh=v==null?2:Math.max(Math.round(v/mx*H),3);
-      const label=labels[mi]||'';
-      html+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:${H+LH}px">`;
-      if(v!=null) html+=`<div style="font-size:6px;color:${col};font-weight:800;line-height:1;margin-bottom:1px">${v}%</div>`;
-      html+=`<div style="width:100%;height:${bh}px;background:${col};border-radius:1px 1px 0 0;flex-shrink:0"></div>`;
-      html+=`<div style="font-size:6px;color:${isCur?'#3B82F6':'#64748B'};line-height:1;margin-top:1px;flex-shrink:0">${label}</div>`;
-      html+='</div>';
+      const col=v==null?'transparent':v>tgt?'#EF4444':'#22C55E';
+      const bh=v==null?0:Math.max(Math.round(v/mx*H),3);
+      const spaceH=H-bh;
+      html+=`<td style="padding:0;vertical-align:bottom;position:relative">`;
+      // ตัวเลข %
+      if(v!=null) html+=`<div style="font-size:6.5px;font-weight:800;color:${col};text-align:center;line-height:1;margin-bottom:1px">${v}%</div>`;
+      // แท่ง
+      html+=`<div style="height:${bh}px;background:${col};border-radius:1px 1px 0 0;width:100%"></div>`;
+      html+='</td>';
     });
-    html+='</div>';
-    ce.style.cssText='overflow:visible';
+    html+='</tr>';
+
+    // row 2: label
+    html+='<tr>';
+    data.forEach((v,mi)=>{
+      const isCur=mi===curIdx;
+      const label=labels[mi]||'';
+      html+=`<td style="padding:0;text-align:center;font-size:6px;color:${isCur?'#3B82F6':'#64748B'};font-weight:${isCur?'900':'400'};white-space:nowrap;line-height:1.2">${label}</td>`;
+    });
+    html+='</tr>';
+    html+='</tbody></table>';
+
+    // เส้น target แยกต่างหาก
+    if(tgt>0&&validData.length){
+      const tgtPct=(1-tgt/mx)*100;
+      html+=`<div style="position:absolute;left:0;right:0;bottom:calc(${Math.min(tgtPct,95)}% + 12px);border-top:1.5px dashed #F59E0B;pointer-events:none">
+        <span style="position:absolute;right:0;top:-9px;font-size:6px;color:#F59E0B;font-weight:900;white-space:nowrap;background:#1E293B;padding:0 2px">Target ${tgt}%</span>
+      </div>`;
+    }
+
+    ce.style.cssText='position:relative;display:block;width:100%;overflow:visible';
     ce.innerHTML=html;
     }catch(e){console.log('renderChart error',e.message);}
   }
@@ -4242,17 +4265,6 @@ function checkRest(name,di,sh,sched){
 document.addEventListener('DOMContentLoaded',()=>{
   // รอ Firebase SDK โหลดครบก่อน
   function migrateTarget(){
-  // migrate target_proc/fill เก่า → ot_target ใหม่
-  const existing = localStorage.getItem('fv2_ot_target');
-  if(!existing || existing === '0' || existing === 'null') {
-    const old1 = parseFloat(localStorage.getItem('fv2_target_proc')) || 0;
-    const old2 = parseFloat(localStorage.getItem('fv2_target_fill')) || 0;
-    const migrated = old1 || old2 || 15; // default 15% ถ้าไม่มีเลย
-    localStorage.setItem('fv2_ot_target', JSON.stringify(migrated));
-    console.log('✅ migrated target → ' + migrated + '%');
-  }
-}
-function migrateTarget(){
   const ex=localStorage.getItem('fv2_ot_target');
   if(!ex||ex==='0'||ex==='null'){
     const o1=parseFloat(localStorage.getItem('fv2_target_proc'))||0;
@@ -4276,7 +4288,6 @@ function tryInit(retry=0){
     LEAVE.archivePast();
     resetSessionTimer();
   }
-  migrateTarget();
   migrateTarget();
   tryInit();
 });
