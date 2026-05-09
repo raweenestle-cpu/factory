@@ -1416,6 +1416,7 @@ const APP={
     FB.on('config/prod_display',v=>{if(v)LS.set('prod_display',v);});
     FB.on('config/ot_target',v=>{if(v!=null){LS.set('ot_target',v);DASH.render();}});
     FB.on('config/ot_target',v=>{if(v!=null){LS.set('ot_target',v);DASH.render();}});
+    FB.on('config/ot_target',v=>{if(v!=null){LS.set('ot_target',v);DASH.render();}});
     FB.on('config/admin_pin',v=>{if(v)LS.set('admin_pin',v);});
     FB.on('config/max_ot',v=>{if(v)LS.set('max_ot',v);});
     FB.on('config/ot_reasons',v=>{if(v&&v.length)LS.set('ot_reasons',v);});
@@ -1619,7 +1620,7 @@ const DASH={
     pe.className='dc-val'+(cur==null?' ot-none':cur>tgt?' ot-hi':' ot-ok');
     const mx=Math.max(...data.filter(v=>v!=null),tgt,1);
     const BAR_H=54; // px ความสูงพื้นที่แท่ง
-    ce.style.cssText='display:flex;align-items:flex-end;gap:2px;height:70px;width:100%;padding-bottom:16px;position:relative;overflow:visible;cursor:pointer';
+    ce.style.cssText='display:flex;align-items:flex-end;gap:2px;height:54px;width:100%;margin-bottom:16px;position:relative;overflow:visible;cursor:pointer';
     ce.onclick=()=>this.openChart(type);
     ce.innerHTML=data.map((v,mi)=>{
       const isCur=mi===curIdx;
@@ -4250,6 +4251,7 @@ function checkRest(name,di,sh,sched){
 document.addEventListener('DOMContentLoaded',()=>{
   // รอ Firebase SDK โหลดครบก่อน
   function migrateTarget(){const ex=localStorage.getItem('fv2_ot_target');if(!ex||ex==='0'||ex==='null'){const o1=parseFloat(localStorage.getItem('fv2_target_proc'))||0;const o2=parseFloat(localStorage.getItem('fv2_target_fill'))||0;localStorage.setItem('fv2_ot_target',JSON.stringify(o1||o2||15));}}
+function migrateTarget(){const ex=localStorage.getItem('fv2_ot_target');if(!ex||ex==='0'||ex==='null'){const o1=parseFloat(localStorage.getItem('fv2_target_proc'))||0;const o2=parseFloat(localStorage.getItem('fv2_target_fill'))||0;localStorage.setItem('fv2_ot_target',JSON.stringify(o1||o2||15));}}
 function tryInit(retry=0){
     if(typeof firebase==='undefined'||!firebase.initializeApp){
       if(retry<10){setTimeout(()=>tryInit(retry+1),300);}
@@ -4266,6 +4268,7 @@ function tryInit(retry=0){
     LEAVE.archivePast();
     resetSessionTimer();
   }
+  migrateTarget();
   migrateTarget();
   tryInit();
 });
