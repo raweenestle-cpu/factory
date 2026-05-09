@@ -1571,89 +1571,80 @@ const DASH={
     let data=[],labels=[],curIdx=0;
 
     if(mode==='month'){
+      // รายสัปดาห์ของเดือนปัจจุบัน
+      const allSchedKeys=Object.keys(LS.get('sched_proc',{})||{}).concat(Object.keys(LS.get('sched_fill',{})||{})).concat(Object.keys(LS.get('lsvc_data',{})||{}));
+      // หา wkKeys ที่อยู่ในเดือนปัจจุบัน
+      const wkSet=new Set();
+      // สร้าง wkKeys ของเดือนนี้ (4-5 สัปดาห์)
       const firstDay=new Date(yr,curMo,1);
       const lastDay=new Date(yr,curMo+1,0);
-      const wkSet=new Set();
+      let d=new Date(firstDay);
+      // หา Monday แรกของเดือน
       function getMonday2(dt){const dd=new Date(dt);dd.setDate(dd.getDate()-((dd.getDay()||7)-1));return dd;}
-      let d=getMonday2(firstDay);
+      d=getMonday2(firstDay);
       while(d<=lastDay){
         const wk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-        wkSet.add(wk);d=new Date(d);d.setDate(d.getDate()+7);
+        wkSet.add(wk);
+        d=new Date(d);d.setDate(d.getDate()+7);
       }
       const wkKeys=[...wkSet].sort();
       labels=wkKeys.map(k=>{const wp=k.split('-');return 'W'+wNum(new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2])));});
       const today=new Date();
       curIdx=wkKeys.findIndex(k=>{const wp=k.split('-');const mn=new Date(parseInt(wp[0]),parseInt(wp[1])-1,parseInt(wp[2]));const me=new Date(mn);me.setDate(mn.getDate()+6);return today>=mn&&today<=me;});
       if(curIdx<0)curIdx=wkKeys.length-1;
+
       if(type==='proc')data=wkKeys.map(wk=>this.getOTWeek('proc',wk));
       else if(type==='fill')data=wkKeys.map(wk=>this.getOTWeek('fill',wk));
       else if(type==='lsvc')data=wkKeys.map(wk=>this.getLSVCOTWeek(wk));
-      else data=wkKeys.map(wk=>{const vals=[this.getOTWeek('proc',wk),this.getOTWeek('fill',wk),this.getLSVCOTWeek(wk)].filter(v=>v!=null);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;});
+      else data=wkKeys.map(wk=>{
+        const vals=[this.getOTWeek('proc',wk),this.getOTWeek('fill',wk),this.getLSVCOTWeek(wk)].filter(v=>v!=null);
+        return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+      });
     } else {
-      labels=MONTHS;curIdx=curMo;
+      // รายเดือน (ทั้งปี) — mode เดิม
+      labels=MONTHS;
+      curIdx=curMo;
       if(type==='proc')data=Array.from({length:12},(_,mi)=>this.getOT('proc',yr,mi));
       else if(type==='fill')data=Array.from({length:12},(_,mi)=>this.getOT('fill',yr,mi));
       else if(type==='lsvc')data=Array.from({length:12},(_,mi)=>LSVC.getOT(yr,mi));
-      else{data=Array.from({length:12},(_,mi)=>{const vals=[this.getOT('proc',yr,mi),this.getOT('fill',yr,mi),LSVC.getOT(yr,mi)].filter(v=>v!=null);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;});}
+      else{
+        data=Array.from({length:12},(_,mi)=>{
+          const vals=[this.getOT('proc',yr,mi),this.getOT('fill',yr,mi),LSVC.getOT(yr,mi)].filter(v=>v!=null);
+          return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+        });
+      }
     }
-
     const cur=data[curIdx];
     pe.textContent=cur!=null?cur+'%':'-';
     pe.className='dc-val'+(cur==null?' ot-none':cur>tgt?' ot-hi':' ot-ok');
-
-    // ✅ ใช้ Canvas วาดแท่ง — ไม่มีปัญหา CSS height
-    const validData=data.filter(v=>v!=null);
-    const mx=Math.max(...validData,tgt,1);
-    const W=ce.parentElement?ce.parentElement.offsetWidth||200:200;
-    const H=60;
-    ce.innerHTML='';
-    const canvas=document.createElement('canvas');
-    canvas.width=W;canvas.height=H;
-    canvas.style.cssText='width:100%;height:'+H+'px;display:block;cursor:pointer';
-    canvas.onclick=()=>this.openChart(type);
-    ce.style.cssText='width:100%;height:'+H+'px;position:relative;display:block';
-    ce.appendChild(canvas);
-    const ctx=canvas.getContext('2d');
-    const n=data.length;
-    const gap=2;
-    const barW=Math.floor((W-gap*(n+1))/n);
-    const LABEL_H=14;
-    const CHART_H=H-LABEL_H;
-    const tgtY=CHART_H-Math.round(tgt/mx*CHART_H);
-
-    // วาด target line
-    ctx.strokeStyle='#F59E0B';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
-    ctx.beginPath();ctx.moveTo(0,tgtY);ctx.lineTo(W,tgtY);ctx.stroke();
-    ctx.setLineDash([]);
-
-    // วาดแท่ง
+    const mx=Math.max(...data.filter(v=>v!=null),tgt,1);
+    // ✅ ใช้ SVG วาดแท่ง — ไม่มีปัญหา CSS เลย
+    const svgH=60,svgW=300,padB=14,chartH=svgH-padB;
+    const n=data.length,bw=Math.floor((svgW-(n+1)*2)/n);
+    const tgtY=chartH-Math.round(tgt/mx*chartH);
+    let svgBars='';
     data.forEach((v,mi)=>{
-      const x=gap+mi*(barW+gap);
-      const colOver='#EF4444';const colOk='#22C55E';const colNull='#334155';
-      const col=v==null?colNull:v>tgt?colOver:colOk;
+      const x=2+mi*(bw+2);
+      const col=v==null?'#334155':v>tgt?'#EF4444':'#22C55E';
+      const bh=v==null?2:Math.max(Math.round(v/mx*chartH),3);
+      const y=chartH-bh;
+      const isCur=mi===curIdx;
       if(v!=null){
-        const barH=Math.max(Math.round(v/mx*CHART_H),3);
-        const y=CHART_H-barH;
-        ctx.fillStyle=col;
-        if(mi===curIdx){ctx.shadowColor=col;ctx.shadowBlur=4;}
-        ctx.fillRect(x,y,barW,barH);
-        ctx.shadowBlur=0;
-        // ตัวเลข %
-        ctx.fillStyle=col;ctx.font='bold 7px sans-serif';ctx.textAlign='center';
-        if(y>8)ctx.fillText(v+'%',x+barW/2,y-1);
+        svgBars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="${col}" rx="1" ${isCur?'filter="url(#glow)"':''}/>`;
+        svgBars+=`<text x="${x+bw/2}" y="${Math.max(y-1,7)}" text-anchor="middle" fill="${col}" font-size="6" font-weight="bold">${v}%</text>`;
       } else {
-        ctx.fillStyle=colNull;ctx.fillRect(x,CHART_H-2,barW,2);
+        svgBars+=`<rect x="${x}" y="${chartH-2}" width="${bw}" height="2" fill="${col}" rx="1"/>`;
       }
-      // label
-      ctx.fillStyle=mi===curIdx?'#3B82F6':'#64748B';
-      ctx.font=(mi===curIdx?'bold ':'')+'6.5px sans-serif';
-      ctx.textAlign='center';
-      ctx.fillText(labels[mi]||MONTHS[mi]||mi,x+barW/2,H-2);
+      svgBars+=`<text x="${x+bw/2}" y="${svgH-1}" text-anchor="middle" fill="${isCur?'#3B82F6':'#64748B'}" font-size="6" font-weight="${isCur?'bold':'normal'}">${labels[mi]||MONTHS[mi]||''}</text>`;
     });
-
-    // target label
-    ctx.fillStyle='#F59E0B';ctx.font='bold 7px sans-serif';ctx.textAlign='right';
-    ctx.fillText('Target '+tgt+'%',W-2,tgtY-2);
+    ce.style.cssText='width:100%;height:60px;position:relative;display:block;cursor:pointer';
+    ce.onclick=()=>this.openChart(type);
+    ce.innerHTML=`<svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="${svgH}" preserveAspectRatio="none" style="display:block">
+      <defs><filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      ${tgt>0?`<line x1="0" y1="${tgtY}" x2="${svgW}" y2="${tgtY}" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <text x="${svgW-2}" y="${Math.max(tgtY-2,8)}" text-anchor="end" fill="#F59E0B" font-size="6" font-weight="bold">T${tgt}%</text>`:''}
+      ${svgBars}
+    </svg>`;
     }catch(e){console.log('renderChart error',e.message);}
   },
   openChart(type){
@@ -4263,7 +4254,18 @@ function checkRest(name,di,sh,sched){
 
 document.addEventListener('DOMContentLoaded',()=>{
   // รอ Firebase SDK โหลดครบก่อน
-  function tryInit(retry=0){
+  function migrateTarget(){
+  // migrate target_proc/fill เก่า → ot_target ใหม่
+  const existing = localStorage.getItem('fv2_ot_target');
+  if(!existing || existing === '0' || existing === 'null') {
+    const old1 = parseFloat(localStorage.getItem('fv2_target_proc')) || 0;
+    const old2 = parseFloat(localStorage.getItem('fv2_target_fill')) || 0;
+    const migrated = old1 || old2 || 15; // default 15% ถ้าไม่มีเลย
+    localStorage.setItem('fv2_ot_target', JSON.stringify(migrated));
+    console.log('✅ migrated target → ' + migrated + '%');
+  }
+}
+function tryInit(retry=0){
     if(typeof firebase==='undefined'||!firebase.initializeApp){
       if(retry<10){setTimeout(()=>tryInit(retry+1),300);}
       else{console.log('Firebase SDK not loaded');}
@@ -4279,6 +4281,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     LEAVE.archivePast();
     resetSessionTimer();
   }
+  migrateTarget();
   tryInit();
 });
 
