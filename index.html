@@ -76,7 +76,7 @@ input,select,textarea{font-family:'Sarabun',sans-serif}
 .dc-val{font-size:28px;font-weight:900;margin:4px 0;line-height:1}
 .dc-sub{font-size:11px;color:var(--text2)}
 .dc-chart{margin-top:10px;height:60px;position:relative}
-.mini-bars{display:flex;align-items:flex-end;gap:2px;height:100%}
+.mini-bars{display:block;width:100%;overflow:visible}
 .mini-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px}
 .mini-bar.over{background:var(--red2)}
 .mini-bar.ok{background:var(--green2)}
@@ -1631,7 +1631,7 @@ const DASH={
       html+='<div style="position:absolute;left:0;right:0;bottom:calc('+Math.min(tgtPct,90)+'% + 14px);border-top:1.5px dashed #F59E0B;pointer-events:none"><span style="position:absolute;right:0;top:-9px;font-size:6px;color:#F59E0B;font-weight:900;background:#1E293B;padding:0 2px">Target '+tgt+'%</span></div>';
     }
 
-    ce.style.cssText='position:relative;display:block;width:100%;overflow:visible';
+    ce.style.overflow='visible';
     ce.innerHTML=html;
     }catch(e){console.log('renderChart error',e.message);}
   }
