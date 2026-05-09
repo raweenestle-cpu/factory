@@ -1422,7 +1422,7 @@ const APP={
     FB.on('config/ot_reasons',v=>{if(v&&v.length)LS.set('ot_reasons',v);});
     FB.on('team_cfg',v=>{if(v)LS.set('team_cfg',v);});
     FB.on('leave_req',v=>{if(v){LS.set('leave_req',v);LEAVE.render();LEAVE.updBadge();}});
-    FB.on('lsvc_data',v=>{if(v){LS.set('lsvc_data',v);LSVC.render();DASH.render();}});
+    FB.on('lsvc/data',v=>{if(v){LS.set('lsvc_data',v);LSVC.render();DASH.render();}});
     FB.on('leave_hist',v=>{if(v)LS.set('leave_hist',v);});
   },
   setSys(sys){
@@ -1618,17 +1618,16 @@ const DASH={
     const cur=data[curIdx];
     pe.textContent=cur!=null?cur+'%':'-';
     pe.className='dc-val'+(cur==null?' ot-none':cur>tgt?' ot-hi':' ot-ok');
-    // แสดงตัวเลขรายสัปดาห์ ไม่มีแท่ง
-    ce.style.cssText='width:100%;display:flex;gap:4px;align-items:stretch;margin-top:6px';
+    ce.style.cssText='width:100%;display:flex;gap:3px;align-items:stretch;margin-top:8px';
     ce.innerHTML=data.map((v,mi)=>{
       const isCur=mi===curIdx;
       const col=v==null?'#475569':v>tgt?'#EF4444':'#22C55E';
-      const bg=isCur?(v==null?'rgba(59,130,246,.15)':v>tgt?'rgba(239,68,68,.15)':'rgba(34,197,94,.15)'):'rgba(255,255,255,.04)';
-      const border=isCur?(v==null?'#3B82F6':v>tgt?'#EF4444':'#22C55E'):'#334155';
+      const bg=isCur?(v==null?'rgba(59,130,246,.2)':v>tgt?'rgba(239,68,68,.2)':'rgba(34,197,94,.2)'):'rgba(255,255,255,.04)';
+      const border=isCur?(v==null?'#3B82F6':v>tgt?'#EF4444':'#22C55E'):'rgba(255,255,255,.08)';
       const label=labels[mi]||MONTHS[mi]||mi;
-      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;background:${bg};border:1px solid ${border};border-radius:6px;gap:2px">
-        <div style="font-size:${isCur?'12':'10'}px;font-weight:900;color:${col};line-height:1">${v!=null?v+'%':'-'}</div>
-        <div style="font-size:6px;color:${isCur?'#93C5FD':'#64748B'};font-weight:${isCur?'800':'600'};line-height:1">${label}</div>
+      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 1px;background:${bg};border:1.5px solid ${border};border-radius:6px;gap:1px">
+        <div style="font-size:${isCur?'11':'9'}px;font-weight:900;color:${col};line-height:1">${v!=null?v+'%':'-'}</div>
+        <div style="font-size:6px;color:${isCur?'#93C5FD':'#64748B'};font-weight:700;line-height:1">${label}</div>
       </div>`;
     }).join('');
     }catch(e){console.log('renderChart error',e.message);}
