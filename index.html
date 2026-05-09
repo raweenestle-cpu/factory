@@ -1565,7 +1565,8 @@ const DASH={
     const ids={proc:'pp',fill:'fp',lsvc:'lsp',total:'tp'};
     const cids={proc:'pch',fill:'fch',lsvc:'lschart',total:'tch'};
     const pe=document.getElementById(ids[type]);if(!pe)return;
-    const ce=document.getElementById(cids[type]);if(!ce)return;
+    const ceInner=document.getElementById(cids[type]);if(!ceInner)return;
+    const ce=ceInner.parentElement||ceInner; // ใช้ .dc-chart parent
     const periodEl=document.getElementById('chart-period');
     const mode=periodEl?periodEl.value:'year';
     let data=[],labels=[],curIdx=0;
@@ -1606,25 +1607,30 @@ const DASH={
     const mx=Math.max(...validData,tgt*1.2,1);
     const TOTAL_H=50; // px ความสูงรวม
 
-    ce.style.cssText='display:flex;align-items:flex-end;gap:1px;height:'+TOTAL_H+'px;width:100%;position:relative';
-
+    // ✅ inject กราฟเข้า .dc-chart โดยตรง ด้วย fixed px ทั้งหมด
+    const H=46,LH=12; // chart area height, label height
+    const tgtY=tgt>0?Math.round((1-tgt/mx)*H):null;
+    let html='<div style="position:relative;width:100%;height:'+(H+LH)+'px;display:flex;align-items:flex-end;gap:1px">';
     // เส้น target
-    const tgtPct=Math.min(tgt/mx*100,95);
-    const tgtHtml=tgt>0?`<div style="position:absolute;left:0;right:0;bottom:${tgtPct}%;border-top:1.5px dashed #F59E0B;z-index:2;pointer-events:none"><span style="position:absolute;right:0;top:-9px;font-size:6px;color:#F59E0B;font-weight:900;background:#1E293B;padding:0 2px">T${tgt}%</span></div>`:'';
-
+    if(tgtY!=null){
+      html+=`<div style="position:absolute;left:0;right:0;top:${tgtY}px;border-top:1.5px dashed #F59E0B;z-index:3;pointer-events:none">`;
+      html+=`<span style="position:absolute;right:0;top:-9px;font-size:6px;color:#F59E0B;font-weight:900;white-space:nowrap;background:#1E293B;padding:0 2px">Target ${tgt}%</span></div>`;
+    }
     // แท่ง
-    const bars=data.map((v,mi)=>{
+    data.forEach((v,mi)=>{
       const isCur=mi===curIdx;
       const col=v==null?'#334155':v>tgt?'#EF4444':'#22C55E';
-      const pct=v==null?2:Math.max(Math.round(v/mx*100),5);
+      const bh=v==null?2:Math.max(Math.round(v/mx*H),3);
       const label=labels[mi]||'';
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:${TOTAL_H}px;position:relative">
-        <div style="width:100%;background:${col};height:${Math.max(Math.round(pct/100*TOTAL_H),2)}px;border-radius:1px 1px 0 0"></div>
-        <div style="font-size:6px;color:${isCur?'#3B82F6':'#64748B'};margin-top:1px;white-space:nowrap">${label}</div>
-      </div>`;
-    }).join('');
-
-    ce.innerHTML=tgtHtml+bars;
+      html+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:${H+LH}px">`;
+      if(v!=null) html+=`<div style="font-size:6px;color:${col};font-weight:800;line-height:1;margin-bottom:1px">${v}%</div>`;
+      html+=`<div style="width:100%;height:${bh}px;background:${col};border-radius:1px 1px 0 0;flex-shrink:0"></div>`;
+      html+=`<div style="font-size:6px;color:${isCur?'#3B82F6':'#64748B'};line-height:1;margin-top:1px;flex-shrink:0">${label}</div>`;
+      html+='</div>';
+    });
+    html+='</div>';
+    ce.style.cssText='overflow:visible';
+    ce.innerHTML=html;
     }catch(e){console.log('renderChart error',e.message);}
   }
   },
