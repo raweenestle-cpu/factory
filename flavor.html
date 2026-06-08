@@ -236,7 +236,7 @@ tbody tr:hover td{background:rgba(244,114,182,.04)!important}
           <th rowspan="2">Rework (kg)</th>
           <th rowspan="2" style="color:#111;font-weight:700">🪣 Aging Tank</th>
           <th rowspan="2" style="color:#111;font-weight:700">คาดว่า Past.เสร็จ</th>
-          <th colspan="4" style="text-align:center;color:var(--purple);border-bottom:1px solid var(--b2)">🧪 Flavor / Color / กรดมะนาว / Salt</th>
+          <th colspan="4" style="text-align:center;color:#111;font-weight:800;border-bottom:1px solid var(--b2)">🧪 Flavor / Color / กรดมะนาว / Salt</th>
           <th rowspan="2">เวลาเท</th>
           <th rowspan="2">Status</th>
           <th rowspan="2">หมายเหตุ</th>
@@ -279,7 +279,7 @@ tbody tr:hover td{background:rgba(244,114,182,.04)!important}
           <th rowspan="2">Rework (kg)</th>
           <th rowspan="2" style="color:#111;font-weight:700">🪣 Aging Tank</th>
           <th rowspan="2" style="color:#111;font-weight:700">คาดว่า Past.เสร็จ</th>
-          <th colspan="3" style="text-align:center;color:var(--purple);border-bottom:1px solid var(--b2)">🧪 Flavor / Color / กรดมะนาว</th>
+          <th colspan="3" style="text-align:center;color:#111;font-weight:800;border-bottom:1px solid var(--b2)">🧪 Flavor / Color / กรดมะนาว</th>
           <th rowspan="2">เวลาเท</th>
           <th rowspan="2">Status</th>
           <th rowspan="2">หมายเหตุ</th>
@@ -482,25 +482,25 @@ function flvBox(col,id,type,row,p){
     <div class="flv-title" style="color:#111;font-weight:800">${icon} ${type==='flavor'?'Flavor':type==='color'?'Color':type==='acid'?'กรดมะนาว':'Salt'}</div>
     <div class="flv-qty">
       <input type="number" min="0" value="${qty}" placeholder="0"
-        style="accent-color:${color}"
+        style="accent-color:#111"
         onchange="_up('${col}','${id}','${field}_qty',+this.value)">
       <span>ขวด</span>
     </div>
     <div class="flv-checks">
       <label class="flv-check" style="opacity:${canPrep?1:.4}">
-        <input type="checkbox" ${prep?'checked':''} ${canPrep?'':'disabled'} style="accent-color:${color}"
+        <input type="checkbox" ${prep?'checked':''} ${canPrep?'':'disabled'} style="accent-color:#111"
           onchange="_up('${col}','${id}','${field}_prep',this.checked)">
-        <span style="color:${prep?color:'var(--t2)'}">เตรียมแล้ว</span>
+        <span style="color:#111;font-weight:${prep?'700':'400'}">เตรียมแล้ว</span>
       </label>
       <label class="flv-check" style="opacity:${canPour?1:.35}">
-        <input type="checkbox" ${pour?'checked':''} ${canPour?'':'disabled'} style="accent-color:${color}"
+        <input type="checkbox" ${pour?'checked':''} ${canPour?'':'disabled'} style="accent-color:#111"
           onchange="_up('${col}','${id}','${field}_pour',this.checked)">
-        <span style="color:${pour?color:canPour?'var(--t2)':'var(--t3)'}">เทแล้ว</span>
+        <span style="color:#111;font-weight:${pour?'700':'400'}">เทแล้ว</span>
       </label>
       <label class="flv-check" style="opacity:${canNotify?1:.35}">
-        <input type="checkbox" ${notify?'checked':''} ${canNotify?'':'disabled'} style="accent-color:${color}"
+        <input type="checkbox" ${notify?'checked':''} ${canNotify?'':'disabled'} style="accent-color:#111"
           onchange="_up('${col}','${id}','${field}_notify',this.checked)">
-        <span style="color:${notify?color:canNotify?'var(--t2)':'var(--t3)'}">แจ้งใช้แล้ว</span>
+        <span style="color:#111;font-weight:${notify?'700':'400'}">แจ้งใช้แล้ว</span>
       </label>
     </div>
   </div>`;
