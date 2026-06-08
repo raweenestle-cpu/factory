@@ -1254,22 +1254,22 @@ function renderPastCard(row, i, col, p){
     </div>
     <div class="tv3-body">
 
-      ` + (function(){
-        var _st=row.past_start_time||'';
-        var _eta=row.expected_finish_time||'';
+      ` + (function(_row){
+        var _st=_row.past_start_time||'';
+        var _eta=_row.expected_finish_time||'';
         var _dur='';
-        if(_st&&row.past_end_time){
+        if(_st&&__row.past_end_time){
           var toS=function(t){var a=(t+'::').split(':').map(Number);return a[0]*3600+a[1]*60+(a[2]||0);};
-          var df=toS(row.past_end_time)-toS(_st);
+          var df=toS(_row.past_end_time)-toS(_st);
           if(df>=0){var h=Math.floor(df/3600),mn=Math.floor((df%3600)/60),s=df%60;_dur=(h?h+' ชม. ':'')+(mn?mn+' นาที ':'')+(!h&&!mn?s+' วิ':'');}
         }
-        if(!_st&&!_eta) return '';
+        if(!_st) return '';
         var pills='';
         if(_st)pills+='<div style="background:#dbeafe;border:2.5px solid #3b82f6;border-radius:14px;padding:10px 22px;text-align:center;box-shadow:0 2px 8px rgba(59,130,246,.15)"><div style="font-family:var(--mono);font-size:10px;font-weight:700;color:#1e40af;letter-spacing:.1em">⏱ เริ่ม Past</div><div style="font-family:var(--mono);font-size:22px;font-weight:900;color:#1e3a8a;margin-top:2px">'+_st+'</div></div>';
         if(_eta)pills+='<div style="background:#fef3c7;border:2.5px solid #f59e0b;border-radius:14px;padding:10px 22px;text-align:center;box-shadow:0 2px 8px rgba(245,158,11,.15)"><div style="font-family:var(--mono);font-size:10px;font-weight:700;color:#92400e;letter-spacing:.1em">🏁 คาดเสร็จ</div><div style="font-family:var(--mono);font-size:22px;font-weight:900;color:#78350f;margin-top:2px">'+_eta+'</div></div>';
         if(_dur)pills+='<div style="background:#d1fae5;border:2.5px solid #10b981;border-radius:14px;padding:10px 22px;text-align:center;box-shadow:0 2px 8px rgba(16,185,129,.15)"><div style="font-family:var(--mono);font-size:10px;font-weight:700;color:#065f46;letter-spacing:.1em">⏳ รวมเวลา</div><div style="font-family:var(--mono);font-size:20px;font-weight:900;color:#064e3b;margin-top:2px">'+_dur+'</div></div>';
         return '<div style="display:flex;justify-content:center;align-items:center;gap:12px;padding:12px 20px;background:linear-gradient(135deg,rgba(239,246,255,.8),rgba(255,253,235,.8));border-bottom:1px solid #e2e8f0">'+pills+'</div>';
-      })() + `
+      })(row) + `
       <div class="tv3-flow" style="flex:1;padding:16px 20px;display:flex;align-items:center;background:#fff;overflow-x:auto;min-height:140px">
         <div class="tv3-steps">${stepsHtml}</div>
       </div>
