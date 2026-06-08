@@ -1225,27 +1225,28 @@ function renderPastCard(row, i, col, p){
       <div class="tv3-flow" style="flex:1;padding:16px 20px;display:flex;align-items:center;background:#fff;overflow-x:auto;min-height:140px">
         <div class="tv3-steps">${stepsHtml}</div>
       </div>
-    ${(()=>{
-      const _st=row.past_start_time||'';
-      const _ed=row.past_end_time||'';
-      const _eta=row.expected_finish_time||'';
-      let _durTxt='';
-      if(_st&&_ed){
-        const toSec=t=>{const[h,m,s]=(t+'::').split(':').map(Number);return h*3600+m*60+(s||0);};
-        const df=toSec(_ed)-toSec(_st);
-        if(df>=0){const h=Math.floor(df/3600),m=Math.floor((df%3600)/60),s=df%60;_durTxt=(h?h+' ชม. ':'')+(m?m+' นาที ':'')+(!h&&!m?s+' วิ':'');}
-      }
-      const _timeBar=(_st||_eta)?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-        ${_st?`<div style="background:#dbeafe;border:2px solid #3b82f6;border-radius:10px;padding:6px 14px;text-align:center"><div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#1e40af">⏱ เริ่ม</div><div style="font-family:var(--mono);font-size:18px;font-weight:900;color:#1e3a8a">${_st}</div></div>`:''}
-        ${_eta?`<div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:10px;padding:6px 14px;text-align:center"><div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#92400e">🏁 คาดเสร็จ</div><div style="font-family:var(--mono);font-size:18px;font-weight:900;color:#78350f">${_eta}</div></div>`:''}
-        ${_durTxt?`<div style="background:#d1fae5;border:2px solid #10b981;border-radius:10px;padding:6px 14px;text-align:center"><div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#065f46">⏳ รวม</div><div style="font-family:var(--mono);font-size:16px;font-weight:900;color:#064e3b">${_durTxt}</div></div>`:''}
-      </div>`:'';
-      const _startBtn=_st?`<button class="tv3-sbtn g" style="flex:1">▶ Start ${_st}</button>`:`<button class="tv3-sbtn y" style="flex:1" onclick="stampTime('${col}','${row.id}','past_start_time','${p}')">▶ Start Past</button>`;
-      const _stopBtn=_ed?`<button class="tv3-sbtn g" style="flex:1">⏹ Stop ${_ed}</button>`:_st?`<button class="tv3-sbtn r" style="flex:1" onclick="stampTime('${col}','${row.id}','past_end_time','${p}')">⏹ Stop Past</button>`:`<button class="tv3-sbtn" style="flex:1;opacity:.4;border:2px solid #cbd5e1;background:#f1f5f9;color:#94a3b8;cursor:not-allowed" disabled>⏹ Stop Past</button>`;
-      return `<div class="tv3-stamp"><div style="flex:1">${_timeBar}<div style="display:flex;gap:8px">${_startBtn}${_stopBtn}</div></div></div>`;
-    })()}
+
+
     </div>
-  `;
+    <div class="tv3-stamp"><div style="flex:1">` +
+    (function(_r,_col,_p){
+      var _st=_r.past_start_time||'',_ed=_r.past_end_time||'',_eta=_r.expected_finish_time||'';
+      var _dur='';
+      if(_st&&_ed){var ts=function(t){var a=(t+'::').split(':').map(Number);return a[0]*3600+a[1]*60+(a[2]||0);};var df=ts(_ed)-ts(_st);if(df>=0){var h=Math.floor(df/3600),mn=Math.floor((df%3600)/60),s=df%60;_dur=(h?h+' ชม. ':'')+(mn?mn+' นาที ':'')+(!h&&!mn?s+' วิ':'');}}
+      var tb='';
+      if(_st||_eta){
+        tb='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+        if(_st)tb+='<div style="background:#dbeafe;border:2px solid #3b82f6;border-radius:10px;padding:6px 14px;text-align:center"><div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#1e40af">⏱ เริ่ม</div><div style="font-family:var(--mono);font-size:18px;font-weight:900;color:#1e3a8a">'+_st+'</div></div>';
+        if(_eta)tb+='<div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:10px;padding:6px 14px;text-align:center"><div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#92400e">🏁 คาดเสร็จ</div><div style="font-family:var(--mono);font-size:18px;font-weight:900;color:#78350f">'+_eta+'</div></div>';
+        if(_dur)tb+='<div style="background:#d1fae5;border:2px solid #10b981;border-radius:10px;padding:6px 14px;text-align:center"><div style="font-family:var(--mono);font-size:9px;font-weight:700;color:#065f46">⏳ รวม</div><div style="font-family:var(--mono);font-size:16px;font-weight:900;color:#064e3b">'+_dur+'</div></div>';
+        tb+='</div>';
+      }
+      var sb=_st?'<button class="tv3-sbtn g" style="flex:1">▶ Start '+_st+'</button>':'<button class="tv3-sbtn y" style="flex:1" onclick="window._pStampStart(this)" data-col="'+_col+'" data-id="'+_r.id+'" data-p="'+_p+'">▶ Start Past</button>';
+      var eb=_ed?'<button class="tv3-sbtn g" style="flex:1">⏹ Stop '+_ed+'</button>':_st?'<button class="tv3-sbtn r" style="flex:1" onclick="window._pStampStop(this)" data-col="'+_col+'" data-id="'+_r.id+'" data-p="'+_p+'">⏹ Stop Past</button>':'<button class="tv3-sbtn" style="flex:1;opacity:.4;border:2px solid #cbd5e1;background:#f1f5f9;color:#94a3b8;cursor:not-allowed" disabled>⏹ Stop Past</button>';
+      return tb+'<div style="display:flex;gap:8px">'+sb+eb+'</div>';
+    })(row,col,p) +
+    `</div></div>
+  </div>`;
 }
 
 window._pastCk=async function(pcol,rid,field){
