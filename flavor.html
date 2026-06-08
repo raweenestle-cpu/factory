@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+  
+  <meta name="theme-color" content="#db2777">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PROD.SYS">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Flavor — PROD.SYS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#e8ecf0;--s1:#f2f4f7;--s2:#e0e4ea;--s3:#d0d6de;--b1:#b0bac8;--b2:#8896aa;
+  --text:#111827;--t2:#374151;--t3:#6b7280;
+  --pink:#f472b6;--pink2:#ec4899;--pink3:#db2777;
+  --rose:#fda4af;--lilac:#c084fc;--lavender:#a78bfa;
+  --green:#4ade80;--yellow:#fbbf24;--red:#f87171;--cyan:#67e8f9;--orange:#fb923c;
+  --mono:'DM Mono',monospace;--sans:'Sarabun',sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
+body::before{content:"";position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 0%,rgba(236,72,153,.08) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 100%,rgba(167,139,250,.06) 0%,transparent 60%);
+  pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(244,114,182,.3);border-radius:3px}
+input[type="number"]{-moz-appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+nav{display:flex;align-items:center;height:54px;
+  background:rgba(13,8,16,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(244,114,182,.15);
+  position:sticky;top:0;z-index:200;padding:0 16px;gap:8px}
+nav::after{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(244,114,182,.4),transparent)}
+.nav-logo{font-family:var(--mono);font-size:14px;font-weight:700;flex-shrink:0;
+  background:linear-gradient(135deg,var(--pink),var(--lilac));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-logo span{-webkit-text-fill-color:var(--t2);font-size:12px}
+.ntab{font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:none;
+  background:none;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
+.ntab:hover{color:var(--pink);background:rgba(244,114,182,.08)}
+.ntab.on{color:var(--pink);background:rgba(244,114,182,.15);
+  border:1px solid rgba(244,114,182,.25)}
+.nav-r{display:flex;align-items:center;gap:8px;margin-left:auto}
+.nbtn{font-size:11px;padding:5px 12px;border-radius:20px;
+  border:1px solid rgba(244,114,182,.2);
+  background:rgba(244,114,182,.06);color:var(--t2);cursor:pointer;
+  text-decoration:none;font-family:var(--mono);transition:all .2s}
+.nbtn:hover{border-color:var(--pink);color:var(--pink)}
+
+.page{display:none;padding:14px 16px;position:relative;z-index:1}
+.page.on{display:block}
+
+/* TABLE */
+.tw{border-radius:12px;border:1px solid rgba(244,114,182,.15);overflow:auto;margin-bottom:14px;
+  background:var(--s1);box-shadow:0 4px 24px rgba(236,72,153,.06)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
+thead th{background:rgba(244,114,182,.06);padding:8px 10px;text-align:left;white-space:nowrap;
+  font-family:var(--mono);font-size:10px;color:var(--t2);
+  border-bottom:1px solid rgba(244,114,182,.15);
+  position:sticky;top:0;z-index:5;border-right:1px solid rgba(244,114,182,.08);
+  letter-spacing:.06em;text-transform:uppercase}
+tbody td{padding:7px 9px;vertical-align:middle;
+  border-right:1px solid rgba(244,114,182,.07);
+  border-bottom:1px solid rgba(244,114,182,.07);font-weight:600}
+tbody tr:hover td{background:rgba(244,114,182,.04)!important}
+
+/* ROW COLORS */
+.row-ready td{background:rgba(74,222,128,.06)!important}
+.row-ready td:first-child{border-left:3px solid var(--green)!important}
+.row-past td{background:rgba(251,146,60,.06)!important}
+.row-past td:first-child{border-left:3px solid var(--orange)!important}
+.row-mixing td{background:rgba(251,191,36,.05)!important}
+.row-mixing td:first-child{border-left:3px solid var(--yellow)!important}
+.row-done td{background:rgba(244,114,182,.08)!important}
+.row-done td:first-child{border-left:3px solid var(--pink)!important}
+
+/* INPUTS */
+.ci{background:var(--s2);border:1px solid rgba(244,114,182,.2);border-radius:8px;
+  color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 9px;outline:none;
+  transition:border-color .2s}
+.ci:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(244,114,182,.1)}
+
+/* FLAVOR BOX */
+.flv-box{display:flex;flex-direction:column;gap:5px;min-width:115px;padding:8px 10px;
+  border-radius:10px;border:1px solid rgba(244,114,182,.15);background:var(--s3);
+  transition:all .2s}
+.flv-box.all-done{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.35);
+  box-shadow:0 2px 12px rgba(74,222,128,.1)}
+.flv-title{font-family:var(--mono);font-size:11px;font-weight:800;color:#111;text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:3px}
+.flv-qty{display:flex;align-items:center;gap:5px}
+.flv-qty input{width:64px;font-family:var(--mono);font-size:13px;font-weight:700;
+  text-align:center;background:var(--s2);border:1px solid rgba(244,114,182,.2);
+  border-radius:6px;color:var(--text);padding:5px 6px;outline:none}
+.flv-qty input:focus{border-color:var(--pink);box-shadow:0 0 0 2px rgba(244,114,182,.15)}
+.flv-qty span{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.flv-checks{display:flex;flex-direction:column;gap:4px;margin-top:3px}
+.flv-check{display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 0}
+.flv-check input[type="checkbox"]{width:15px;height:15px;cursor:pointer;flex-shrink:0;
+  accent-color:var(--pink)}
+.flv-check span{font-family:var(--mono);font-size:10px;font-weight:600}
+
+/* FLAVOR CELLS */
+.flv-cell{padding:5px 6px!important}
+.flv-wrap{display:flex;gap:6px;align-items:stretch}
+
+/* STAMP BTN */
+.stamp-btn{display:flex;align-items:center;justify-content:center;gap:4px;
+  background:rgba(244,114,182,.06);border:1px solid rgba(244,114,182,.2);
+  border-radius:8px;color:var(--t2);
+  font-size:11px;font-family:var(--mono);padding:6px 10px;cursor:pointer;
+  white-space:nowrap;width:100%;transition:all .2s}
+.stamp-btn:hover{border-color:var(--pink);color:var(--pink);background:rgba(244,114,182,.1)}
+.stamp-btn.stamped{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.4);color:var(--green)}
+.stamp-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* STAT BADGE */
+.stat-badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;
+  border-radius:99px;white-space:nowrap}
+
+/* ACTION BTN */
+.done-btn{background:linear-gradient(135deg,rgba(244,114,182,.2),rgba(167,139,250,.2));
+  border:1px solid rgba(244,114,182,.4);color:var(--pink);
+  font-family:var(--mono);font-size:11px;font-weight:700;padding:7px 12px;
+  border-radius:8px;cursor:pointer;white-space:nowrap;width:100%;transition:all .2s}
+.done-btn:hover{background:linear-gradient(135deg,rgba(244,114,182,.3),rgba(167,139,250,.3));
+  box-shadow:0 4px 14px rgba(244,114,182,.2)}
+.done-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.btn{font-size:12px;padding:6px 14px;border-radius:20px;
+  border:1px solid rgba(244,114,182,.2);
+  background:rgba(244,114,182,.06);color:var(--text);cursor:pointer;
+  font-family:var(--sans);white-space:nowrap;transition:all .2s}
+.btn:hover{border-color:var(--pink);color:var(--pink)}
+.btn-b{background:linear-gradient(135deg,var(--pink2),var(--lilac));
+  border-color:transparent;color:#fff;font-weight:600}
+.btn-b:hover{box-shadow:0 4px 14px rgba(236,72,153,.35);color:#fff}
+
+/* HISTORY */
+.hist-item{background:var(--s1);border:1px solid rgba(244,114,182,.12);border-radius:12px;
+  padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  transition:border-color .2s}
+.hist-item:hover{border-color:rgba(244,114,182,.3)}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:linear-gradient(135deg,var(--pink3),var(--lilac));
+  color:#fff;padding:10px 22px;border-radius:20px;font-size:12px;
+  opacity:0;transition:all .3s;z-index:9999;pointer-events:none;
+  font-family:var(--mono);box-shadow:0 8px 24px rgba(219,39,119,.3)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* SIGNATURE MODAL */
+.sig-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;padding:16px}
+.sig-modal-bg.show{display:flex}
+.sig-modal{background:linear-gradient(135deg,var(--s1),var(--s2));
+  border:1px solid rgba(244,114,182,.25);border-radius:20px;padding:24px 20px;
+  width:100%;max-width:400px;box-shadow:0 20px 60px rgba(219,39,119,.2)}
+.sig-title{font-family:var(--mono);font-size:15px;font-weight:700;
+  background:linear-gradient(135deg,var(--pink),var(--lilac));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.sig-sub{font-size:12px;color:var(--t2);margin-bottom:16px}
+#sig-canvas{width:100%;height:160px;background:rgba(255,255,255,0.05);border-radius:12px;
+  border:2px solid rgba(244,114,182,.4);cursor:crosshair;touch-action:none;display:block}
+.sig-btns{display:flex;gap:8px;margin-top:14px}
+.sig-btn{flex:1;padding:11px;border-radius:12px;border:none;font-family:var(--mono);
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.sig-btn.save{background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#fff;
+  box-shadow:0 4px 14px rgba(236,72,153,.3)}
+.sig-btn.save:hover{box-shadow:0 6px 20px rgba(236,72,153,.4);transform:translateY(-1px)}
+.sig-btn.clear{background:rgba(244,114,182,.08);border:1px solid rgba(244,114,182,.2);color:var(--t2)}
+.sig-btn.cancel{background:rgba(244,114,182,.08);border:1px solid rgba(244,114,182,.2);color:var(--t2)}
+.sig-btn.confirm{background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#fff;
+  box-shadow:0 4px 14px rgba(236,72,153,.3)}
+#sig-preview-img{width:100%;max-height:120px;object-fit:contain;background:#fff5f8;
+  border-radius:12px;border:2px solid rgba(244,114,182,.3);padding:8px}
+@media(max-width:768px){
+  nav{padding:0 10px;gap:4px}
+  .nav-logo{font-size:12px}
+  .ntab{font-size:10px;padding:4px 8px}
+  .page{padding:10px}
+  .tw{border:none;background:none;overflow:visible}
+  table,thead,tbody,tr,td,th{display:block;width:100%}
+  thead tr{display:none}
+  tbody tr{background:var(--s1);border:1px solid var(--b1);border-radius:12px;margin-bottom:12px;padding:12px}
+  tbody td{border:none!important;padding:4px 0;display:flex;align-items:flex-start;gap:8px;font-size:13px}
+  tbody td:nth-child(1){display:none}
+  .flv-wrap{flex-direction:column;gap:8px}
+  .flv-box{min-width:unset;width:100%}
+  .stamp-btn{min-height:44px;font-size:13px!important}
+  .done-btn{min-height:44px;font-size:13px!important}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo" id="nav-logo-tap">PROD<b>.</b>SYS <span>/ FLAVOR</span></div>
+  <button class="ntab on" onclick="showPage('m1',this)">💗 Mix 1</button>
+  <button class="ntab" onclick="showPage('m2',this)">💜 Mix 2</button>
+  <button class="ntab" onclick="showPage('history',this);loadHistory()">📋 History</button>
+  <button class="ntab" id="tab-report" style="display:none;color:#fda4af;background:rgba(253,164,175,.1);border:1px solid rgba(253,164,175,.2)" onclick="showPage('report',this);loadReport()">🔐 Report</button>
+  <div class="nav-r">
+    <a href="index.html" class="nbtn">🏠</a>
+    <button class="nbtn" onclick="doLogout()">ออก</button>
+  </div>
+</nav>
+
+<!-- MIX 1 PAGE -->
+<div class="page on" id="page-m1">
+  <div style="height:3px;background:linear-gradient(90deg,var(--pink3),var(--pink),var(--lilac));border-radius:0 0 4px 4px;margin:-14px -16px 16px;opacity:.7"></div>
+  <div style="margin-bottom:6px;font-family:var(--mono);font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--pink),var(--lilac));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase;letter-spacing:.1em">💗 Mixing 1</div>
+  <div class="toolbar">
+    <input type="date" id="date-m1" class="ci" style="width:140px" onchange="loadPlan('m1')">
+    <button class="btn" onclick="changeDate('m1',-1)">◀</button>
+    <button class="btn" onclick="changeDate('m1',1)">▶</button>
+    <button class="btn" onclick="goToday('m1')">วันนี้</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">#</th>
+          <th rowspan="2">Mix Code</th>
+          <th rowspan="2" style="color:#111;font-weight:700">🔗 Process</th>
+          <th rowspan="2">Mix Name</th>
+          <th rowspan="2">ผลิตภัณฑ์</th>
+          <th rowspan="2">Batch</th>
+          <th rowspan="2">Vol (L)</th>
+          <th rowspan="2">Rework (kg)</th>
+          <th rowspan="2" style="color:#111;font-weight:700">🪣 Aging Tank</th>
+          <th rowspan="2" style="color:#111;font-weight:700">คาดว่า Past.เสร็จ</th>
+          <th colspan="4" style="text-align:center;color:var(--purple);border-bottom:1px solid var(--b2)">🧪 Flavor / Color / กรดมะนาว / Salt</th>
+          <th rowspan="2">เวลาเท</th>
+          <th rowspan="2">Status</th>
+          <th rowspan="2">หมายเหตุ</th>
+          <th rowspan="2" style="color:#111;font-weight:700">🖊️ ลายเซ็น</th>
+          <th rowspan="2">Action</th>
+        </tr>
+        <tr>
+          <th style="color:#111;font-size:10px;font-weight:700">🍶 Flavor</th>
+          <th style="color:#111;font-size:10px;font-weight:700">🎨 Color</th>
+          <th style="color:#111;font-size:10px;font-weight:700">🍋 กรดมะนาว</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-m1"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- MIX 2 PAGE -->
+<div class="page" id="page-m2">
+  <div style="height:3px;background:linear-gradient(90deg,var(--lilac),var(--rose),var(--pink3));border-radius:0 0 4px 4px;margin:-14px -16px 16px;opacity:.7"></div>
+  <div style="margin-bottom:6px;font-family:var(--mono);font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--lilac),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase;letter-spacing:.1em">💜 Mixing 2</div>
+  <div class="toolbar">
+    <input type="date" id="date-m2" class="ci" style="width:140px" onchange="loadPlan('m2')">
+    <button class="btn" onclick="changeDate('m2',-1)">◀</button>
+    <button class="btn" onclick="changeDate('m2',1)">▶</button>
+    <button class="btn" onclick="goToday('m2')">วันนี้</button>
+  </div>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">#</th>
+          <th rowspan="2">Mix Code</th>
+          <th rowspan="2" style="color:#111;font-weight:700">🔗 Process</th>
+          <th rowspan="2">Mix Name</th>
+          <th rowspan="2">ผลิตภัณฑ์</th>
+          <th rowspan="2">Batch</th>
+          <th rowspan="2">Vol (L)</th>
+          <th rowspan="2">Rework (kg)</th>
+          <th rowspan="2" style="color:#111;font-weight:700">🪣 Aging Tank</th>
+          <th rowspan="2" style="color:#111;font-weight:700">คาดว่า Past.เสร็จ</th>
+          <th colspan="3" style="text-align:center;color:var(--purple);border-bottom:1px solid var(--b2)">🧪 Flavor / Color / กรดมะนาว</th>
+          <th rowspan="2">เวลาเท</th>
+          <th rowspan="2">Status</th>
+          <th rowspan="2">หมายเหตุ</th>
+          <th rowspan="2" style="color:#111;font-weight:700">🖊️ ลายเซ็น</th>
+          <th rowspan="2">Action</th>
+        </tr>
+        <tr>
+          <th style="color:#111;font-size:10px;font-weight:700">🍶 Flavor</th>
+          <th style="color:#111;font-size:10px;font-weight:700">🎨 Color</th>
+          <th style="color:#111;font-size:10px;font-weight:700">🍋 กรดมะนาว</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-m2"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div class="toolbar">
+    <input type="date" id="hist-date" class="ci" style="width:140px" onchange="loadHistory()">
+    <button class="btn" onclick="goTodayHist()">วันนี้</button>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<!-- REPORT PAGE — Admin Only -->
+<div class="page" id="page-report">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">DATE</span>
+    <input type="date" id="report-date" class="ci" style="width:140px" onchange="loadReport()">
+    <button class="btn" onclick="goTodayReport()">วันนี้</button>
+    <span style="font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:5px;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3)">🔐 Admin Only</span>
+  </div>
+  <div id="report-list"></div>
+</div>
+
+<!-- PIN MODAL -->
+<div id="pin-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:998;align-items:center;justify-content:center" onclick="if(event.target===this)closePinModal()">
+  <div style="background:linear-gradient(135deg,var(--s1),var(--s2));border:1px solid rgba(244,114,182,.25);border-radius:24px;padding:28px 24px;width:100%;max-width:320px;text-align:center;box-shadow:0 20px 60px rgba(219,39,119,.25)">
+    <div style="font-size:32px;margin-bottom:8px">🔐</div>
+    <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Report Access</div>
+    <div style="font-size:12px;color:var(--t2);margin-bottom:18px">ใส่ PIN 4 หลักเพื่อเข้าดู Report</div>
+    <input id="pin-input" type="password" inputmode="numeric" maxlength="4"
+      style="width:100%;text-align:center;letter-spacing:.3em;font-size:22px;font-family:var(--mono);background:rgba(244,114,182,.06);border:2px solid rgba(244,114,182,.3);border-radius:12px;color:var(--text);padding:12px;outline:none;margin-bottom:12px"
+      placeholder="••••" onkeydown="if(event.key==='Enter')checkPin();if(event.key==='Escape')closePinModal()">
+    <div id="pin-err" style="font-family:var(--mono);font-size:11px;color:var(--red);min-height:16px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button style="flex:1;padding:11px;border-radius:12px;border:1px solid rgba(244,114,182,.2);background:rgba(244,114,182,.06);color:var(--t2);font-family:var(--mono);cursor:pointer;font-size:13px" onclick="closePinModal()">✕ ยกเลิก</button>
+      <button style="flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--pink2),var(--lilac));color:#fff;font-family:var(--mono);font-weight:700;cursor:pointer;font-size:13px;box-shadow:0 4px 14px rgba(236,72,153,.3)" onclick="checkPin()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+<div class="sig-modal-bg" id="sig-modal-bg">
+  <div class="sig-modal">
+    <!-- วาดลายเซ็น -->
+    <div id="sig-modal-draw">
+      <div class="sig-title">🖊️ วาดลายเซ็น</div>
+      <div class="sig-sub">ลายเซ็นจะถูกบันทึกไว้สำหรับครั้งต่อไป</div>
+      <canvas id="sig-canvas" width="360" height="160"></canvas>
+      <div class="sig-btns">
+        <button class="sig-btn clear" onclick="clearCanvas()">ลบ</button>
+        <button class="sig-btn cancel" onclick="closeSigModal()">ยกเลิก</button>
+        <button class="sig-btn save" onclick="saveSig()">บันทึก ✅</button>
+      </div>
+    </div>
+    <!-- ยืนยันลายเซ็นเดิม -->
+    <div id="sig-modal-preview" style="display:none">
+      <div class="sig-title">🖊️ ยืนยันลายเซ็น</div>
+      <div class="sig-sub">ลายเซ็นที่บันทึกไว้</div>
+      <img id="sig-preview-img" src="">
+      <div class="sig-btns">
+        <button class="sig-btn clear" onclick="redrawSig()">วาดใหม่</button>
+        <button class="sig-btn cancel" onclick="closeSigModal()">ยกเลิก</button>
+        <button class="sig-btn confirm" onclick="confirmSig()">ยืนยัน ✅</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getAuth,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,query,where,onSnapshot,updateDoc,addDoc,getDocs,doc,getDoc}
+  from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app=initializeApp({apiKey:"AIzaSyC3f6jMuhugE6BNfRfkpOA9BMrIKWR9YgQ",authDomain:"production-filling.firebaseapp.com",projectId:"production-filling",storageBucket:"production-filling.firebasestorage.app",messagingSenderId:"89098393458",appId:"1:89098393458:web:b723f2886e8a341935afeb"});
+const auth=getAuth(app),db=getFirestore(app);
+let ME=null,rows={m1:[],m2:[]},unsub={m1:null,m2:null},productMap={};
+const today=()=>new Date().toISOString().slice(0,10);
+const $=id=>document.getElementById(id);
+const nowHHMM=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+
+function toast(msg,t='blue'){const el=$('toast');el.textContent=msg;el.style.background=t==='green'?'#15803d':t==='red'?'#991b1b':'#1d4ed8';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+
+function calcCuringEnd(pastEnd,agingHr,dateStr){
+  if(!pastEnd)return'—';
+  const d=new Date((dateStr||today())+'T00:00:00');
+  const[h,m]=pastEnd.split(':').map(Number);
+  d.setHours(h,m,0,0);
+  d.setTime(d.getTime()+(+agingHr)*3600000);
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){location.href='index.html';return;}
+  ME=user;
+  try{const ps=await getDocs(collection(db,'products'));ps.docs.forEach(d=>{const p={id:d.id,...d.data()};productMap[p.mix_code]=p;});}catch{}
+  await loadUserSignature();
+  ['m1','m2'].forEach(m=>{
+    const inp=$(m==='m1'?'date-m1':'date-m2');
+    inp.value=today();
+    loadPlan(m);
+  });
+  $('hist-date').value=today();
+  initIdleTimeout();
+});
+window.doLogout=async()=>{await signOut(auth);location.href='index.html';};
+
+window.changeDate=(m,delta)=>{
+  const inp=$(m==='m1'?'date-m1':'date-m2');
+  const d=new Date(inp.value||today());d.setDate(d.getDate()+delta);
+  inp.value=d.toISOString().slice(0,10);loadPlan(m);
+};
+window.goToday=(m)=>{$(m==='m1'?'date-m1':'date-m2').value=today();loadPlan(m);};
+window.goTodayHist=()=>{$('hist-date').value=today();loadHistory();};
+
+window.loadPlan=(m)=>{
+  const col=m==='m1'?'production_plans':'production_plans_m2';
+  const d=$(m==='m1'?'date-m1':'date-m2').value||today();
+  if(unsub[m])unsub[m]();
+  const q=query(collection(db,col),where('date','==',d));
+  unsub[m]=onSnapshot(q,snap=>{
+    rows[m]=snap.docs.map(x=>({id:x.id,...x.data()}))
+      .filter(r=>r.mix_code&&r.mix_code!=='')
+      .sort((a,b)=>(a.seq||0)-(b.seq||0));
+    renderPlan(m);
+  });
+};
+
+// UPDATE field + stamp ชื่อเวลาไว้หลังบ้าน
+window._up=async(col,id,field,val)=>{
+  try{
+    const upd={[field]:val};
+    // ถ้าเป็น checkbox (boolean) ให้ stamp ชื่อ+เวลาไว้ด้วย
+    if(typeof val==='boolean'&&val===true&&ME){
+      const name=ME?.displayName||ME?.email?.split('@')[0]||ME?.email||'—';
+      upd[field+'_by']=name+' · '+nowHHMM();
+    }
+    await updateDoc(doc(db,col,id),upd);
+  }catch(e){toast('บันทึกไม่สำเร็จ','red');}
+};
+
+// STAMP POUR TIME
+window.stampPour=async(col,id)=>{
+  await updateDoc(doc(db,col,id),{flavor_pour_time:nowHHMM()});
+  toast('บันทึกเวลาเทแล้ว','green');
+};
+
+// COMPLETE FLAVOR
+window.completeFlavor=async(col,id,m)=>{
+  const row=rows[m].find(r=>r.id===id);if(!row)return;
+  if(!confirm('ยืนยัน Flavor เสร็จแล้ว?'))return;
+  await updateDoc(doc(db,col,id),{status:'ready',flavor_done_at:nowHHMM()});
+  await addDoc(collection(db,'flavor_history'),{
+    date:today(),mix_code:row.mix_code,mix_name:row.mix_name,
+    batch_no:row.batch_no,volume_liter:row.volume_liter,
+    aging_tank:row.aging_tank||'—',
+    flavor_qty:row.flavor_qty||0,color_qty:row.color_qty||0,acid_qty:row.acid_qty||0,
+    flavor_pour_time:row.flavor_pour_time||'—',
+    completed_at:nowHHMM(),completed_by:ME?.email||'flavor',
+  });
+  toast('Flavor เสร็จแล้ว ✅','green');
+};
+
+function flvBox(col,id,type,row,p){
+  const labels={flavor:{icon:'🍶',color:'#d8b4fe',field:'flavor',hasKey:'has_flavor'},color:{icon:'🎨',color:'#f9a8d4',field:'color',hasKey:'has_color'},acid:{icon:'🍋',color:'#86efac',field:'acid',hasKey:'has_citric'},salt:{icon:'🧂',color:'#fcd34d',field:'salt',hasKey:'has_salt'}};
+  const{icon,color,field,hasKey}=labels[type];
+  const needed=p?!!p[hasKey]:true;
+  const qty=row[`${field}_qty`]||0;
+  const prep=!!row[`${field}_prep`];
+  const pour=!!row[`${field}_pour`];
+  const notify=!!row[`${field}_notify`];
+  const allDone=prep&&pour&&notify;
+
+  if(!needed){
+    return`<div class="flv-box" style="opacity:.28;pointer-events:none;filter:grayscale(1)">
+    <div class="flv-title" style="color:#111;font-weight:800">${icon} ${type==='flavor'?'Flavor':type==='color'?'Color':type==='acid'?'กรดมะนาว':'Salt'}</div>
+    <div style="text-align:center;font-size:11px;color:#6b7280;padding:8px 0">ไม่ใช้</div>
+  </div>`;
+  }
+
+  const canPrep=true;
+  const canPour=true;
+  const canNotify=true;
+
+  return`<div class="flv-box${allDone?' all-done':''}">
+    <div class="flv-title" style="color:#111;font-weight:800">${icon} ${type==='flavor'?'Flavor':type==='color'?'Color':type==='acid'?'กรดมะนาว':'Salt'}</div>
+    <div class="flv-qty">
+      <input type="number" min="0" value="${qty}" placeholder="0"
+        style="accent-color:${color}"
+        onchange="_up('${col}','${id}','${field}_qty',+this.value)">
+      <span>ขวด</span>
+    </div>
+    <div class="flv-checks">
+      <label class="flv-check" style="opacity:${canPrep?1:.4}">
+        <input type="checkbox" ${prep?'checked':''} ${canPrep?'':'disabled'} style="accent-color:${color}"
+          onchange="_up('${col}','${id}','${field}_prep',this.checked)">
+        <span style="color:${prep?color:'var(--t2)'}">เตรียมแล้ว</span>
+      </label>
+      <label class="flv-check" style="opacity:${canPour?1:.35}">
+        <input type="checkbox" ${pour?'checked':''} ${canPour?'':'disabled'} style="accent-color:${color}"
+          onchange="_up('${col}','${id}','${field}_pour',this.checked)">
+        <span style="color:${pour?color:canPour?'var(--t2)':'var(--t3)'}">เทแล้ว</span>
+      </label>
+      <label class="flv-check" style="opacity:${canNotify?1:.35}">
+        <input type="checkbox" ${notify?'checked':''} ${canNotify?'':'disabled'} style="accent-color:${color}"
+          onchange="_up('${col}','${id}','${field}_notify',this.checked)">
+        <span style="color:${notify?color:canNotify?'var(--t2)':'var(--t3)'}">แจ้งใช้แล้ว</span>
+      </label>
+    </div>
+  </div>`;
+}
+
+function renderPlan(m){
+  const col=m==='m1'?'production_plans':'production_plans_m2';
+  const tbody=$(`tbody-${m}`);if(!tbody)return;
+  if(!rows[m].length){
+    tbody.innerHTML=`<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--t3);font-family:var(--mono)">ไม่มีข้อมูล</td></tr>`;
+    return;
+  }
+  tbody.innerHTML='';
+
+  // Group rows ที่มี process_order + mix_code เดียวกัน
+  const grouped=[];
+  const seen=new Set();
+  rows[m].forEach(row=>{
+    const key=row.process_order&&row.mix_code?`${row.process_order}__${row.mix_code}`:'';
+    if(key&&seen.has(key)) return; // ข้ามแถวที่รวมแล้ว
+    if(key){
+      seen.add(key);
+      const group=rows[m].filter(r=>r.process_order===row.process_order&&r.mix_code===row.mix_code);
+      if(group.length>1){
+        // รวม volume และ batch_no
+        const totalVol=group.reduce((sum,r)=>sum+(+(r.volume_liter||0)),0);
+        // ตัด /1 /2 /3 ออก เหลือแค่ prefix เช่น "1"
+        const batchBase=String(row.batch_no||'').replace(/[\/\-]\d+$/,'');
+        const merged={...row, volume_liter:totalVol, batch_no:batchBase, _merged:group};
+        grouped.push(merged);
+        return;
+      }
+    }
+    grouped.push(row);
+  });
+
+  grouped.forEach((row,i)=>{
+    const p=productMap[row.mix_code]||{};
+    const agingHr=+(p.aging_time||4);
+    const curingEnd=row.past_end_time?calcCuringEnd(row.past_end_time,agingHr,row.date):'—';
+    const col2=row._col||col;
+
+    // Status
+    let statTxt='—',statC='var(--t2)';
+    if(row.status==='mixing'){statTxt='🔄 ผสม';statC='var(--yellow)';}
+    else if(row.status==='pasteurising'){statTxt='♨️ Past.';statC='var(--orange)';}
+    else if(row.status==='past_done'){statTxt='✅ พร้อม Flavor';statC='var(--green)';}
+    else if(row.status==='ready'){statTxt='✅ Flavor เสร็จ';statC='#16a34a';}
+
+    // Row class
+    let rowClass='';
+    if(row.status==='ready')rowClass='row-done';
+    else if(row.status==='past_done')rowClass='row-ready';
+    else if(row.status==='pasteurising')rowClass='row-past';
+    else if(row.status==='mixing')rowClass='row-mixing';
+
+    // Flavor done check
+    const _needFlv=!!p.has_flavor,_needCol=!!p.has_color,_needAcid=!!p.has_citric,_needSalt=!!p.has_salt;
+    const allFlvDone=
+      (!_needFlv||(row.flavor_prep&&row.flavor_pour&&row.flavor_notify))&&
+      (!_needCol||(row.color_prep&&row.color_pour&&row.color_notify))&&
+      (!_needAcid||(row.acid_prep&&row.acid_pour&&row.acid_notify))&&
+      (!_needSalt||(row.salt_prep&&row.salt_pour&&row.salt_notify));
+    const canDone=row.status==='past_done'&&allFlvDone;
+
+    const tr=document.createElement('tr');
+    tr.className=rowClass;
+    tr.innerHTML=`
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--t3)">${i+1}</span></td>
+      <td><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#111">${row.mix_code||'—'}</span></td>
+      <td style="text-align:center"><span style="font-family:var(--mono);font-size:14px;font-weight:800;color:#111">${row.process_order||'—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#111">${row.mix_name||'—'}</span></td>
+      <td><span style="font-size:12px;font-weight:600;color:var(--text)">${row.product_name||'—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--t2)">Batch ${row.batch_no||'—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--cyan);white-space:nowrap">${(+(row.volume_liter||0)).toLocaleString()} L</span></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--purple)">${row.rework_kg||'—'} kg</span></td>
+      <td><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan);background:rgba(6,182,212,.1);padding:3px 10px;border-radius:6px;border:1px solid rgba(6,182,212,.25)">${row.aging_tank||'—'}</span></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--yellow)">${curingEnd}</span></td>
+      <td class="flv-cell"><div class="flv-wrap">${flvBox(col,row.id,'flavor',row,p)}</div></td>
+      <td class="flv-cell"><div class="flv-wrap">${flvBox(col,row.id,'color',row,p)}</div></td>
+      <td class="flv-cell"><div class="flv-wrap">${flvBox(col,row.id,'acid',row,p)}</div></td>
+      <td class="flv-cell"><div class="flv-wrap">${flvBox(col,row.id,'salt',row,p)}</div></td>
+      <td>
+        <button class="stamp-btn ${row.flavor_pour_time?'stamped':''}"
+          ${row.flavor_pour_time||(row.status==='mixing'||row.status==='pending')?'disabled':''}
+          onclick="stampPour('${col}','${row.id}')">
+          ⏱ ${row.flavor_pour_time||'Stamp เท'}
+        </button>
+      </td>
+      <td><span class="stat-badge" style="color:${statC};background:${statC}22;border:1px solid ${statC}44">${statTxt}</span></td>
+      <td>
+        <input class="ci" style="width:110px;font-size:11px" value="${row.flavor_note||''}"
+          placeholder="หมายเหตุ"
+          onchange="_up('${col}','${row.id}','flavor_note',this.value)">
+      </td>
+      <td style="text-align:center;padding:6px">
+        ${row.signature_url
+          ?`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+              <img src="${row.signature_url}" style="height:36px;max-width:100px;border-radius:4px;border:1px solid var(--b2);background:#fff;padding:2px">
+              <span style="font-family:var(--mono);font-size:10px;color:var(--cyan);font-weight:700">${row.signature_name||''}</span>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--t2)">${row.signature_time||''}</span>
+              <button style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid var(--b2);background:none;color:var(--t2);cursor:pointer" onclick="signRow('${col}','${row.id}')">🖊️ แก้ไข</button>
+            </div>`
+          :`<button style="font-size:13px;padding:8px 14px;border-radius:8px;border:1px dashed rgba(6,182,212,.4);background:rgba(6,182,212,.06);color:var(--cyan);cursor:pointer;width:100%" onclick="signRow('${col}','${row.id}')">🖊️ เซ็นชื่อ</button>`
+        }
+      </td>
+      <td>
+        <button class="done-btn" ${!canDone?'disabled':''}
+          onclick="completeFlavor('${col}','${row.id}','${m}')">
+          ${row.status==='ready'?'✅ เสร็จแล้ว':'✅ Done'}
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// HISTORY
+window.loadHistory=async()=>{
+  const d=$('hist-date').value||today();
+  const list=$('history-list');
+  list.innerHTML=`<div style="color:var(--t3);font-family:var(--mono);padding:20px">⏳ กำลังโหลด...</div>`;
+  try{
+    const snap=await getDocs(query(collection(db,'flavor_history'),where('date','==',d)));
+    const items=snap.docs.map(d=>d.data()).sort((a,b)=>(a.completed_at||'').localeCompare(b.completed_at||''));
+    if(!items.length){list.innerHTML=`<div style="color:var(--t3);font-family:var(--mono);padding:20px;text-align:center">ไม่มีข้อมูล</div>`;return;}
+    list.innerHTML=items.map(r=>`<div class="hist-item">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#111">${r.mix_code||'—'}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--blue2)">${r.mix_name||'—'}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--t2)">Batch ${r.batch_no||'—'}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--cyan)">${(+(r.volume_liter||0)).toLocaleString()} L</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--cyan)">🪣 ${r.aging_tank||'—'}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--green);margin-left:auto">✅ ${r.completed_at||'—'}</span>
+    </div>`).join('');
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-family:var(--mono);padding:20px">${e.message}</div>`;}
+};
+
+// ── PIN + LOGO TAP SYSTEM ─────────────────────────────────────────────
+let logoTaps=0,logoTimer=null;
+document.getElementById('nav-logo-tap').addEventListener('click',()=>{
+  logoTaps++;
+  clearTimeout(logoTimer);
+  logoTimer=setTimeout(()=>logoTaps=0,2000);
+  if(logoTaps>=5){
+    logoTaps=0;clearTimeout(logoTimer);
+    openPinModal();
+  }
+});
+
+function openPinModal(){
+  const m=document.getElementById('pin-modal-bg');
+  m.style.display='flex';
+  const inp=document.getElementById('pin-input');
+  inp.value='';
+  document.getElementById('pin-err').textContent='';
+  setTimeout(()=>inp.focus(),100);
+}
+function closePinModal(){
+  document.getElementById('pin-modal-bg').style.display='none';
+}
+
+window.checkPin=async()=>{
+  const inp=document.getElementById('pin-input');
+  const entered=inp.value.trim();
+  if(entered.length!==4){document.getElementById('pin-err').textContent='PIN ต้องเป็น 4 หลัก';return;}
+  try{
+    const snap=await getDoc(doc(db,'settings','report_pin'));
+    const correct=snap.exists()?snap.data().pin:'';
+    if(entered===correct){
+      closePinModal();
+      document.getElementById('tab-report').style.display='';
+      document.getElementById('report-date').value=today();
+      // คลิก tab report
+      document.getElementById('tab-report').click();
+      toast('เข้าสู่ Report Mode','green');
+    } else {
+      document.getElementById('pin-err').textContent='PIN ไม่ถูกต้อง';
+      inp.value='';inp.focus();
+    }
+  }catch(e){document.getElementById('pin-err').textContent='เกิดข้อผิดพลาด';}
+};
+
+window.goTodayReport=()=>{document.getElementById('report-date').value=today();loadReport();};
+
+window.loadReport=async()=>{
+  const d=document.getElementById('report-date').value||today();
+  const list=document.getElementById('report-list');
+  if(!list)return;
+  list.innerHTML=`<div style="color:var(--t3);font-family:var(--mono);padding:20px">⏳ กำลังโหลด...</div>`;
+
+  try{
+    // ดึงข้อมูลทั้ง M1 และ M2
+    const [s1,s2]=await Promise.all([
+      getDocs(query(collection(db,'production_plans'),where('date','==',d))),
+      getDocs(query(collection(db,'production_plans_m2'),where('date','==',d))),
+    ]);
+    const allRows=[
+      ...s1.docs.map(x=>({id:x.id,_col:'production_plans',...x.data()})),
+      ...s2.docs.map(x=>({id:x.id,_col:'production_plans_m2',...x.data()})),
+    ].filter(r=>r.mix_code).sort((a,b)=>(a.seq||0)-(b.seq||0));
+
+    if(!allRows.length){
+      list.innerHTML=`<div style="color:var(--t3);font-family:var(--mono);padding:30px;text-align:center">ไม่มีข้อมูล</div>`;
+      return;
+    }
+
+    const actions=[
+      {key:'flavor_prep',label:'🍶 Flavor เตรียม'},
+      {key:'flavor_pour',label:'🍶 Flavor เท'},
+      {key:'flavor_notify',label:'🍶 Flavor แจ้งใช้'},
+      {key:'color_prep',label:'🎨 Color เตรียม'},
+      {key:'color_pour',label:'🎨 Color เท'},
+      {key:'color_notify',label:'🎨 Color แจ้งใช้'},
+      {key:'acid_prep',label:'🍋 กรดมะนาว เตรียม'},
+      {key:'acid_pour',label:'🍋 กรดมะนาว เท'},
+      {key:'acid_notify',label:'🍋 กรดมะนาว แจ้งใช้'},
+      {key:'flavor_pour_time',label:'⏱ เวลาเท',isTime:true},
+      {key:'signature_url',label:'🖊️ ลายเซ็น',isSig:true},
+    ];
+
+    list.innerHTML=allRows.map(row=>`
+      <div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#111">${row.mix_code||'—'}</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:#111">${row.mix_name||'—'}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--t2)">Batch ${row.batch_no||'—'}</span>
+          <span style="font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px;background:var(--s3);color:var(--t3)">${row._col==='production_plans'?'M1':'M2'}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr>
+            <th style="text-align:left;padding:5px 8px;background:var(--s2);font-family:var(--mono);font-size:10px;color:var(--t2);border:1px solid var(--b1)">Action</th>
+            <th style="text-align:left;padding:5px 8px;background:var(--s2);font-family:var(--mono);font-size:10px;color:var(--t2);border:1px solid var(--b1)">ผู้ดำเนินการ</th>
+            <th style="text-align:left;padding:5px 8px;background:var(--s2);font-family:var(--mono);font-size:10px;color:var(--t2);border:1px solid var(--b1)">สถานะ</th>
+          </tr></thead>
+          <tbody>
+            ${actions.map(a=>{
+              if(a.isSig){
+                return `<tr>
+                  <td style="padding:6px 8px;border:1px solid var(--b1);font-family:var(--mono);font-size:11px">${a.label}</td>
+                  <td style="padding:6px 8px;border:1px solid var(--b1)">
+                    ${row.signature_url?`<div style="display:flex;align-items:center;gap:8px">
+                      <img src="${row.signature_url}" style="height:28px;border-radius:3px;border:1px solid var(--b2);background:#fff;padding:2px">
+                      <span style="font-family:var(--mono);font-size:11px;color:var(--cyan)">${row.signature_name||'—'}</span>
+                    </div>`:'<span style="color:var(--t3);font-family:var(--mono);font-size:11px">ยังไม่ได้เซ็น</span>'}
+                  </td>
+                  <td style="padding:6px 8px;border:1px solid var(--b1)">
+                    <span style="font-family:var(--mono);font-size:11px;color:${row.signature_time?'var(--green)':'var(--t3)'}">${row.signature_time||'—'}</span>
+                  </td>
+                </tr>`;
+              }
+              if(a.isTime){
+                return `<tr>
+                  <td style="padding:6px 8px;border:1px solid var(--b1);font-family:var(--mono);font-size:11px">${a.label}</td>
+                  <td style="padding:6px 8px;border:1px solid var(--b1);font-family:var(--mono);font-size:11px;color:var(--cyan)">${row[a.key]||'—'}</td>
+                  <td style="padding:6px 8px;border:1px solid var(--b1)"></td>
+                </tr>`;
+              }
+              const done=!!row[a.key];
+              const by=row[a.key+'_by']||'—';
+              return `<tr style="background:${done?'rgba(34,197,94,.05)':''}">
+                <td style="padding:6px 8px;border:1px solid var(--b1);font-family:var(--mono);font-size:11px">${a.label}</td>
+                <td style="padding:6px 8px;border:1px solid var(--b1);font-family:var(--mono);font-size:11px;color:${done?'var(--green)':'var(--t3)'}">${done?by:'—'}</td>
+                <td style="padding:6px 8px;border:1px solid var(--b1);text-align:center">${done?'<span style="color:var(--green);font-size:14px">✅</span>':'<span style="color:var(--t3);font-size:12px">○</span>'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML=`<div style="color:var(--red);font-family:var(--mono);padding:20px">${e.message}</div>`;
+  }
+};
+let signTarget=null; // {col, id}
+let isDrawing=false;
+let savedSignature=null; // ลายเซ็นที่บันทึกไว้ของ user
+
+// โหลดลายเซ็นที่บันทึกไว้
+async function loadUserSignature(){
+  if(!ME)return;
+  try{
+    const snap=await getDoc(doc(db,'users',ME.uid));
+    if(snap.exists()&&snap.data().signature){
+      savedSignature=snap.data().signature;
+    }
+  }catch{}
+}
+
+// กดปุ่มเซ็นชื่อ
+window.signRow=async(col,id)=>{
+  signTarget={col,id};
+  if(savedSignature){
+    // มีลายเซ็นแล้ว — แสดง preview ให้ยืนยัน
+    $('sig-preview-img').src=savedSignature;
+    $('sig-modal-preview').style.display='flex';
+    $('sig-modal-draw').style.display='none';
+  } else {
+    // ครั้งแรก — เปิด canvas วาด
+    $('sig-modal-draw').style.display='flex';
+    $('sig-modal-preview').style.display='none';
+    initCanvas();
+  }
+  $('sig-modal-bg').classList.add('show');
+};
+
+window.closeSigModal=()=>{
+  $('sig-modal-bg').classList.remove('show');
+  signTarget=null;
+};
+
+window.redrawSig=()=>{
+  $('sig-modal-draw').style.display='flex';
+  $('sig-modal-preview').style.display='none';
+  initCanvas();
+};
+
+// ยืนยันใช้ลายเซ็นเดิม
+window.confirmSig=async()=>{
+  if(!signTarget||!savedSignature)return;
+  const name=ME?.displayName||ME?.email?.split('@')[0]||'—';
+  await updateDoc(doc(db,signTarget.col,signTarget.id),{
+    signature_url:savedSignature,
+    signature_name:name,
+    signature_time:nowHHMM(),
+  });
+  toast('บันทึกลายเซ็นแล้ว','green');
+  closeSigModal();
+};
+
+// บันทึกลายเซ็นใหม่
+window.saveSig=async()=>{
+  const canvas=$('sig-canvas');
+  const dataUrl=canvas.toDataURL('image/png');
+  const name=ME?.displayName||ME?.email?.split('@')[0]||'—';
+  // บันทึกลง user profile
+  try{
+    const{setDoc:sd}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await sd(doc(db,'users',ME.uid),{signature:dataUrl,signature_name:name},{merge:true});
+    savedSignature=dataUrl;
+  }catch{}
+  // บันทึกลง row
+  if(signTarget){
+    await updateDoc(doc(db,signTarget.col,signTarget.id),{
+      signature_url:dataUrl,
+      signature_name:name,
+      signature_time:nowHHMM(),
+    });
+    toast('บันทึกลายเซ็นแล้ว','green');
+  }
+  closeSigModal();
+};
+
+window.clearCanvas=()=>{
+  const canvas=$('sig-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+};
+
+function initCanvas(){
+  const canvas=$('sig-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#ffffff';
+  ctx.shadowColor='#60a5fa';
+  ctx.shadowBlur=6;
+  ctx.lineWidth=2.5;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+
+  function getPos(e){
+    const r=canvas.getBoundingClientRect();
+    const src=e.touches?e.touches[0]:e;
+    return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};
+  }
+  canvas.onmousedown=canvas.ontouchstart=(e)=>{
+    e.preventDefault();isDrawing=true;
+    const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);
+  };
+  canvas.onmousemove=canvas.ontouchmove=(e)=>{
+    e.preventDefault();if(!isDrawing)return;
+    const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();
+  };
+  canvas.onmouseup=canvas.ontouchend=()=>isDrawing=false;
+}
+
+window.showPage=(p,btn)=>{
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(el=>el.classList.remove('on'));
+  $(`page-${p}`).classList.add('on');btn.classList.add('on');
+};
+
+// IDLE TIMEOUT
+async function initIdleTimeout(){
+  try{
+    const snap=await getDoc(doc(db,'settings','idle_timeout'));
+    const minutes=snap.exists()?(snap.data().minutes||0):0;
+    if(!minutes||minutes<=0)return;
+    let t;
+    const reset=()=>{clearTimeout(t);t=setTimeout(async()=>{alert('ระบบ logout อัตโนมัติ');await signOut(auth);location.href='index.html';},minutes*60*1000);};
+    ['mousemove','mousedown','keydown','touchstart','scroll'].forEach(e=>document.addEventListener(e,reset,{passive:true}));
+    reset();
+  }catch(e){console.warn('idle:',e);}
+}
+</script>
+
+</body>
+</html>
