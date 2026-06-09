@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- v2026.06.09 -->
+<!DOCTYPE html><!-- v2026.06.09.1 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -217,7 +217,7 @@ td.sep{border-right:2px solid var(--b1)}
 <div class="page" id="page-ciplog">
   <div style="padding:16px">
     <div style="background:#fff;border:1.5px solid var(--b1);border-radius:14px;padding:16px;margin-bottom:16px">
-      <div style="font-family:var(--mono);font-size:13px;font-weight:900;margin-bottom:14px">+ Add CIP Record</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:900;margin-bottom:12px">+ Add CIP Record</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px">
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Date</div><input id="cip-date" type="date" class="ci" style="width:100%"></div>
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Circuit/Line</div><input id="cip-line" type="text" class="ci" placeholder="e.g. AFC Tank" style="width:100%"></div>
@@ -225,7 +225,7 @@ td.sep{border-right:2px solid var(--b1)}
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Program</div><select id="cip-program" class="ci" style="width:100%"><option>Hot water</option><option>Alkaline</option><option>Acid</option><option>Sanitize</option></select></div>
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Start</div><input id="cip-start" type="time" class="ci" style="width:100%"></div>
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">End</div><input id="cip-end" type="time" class="ci" style="width:100%"></div>
-        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Conduct. (mS)</div><input id="cip-conduct" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%"></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Conductivity</div><input id="cip-conduct" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%"></div>
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Temp (C)</div><input id="cip-temp" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%"></div>
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">Flow (m3/hr)</div><input id="cip-flow" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%"></div>
         <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:3px">pH</div><input id="cip-ph" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%"></div>
@@ -242,37 +242,36 @@ td.sep{border-right:2px solid var(--b1)}
     <div style="background:#fff;border:1.5px solid var(--b1);border-radius:14px;padding:16px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
         <div style="font-family:var(--mono);font-size:13px;font-weight:900">CIP History</div>
-        <input id="ciplog-date" type="date" class="ci" style="width:145px" onchange="window.renderCipLog&&window.renderCipLog()">
+        <input id="ciplog-date" type="date" class="ci" style="width:145px" onchange="if(window.renderCipLog)window.renderCipLog()">
         <button id="cip-export-btn" style="padding:7px 14px;background:#15803d;color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:900;cursor:pointer">Export CSV</button>
         <span id="ciplog-count" style="font-family:var(--mono);font-size:11px;color:var(--t2)"></span>
       </div>
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
           <thead><tr style="background:#f8fafc;font-family:var(--mono)">
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">#</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">#</th>
             <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Date</th>
             <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Circuit</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Grp</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Program</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Start</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">End</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Cond.</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Temp</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Flow</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">pH</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">CIP</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">San</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Operator</th>
-            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1);white-space:nowrap">Remark</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Grp</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Program</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Start</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">End</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Cond.</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Temp</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Flow</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">pH</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">CIP</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">San</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Operator</th>
+            <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)">Remark</th>
             <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)"></th>
           </tr></thead>
-          <tbody id="ciplog-tbody"></tbody>
+          <tbody id="ciplog-tbody"><tr><td colspan="16" style="text-align:center;padding:20px;color:var(--t3)">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
-
 <div id="toast"></div>
 <script type="module">
 function renderTempAlert(){
@@ -880,87 +879,90 @@ window._recFilter = function(f, btn){
   renderRecords();
 };
 
-window.showTab=(id,btn)=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('page-'+id).classList.add('on');curTab=id;if(id==='m1')renderPlans('m1');else if(id==='m2')renderPlans('m2');else if(id==='temp')renderTemp();else if(id==='rec')renderRecords();else if(id==='ciplog'){window.renderCipLog&&window.renderCipLog();};
+window.showTab=(id,btn)=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('page-'+id).classList.add('on');curTab=id;if(id==='m1')renderPlans('m1');else if(id==='m2')renderPlans('m2');else if(id==='temp')renderTemp();else if(id==='rec')renderRecords();else if(id==='ciplog'){if(window.renderCipLog)window.renderCipLog();};
 function toast(msg,col='blue'){const el=$('toast');el.textContent=msg;el.style.background=col==='green'?'#15803d':col==='red'?'#991b1b':'#1d4ed8';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 window.doLogout=async()=>{await signOut(auth);location.href='index.html';};
 
 window._cipLogRows = [];
 
-(function() {
+(function(){
   var now = new Date();
-  var y = now.getFullYear();
-  var mo = String(now.getMonth()+1).padStart(2,'0');
-  var d = String(now.getDate()).padStart(2,'0');
-  var today = y + '-' + mo + '-' + d;
-  var el1 = document.getElementById('cip-date');
-  if (el1) el1.value = today;
-  var el2 = document.getElementById('ciplog-date');
-  if (el2) el2.value = today;
+  var d = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  setTimeout(function(){
+    var e1 = document.getElementById('cip-date');
+    var e2 = document.getElementById('ciplog-date');
+    if(e1 && !e1.value) e1.value = d;
+    if(e2 && !e2.value) e2.value = d;
+    var sb = document.getElementById('cip-save-btn');
+    if(sb) sb.onclick = function(){ window.saveCipLog(); };
+    var eb = document.getElementById('cip-export-btn');
+    if(eb) eb.onclick = function(){ window.exportCipLog(); };
+  }, 500);
 })();
 
-document.getElementById('cip-save-btn') && document.getElementById('cip-save-btn').addEventListener('click', function() {
-  window.saveCipLog && window.saveCipLog();
-});
-document.getElementById('cip-export-btn') && document.getElementById('cip-export-btn').addEventListener('click', function() {
-  window.exportCipLog && window.exportCipLog();
-});
-
-window.saveCipLog = async function() {
-  var d = document.getElementById('cip-date').value;
-  var line = document.getElementById('cip-line').value.trim();
-  if (!d || !line) { toast('Please fill date and circuit', 'red'); return; }
+window.saveCipLog = async function(){
+  var d = (document.getElementById('cip-date')||{}).value || '';
+  var line = ((document.getElementById('cip-line')||{}).value || '').trim();
+  if(!d || !line){ toast('Please fill Date and Circuit', 'red'); return; }
   var rec = {
     date: d,
     line: line,
-    cip_group: document.getElementById('cip-group').value,
-    program: document.getElementById('cip-program').value,
-    start_time: document.getElementById('cip-start').value,
-    end_time: document.getElementById('cip-end').value,
-    conductivity: +(document.getElementById('cip-conduct').value) || 0,
-    temperature: +(document.getElementById('cip-temp').value) || 0,
-    flow: +(document.getElementById('cip-flow').value) || 0,
-    ph: +(document.getElementById('cip-ph').value) || 0,
-    operator: document.getElementById('cip-operator').value.trim(),
-    remark: document.getElementById('cip-remark').value.trim(),
-    cip_done: document.getElementById('cip-done').checked,
-    san_done: document.getElementById('cip-san-done').checked,
+    cip_group: (document.getElementById('cip-group')||{}).value || '',
+    program: (document.getElementById('cip-program')||{}).value || '',
+    start_time: (document.getElementById('cip-start')||{}).value || '',
+    end_time: (document.getElementById('cip-end')||{}).value || '',
+    conductivity: +((document.getElementById('cip-conduct')||{}).value) || 0,
+    temperature: +((document.getElementById('cip-temp')||{}).value) || 0,
+    flow: +((document.getElementById('cip-flow')||{}).value) || 0,
+    ph: +((document.getElementById('cip-ph')||{}).value) || 0,
+    operator: ((document.getElementById('cip-operator')||{}).value || '').trim(),
+    remark: ((document.getElementById('cip-remark')||{}).value || '').trim(),
+    cip_done: (document.getElementById('cip-done')||{}).checked || false,
+    san_done: (document.getElementById('cip-san-done')||{}).checked || false,
     created_at: new Date().toISOString()
   };
   try {
     await addDoc(collection(db, 'cip_records'), rec);
     toast('Saved', 'green');
-    ['cip-conduct','cip-temp','cip-flow','cip-ph','cip-operator','cip-remark','cip-start','cip-end'].forEach(function(id) {
+    ['cip-conduct','cip-temp','cip-flow','cip-ph','cip-operator','cip-remark','cip-start','cip-end'].forEach(function(id){
       var el = document.getElementById(id);
-      if (el) el.value = '';
+      if(el) el.value = '';
     });
-    document.getElementById('cip-done').checked = false;
-    document.getElementById('cip-san-done').checked = false;
+    var cd = document.getElementById('cip-done');
+    var cs = document.getElementById('cip-san-done');
+    if(cd) cd.checked = false;
+    if(cs) cs.checked = false;
     window.renderCipLog();
-  } catch(e) { toast('Error: ' + e.message, 'red'); }
+  } catch(e){ toast('Error: ' + e.message, 'red'); }
 };
 
-window.renderCipLog = async function() {
+window.renderCipLog = async function(){
   var dateEl = document.getElementById('ciplog-date');
   var d = dateEl ? dateEl.value : '';
-  if (!d) {
+  if(!d){
     var now = new Date();
     d = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-    if (dateEl) dateEl.value = d;
+    if(dateEl) dateEl.value = d;
   }
   var tbody = document.getElementById('ciplog-tbody');
   var cnt = document.getElementById('ciplog-count');
-  if (!tbody) return;
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:16px;color:var(--t3)">Loading...</td></tr>';
   try {
     var q = query(collection(db, 'cip_records'), where('date', '==', d));
     var snap = await getDocs(q);
-    var rows = snap.docs.map(function(dc) { return Object.assign({id: dc.id}, dc.data()); });
+    var rows = snap.docs.map(function(dc){ return Object.assign({id: dc.id}, dc.data()); });
     rows.sort(function(a,b){ return (a.created_at||'').localeCompare(b.created_at||''); });
     window._cipLogRows = rows;
-    if (cnt) cnt.textContent = rows.length + ' records';
-    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--t3)">No records</td></tr>'; return; }
-    tbody.innerHTML = rows.map(function(r, i) {
-      var rid = r.id;
-      return '<tr style="border-bottom:1px solid var(--b1)">' +
+    if(cnt) cnt.textContent = rows.length + ' records';
+    if(!rows.length){
+      tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--t3)">No records for ' + d + '</td></tr>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(r, i){
+      var rid = r.id || '';
+      html += '<tr style="border-bottom:1px solid var(--b1)">' +
         '<td style="padding:6px 8px;text-align:center;font-family:var(--mono);font-weight:700">' + (i+1) + '</td>' +
         '<td style="padding:6px 8px;font-family:var(--mono)">' + (r.date||'-') + '</td>' +
         '<td style="padding:6px 8px;font-weight:700">' + (r.line||'-') + '</td>' +
@@ -976,43 +978,43 @@ window.renderCipLog = async function() {
         '<td style="padding:6px 8px;text-align:center">' + (r.san_done ? '<span style="color:#0891b2;font-size:16px">&#10003;</span>' : '-') + '</td>' +
         '<td style="padding:6px 8px">' + (r.operator||'-') + '</td>' +
         '<td style="padding:6px 8px;color:var(--t3)">' + (r.remark||'-') + '</td>' +
-        '<td style="padding:6px 8px;text-align:center"><button data-rid="' + rid + '" class="cip-del-btn" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:14px">&#128465;</button></td>' +
+        '<td style="padding:6px 8px;text-align:center"><button class="cipdel" data-rid="' + rid + '" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:14px">&#128465;</button></td>' +
         '</tr>';
-    }).join('');
-    document.querySelectorAll('.cip-del-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        window.deleteCipLog(this.dataset.rid);
-      });
     });
-  } catch(e) { console.warn('renderCipLog error:', e); }
+    tbody.innerHTML = html;
+    tbody.querySelectorAll('.cipdel').forEach(function(btn){
+      btn.addEventListener('click', function(){ window.deleteCipLog(this.dataset.rid); });
+    });
+  } catch(e){ console.warn('renderCipLog:', e); tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:16px;color:#ef4444">Error: ' + e.message + '</td></tr>'; }
 };
 
-window.deleteCipLog = async function(id) {
-  if (!confirm('Delete this record?')) return;
+window.deleteCipLog = async function(id){
+  if(!id || !confirm('Delete this record?')) return;
   try {
     await deleteDoc(doc(db, 'cip_records', id));
     toast('Deleted', 'green');
     window.renderCipLog();
-  } catch(e) { toast('Error: ' + e.message, 'red'); }
+  } catch(e){ toast('Error: ' + e.message, 'red'); }
 };
 
-window.exportCipLog = function() {
+window.exportCipLog = function(){
   var rows = window._cipLogRows || [];
-  if (!rows.length) { alert('No data'); return; }
-  var headers = ['No','Date','Circuit','Group','Program','Start','End','Conductivity','Temp','Flow','pH','CIP Done','San Done','Operator','Remark'];
-  var esc = function(v) { return '"' + String(v||'').replace(/"/g, '""') + '"'; };
-  var csv = [headers.map(esc).join(',')].concat(rows.map(function(r,i) {
-    return [i+1,r.date,r.line,r.cip_group||'',r.program,r.start_time||'',r.end_time||'',
-      r.conductivity||'',r.temperature||'',r.flow||'',r.ph||'',
-      r.cip_done?'Y':'',r.san_done?'Y':'',r.operator||'',r.remark||''].map(esc).join(',');
-  })).join('\n');
-  var blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
+  if(!rows.length){ alert('No data'); return; }
+  var h = ['No','Date','Circuit','Group','Program','Start','End','Conductivity','Temp','Flow','pH','CIP Done','San Done','Operator','Remark'];
+  var esc = function(v){ return '"' + String(v||'').replace(/"/g,'""') + '"'; };
+  var lines = [h.map(esc).join(',')];
+  rows.forEach(function(r,i){
+    lines.push([i+1,r.date,r.line,r.cip_group||'',r.program,r.start_time||'',r.end_time||'',r.conductivity||'',r.temperature||'',r.flow||'',r.ph||'',r.cip_done?'Y':'',r.san_done?'Y':'',r.operator||'',r.remark||''].map(esc).join(','));
+  });
+  var csv = lines.join('\n');
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = url; a.download = 'cip_records_' + (rows[0]&&rows[0].date||'export') + '.csv';
-  a.click(); URL.revokeObjectURL(url);
+  a.href = url;
+  a.download = 'cip_records_' + ((rows[0]&&rows[0].date)||'export') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 };
-
 </script>
 
 <div class="page" id="page-rec">
