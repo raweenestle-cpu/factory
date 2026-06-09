@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<title>CIP Mixing — PROD.SYS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#e8ecf0;--s1:#f2f4f7;--s2:#e0e4ea;--s3:#d0d6de;--b1:#b0bac8;--text:#111827;--t2:#374151;--t3:#6b7280;--blue:#1d4ed8;--green:#15803d;--cyan:#0e7490;--red:#b91c1c;--mono:'DM Mono',monospace;--sans:'Sarabun',sans-serif;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;font-weight:500;min-height:100vh}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes cipTempBlink{0%,100%{opacity:1}50%{opacity:0.15}}
+@keyframes cipTempPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.7);border-color:#ef4444}50%{box-shadow:0 0 0 10px rgba(239,68,68,0);border-color:#fca5a5}}
+nav{background:#fff;border-bottom:2px solid var(--b1);padding:6px 14px;min-height:52px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.07);position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.nav-logo{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--cyan)}
+.nav-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.nbtn{font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:6px;border:1.5px solid var(--b1);background:none;color:var(--t2);cursor:pointer;font-weight:700;text-decoration:none}
+main{padding:14px}
+.date-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.date-input{font-family:var(--mono);font-size:12px;background:#fff;border:1.5px solid var(--b1);border-radius:7px;color:var(--text);padding:6px 10px;outline:none;font-weight:700}
+.load-btn{font-family:var(--mono);font-size:12px;font-weight:800;padding:7px 16px;border-radius:7px;border:none;background:var(--blue);color:#fff;cursor:pointer}
+.tabs{display:flex;gap:6px;margin-bottom:14px;background:#fff;border-radius:10px;padding:8px;border:1.5px solid var(--b1);flex-wrap:wrap}
+.tab{font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 14px;border-radius:7px;border:none;background:none;color:var(--t2);cursor:pointer}
+.tab.on{background:var(--blue);color:#fff}
+.tab:hover:not(.on){background:var(--s2)}
+.page{display:none}.page.on{display:block}
+.sum-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.sum-card{background:#fff;border:1.5px solid var(--b1);border-radius:12px;padding:12px 16px;min-width:130px;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.tw{overflow-x:auto;background:#fff;border-radius:12px;border:1.5px solid var(--b1);box-shadow:0 2px 6px rgba(0,0,0,.07);margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--s2);padding:9px 10px;text-align:left;font-family:var(--mono);font-size:11px;font-weight:800;color:var(--text);border-bottom:2px solid var(--b1);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--s3);vertical-align:middle;font-weight:600;color:var(--text)}
+tr:hover td{background:#f0f4ff}
+.btn{font-family:var(--mono);font-size:11px;font-weight:800;padding:6px 14px;border-radius:7px;border:none;cursor:pointer;white-space:nowrap}
+.btn-blue{background:var(--blue);color:#fff}.btn-red{background:#dc2626;color:#fff}.btn-green{background:var(--green);color:#fff}
+.badge{font-family:var(--mono);font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px}
+.badge-cyan{background:rgba(14,116,144,.1);color:var(--cyan);border:1px solid rgba(14,116,144,.3)}
+.badge-blue{background:rgba(29,78,216,.08);color:var(--blue);border:1px solid rgba(29,78,216,.3)}
+.badge-green{background:rgba(21,128,61,.08);color:var(--green);border:1px solid rgba(21,128,61,.3)}
+.st-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+.st-circle{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
+.st-circle.pulse{animation:blink 1.2s ease-in-out infinite}
+.ts{font-family:var(--mono);font-size:10px;font-weight:700;margin-top:3px}
+.grp-sel{font-family:var(--mono);font-size:11px;background:var(--s2);border:1.5px solid var(--b1);border-radius:7px;color:var(--text);padding:6px 8px;outline:none;font-weight:700;width:90px;cursor:pointer}
+.th-date{background:var(--s2);padding:8px 6px;text-align:center;font-family:var(--mono);font-size:11px;font-weight:900;border-bottom:1px solid var(--b1);border-right:2px solid var(--b1);white-space:nowrap}
+.th-date.today{background:rgba(29,78,216,.1);color:var(--blue)}
+.th-time{background:var(--s1);padding:6px 4px;text-align:center;font-family:var(--mono);font-size:10px;font-weight:800;color:var(--t2);border-bottom:2px solid var(--b1);border-right:1px solid var(--s3);white-space:nowrap;min-width:50px}
+.th-time.now-col{background:rgba(29,78,216,.08);color:var(--blue)}
+.th-fix{position:sticky;left:0;z-index:4;background:var(--s2);padding:9px 10px;text-align:left;font-family:var(--mono);font-size:11px;font-weight:800;border-bottom:2px solid var(--b1);border-right:1px solid var(--b1);white-space:nowrap;vertical-align:middle}
+td.sep{border-right:2px solid var(--b1)}
+.ti{font-family:var(--mono);font-size:11px;font-weight:800;width:46px;text-align:center;background:var(--s2);border:1.5px solid var(--b1);border-radius:5px;color:var(--text);padding:4px 2px;outline:none}
+.ti:focus{border-color:var(--blue);background:#fff}.ti:disabled{opacity:.3;cursor:not-allowed}
+.ti.ok{background:rgba(21,128,61,.06);border-color:rgba(21,128,61,.4);color:var(--green)}
+.ti.hot{background:rgba(185,28,28,.06);border-color:rgba(185,28,28,.5);color:var(--red)}
+.ti.cur-slot{border-color:rgba(29,78,216,.4);background:rgba(29,78,216,.04)}
+.info-bar{background:#fff;border:1.5px solid var(--b1);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.save-row{display:flex;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--s3)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);padding:9px 20px;border-radius:9px;font-size:12px;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;font-family:var(--mono);color:#fff;font-weight:700}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.shift-summary{display:grid;grid-template-columns:repeat(3,1fr) 1fr;gap:12px;padding:0}
+.ss-card{background:#fff;border:1.5px solid var(--b1);border-radius:14px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.ss-priority{border-top:4px solid #f59e0b;grid-column:4;grid-row:1;min-width:0}
+@keyframes blinkRed{0%,100%{background:rgba(239,68,68,.13)}50%{background:rgba(239,68,68,.04)}}
+@keyframes blinkYellow{0%,100%{background:rgba(234,179,8,.13)}50%{background:rgba(234,179,8,.04)}}
+.prio-item-red{animation:blinkRed 1s ease-in-out infinite;border-radius:8px;padding:7px 10px;margin-bottom:5px;border:1px solid rgba(239,68,68,.25)}
+.prio-item-yellow{animation:blinkYellow 1.6s ease-in-out infinite;border-radius:8px;padding:7px 10px;margin-bottom:5px;border:1px solid rgba(234,179,8,.25)}
+.ss-title{font-family:var(--mono);font-size:13px;font-weight:900;color:var(--t2);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--s2);letter-spacing:.04em}
+.ss-morning{border-top:4px solid #f59e0b}
+.ss-afternoon{border-top:4px solid #f97316}
+.ss-night{border-top:4px solid #6366f1}
+.ss-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-bottom:0}
+.ss-header{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-bottom:8px}
+.ss-hcell{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--t3);text-align:center;padding:6px 0;letter-spacing:.06em;background:var(--s2);border-radius:6px}
+.ss-hcell:not(:last-child){margin-right:6px}
+.ss-cell{text-align:center;padding:12px 8px;border-radius:8px;margin:3px}
+.ss-cell-cip{background:rgba(14,116,144,.08);border:1.5px solid rgba(14,116,144,.25)}
+.ss-cell-san{background:rgba(21,128,61,.08);border:1.5px solid rgba(21,128,61,.25)}
+.ss-cell-total{background:rgba(29,78,216,.08);border:1.5px solid rgba(29,78,216,.25)}
+.ss-num{font-family:var(--mono);font-size:32px;font-weight:900;line-height:1}
+.ss-label{font-family:var(--mono);font-size:10px;font-weight:700;margin-top:4px}
+.ss-cip-col{color:#0e7490}
+.ss-san-col{color:#15803d}
+.ss-total-col{color:#1d4ed8}
+
+#temp-table-wrap{overflow-x:auto}
+#temp-table-wrap table{border-collapse:collapse}
+#temp-table-wrap th.sticky-col,
+#temp-table-wrap td.sticky-col{position:sticky;left:0;z-index:3;background:#fff}
+#temp-table-wrap th.sticky-col2,
+#temp-table-wrap td.sticky-col2{position:sticky;left:60px;z-index:3;background:#fff;border-right:2px solid var(--b1)}
+#temp-table-wrap thead th.sticky-col,
+#temp-table-wrap thead th.sticky-col2{z-index:4;background:var(--s2)}
+
+.f-btn{font-family:var(--mono);font-size:10px;font-weight:800;padding:5px 12px;border-radius:7px;border:1.5px solid var(--b1);background:var(--s2);color:var(--t2);cursor:pointer}
+.f-btn.on{background:var(--blue2,#1d4ed8);color:#fff;border-color:var(--blue2,#1d4ed8)}
+.rec-table-row:hover{background:var(--s1)}
+
+.sign-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.sign-modal-overlay.show{display:flex}
+.sign-modal{background:#fff;border-radius:16px;padding:28px 32px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:280px}
+.sign-modal-icon{font-size:48px;margin-bottom:8px}
+.sign-modal-title{font-family:var(--mono);font-size:14px;font-weight:900;color:var(--text);margin-bottom:4px}
+.sign-modal-sub{font-family:var(--mono);font-size:11px;color:var(--t3);margin-bottom:20px}
+.sign-modal-btns{display:flex;gap:10px;justify-content:center}
+.sign-modal-btn{font-family:var(--mono);font-size:12px;font-weight:900;padding:9px 24px;border-radius:9px;border:none;cursor:pointer}
+.sign-modal-skip{background:var(--s2);color:var(--t2);border:1.5px solid var(--b1)}
+.sign-modal-confirm{background:var(--blue2,#1d4ed8);color:#fff}
+</style>
+</head>
+<body>
+
+<div style="display:flex;gap:16px;padding:12px 0;align-items:flex-start;border-bottom:2px solid var(--b1);margin-bottom:0">
+  <!-- ซ้าย: 3 กะ -->
+  <div style="flex:0 0 auto">
+  <div class="shift-summary" id="shift-summary" style="border-bottom:none;padding:0;margin-bottom:0">
+    <!-- กะเช้า -->
+    <div class="ss-card ss-morning">
+      <div class="ss-title">🌅 กะเช้า &nbsp;06:00 – 14:00</div>
+      <div class="ss-header">
+        <div class="ss-hcell">CIP</div>
+        <div class="ss-hcell">SANITIZE</div>
+        <div class="ss-hcell">TOTAL</div>
+      </div>
+      <div class="ss-row">
+        <div class="ss-cell ss-cell-cip"><div class="ss-num ss-cip-col" id="cip-morning">0</div><div class="ss-label ss-cip-col">ครั้ง</div></div>
+        <div class="ss-cell ss-cell-san"><div class="ss-num ss-san-col" id="san-morning">0</div><div class="ss-label ss-san-col">ครั้ง</div></div>
+        <div class="ss-cell ss-cell-total"><div class="ss-num ss-total-col" id="total-morning">0</div><div class="ss-label ss-total-col">ครั้ง</div></div>
+      </div>
+    </div>
+    <!-- กะบ่าย -->
+    <div class="ss-card ss-afternoon">
+      <div class="ss-title">☀️ กะบ่าย &nbsp;14:00 – 22:00</div>
+      <div class="ss-header">
+        <div class="ss-hcell">CIP</div>
+        <div class="ss-hcell">SANITIZE</div>
+        <div class="ss-hcell">TOTAL</div>
+      </div>
+      <div class="ss-row">
+        <div class="ss-cell ss-cell-cip"><div class="ss-num ss-cip-col" id="cip-afternoon">0</div><div class="ss-label ss-cip-col">ครั้ง</div></div>
+        <div class="ss-cell ss-cell-san"><div class="ss-num ss-san-col" id="san-afternoon">0</div><div class="ss-label ss-san-col">ครั้ง</div></div>
+        <div class="ss-cell ss-cell-total"><div class="ss-num ss-total-col" id="total-afternoon">0</div><div class="ss-label ss-total-col">ครั้ง</div></div>
+      </div>
+    </div>
+    <!-- กะดึก -->
+    <div class="ss-card ss-night">
+      <div class="ss-title">🌙 กะดึก &nbsp;22:00 – 06:00</div>
+      <div class="ss-header">
+        <div class="ss-hcell">CIP</div>
+        <div class="ss-hcell">SANITIZE</div>
+        <div class="ss-hcell">TOTAL</div>
+      </div>
+      <div class="ss-row">
+        <div class="ss-cell ss-cell-cip"><div class="ss-num ss-cip-col" id="cip-night">0</div><div class="ss-label ss-cip-col">ครั้ง</div></div>
+        <div class="ss-cell ss-cell-san"><div class="ss-num ss-san-col" id="san-night">0</div><div class="ss-label ss-san-col">ครั้ง</div></div>
+        <div class="ss-cell ss-cell-total"><div class="ss-num ss-total-col" id="total-night">0</div><div class="ss-label ss-total-col">ครั้ง</div></div>
+      </div>
+    </div>
+    <!-- priority card -->
+    <div class="ss-card ss-priority" id="priority-card">
+      <div class="ss-title" style="color:#b45309">⚠️ ถังกำลังจะว่าง</div>
+      <div id="priority-list" style="margin-top:8px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--t3);text-align:center;padding:16px 0">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- ขวา: ภาพรวม + กรุ๊ป -->
+  <div style="flex:1;min-width:0">
+    <div class="sum-row" id="sum-row-top"></div>
+  </div>
+</div>
+<nav>
+  <div class="nav-logo">CIP MIXING</div>
+  <div id="temp-alert-bar" style="flex:1;min-width:0"></div>
+  <div class="nav-r">
+    <span id="nav-user" style="font-family:var(--mono);font-size:11px;color:var(--t2)"></span>
+    <a href="index.html" class="nbtn">Home</a>
+    <button class="nbtn" onclick="doLogout()">ออก</button>
+  </div>
+</nav>
+<main>
+<div class="date-row">
+  <input type="date" class="date-input" id="inp-date">
+  <button class="load-btn" onclick="loadAll()">🔄 โหลด</button>
+  <span id="emp-name" style="font-family:var(--mono);font-size:11px;color:var(--t2)"></span>
+</div>
+<div class="tabs">
+  <button class="tab on" id="tab-m1" onclick="showTab('m1',this)">🔴 Mixing 1</button>
+  <button class="tab" id="tab-m2" onclick="showTab('m2',this)">🔴 Mixing 2</button>
+  <button class="tab" id="tab-temp" onclick="showTab('temp',this)">🌡️ อุณหภูมิถัง</button>
+  <button class="tab" id="tab-rec" onclick="showTab('rec',this)">📋 CIP Records</button>
+  <button class="tab" id="tab-ciplog" onclick="showTab('ciplog',this)">📝 บันทึก CIP</button>
+</div>
+<div class="page on" id="page-m1">
+
+  <div class="tw"><table><thead><tr><th>#</th><th>Mix Code</th><th>Mix Name</th><th>Batch</th><th>Vol รวม</th><th>Vol ในถัง</th><th>LINE</th><th>Aging Tank</th><th>CIP Group</th><th>วันที่ Past.</th><th>เวลา</th><th>Action</th></tr></thead><tbody id="m1-tbody"></tbody></table></div>
+</div>
+<div class="page" id="page-m2">
+  <div class="tw"><table><thead><tr><th>#</th><th>Mix Code</th><th>Mix Name</th><th>Batch</th><th>Vol รวม</th><th>Vol ในถัง</th><th>LINE</th><th>Aging Tank</th><th>CIP Group</th><th>วันที่ Past.</th><th>เวลา</th><th>Action</th></tr></thead><tbody id="m2-tbody"></tbody></table></div>
+</div>
+<div class="page" id="page-temp">
+  <div class="info-bar">
+    <span style="font-family:var(--mono);font-size:12px;font-weight:800">🌡️ บันทึกอุณหภูมิ</span>
+    <span class="badge badge-blue" id="cur-round">—</span>
+    <span class="badge" style="background:var(--s2);color:var(--t2);border:1px solid var(--b1)" id="next-round">—</span>
+    <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--t2)" id="tank-count"></span>
+  </div>
+  <div class="tw">
+    <table id="temp-table"></table>
+    
+  </div>
+</div>
+</main>
+<div class="page" id="page-ciplog">
+  <div style="padding:16px">
+    <!-- ฟอร์มเพิ่มรายการ -->
+    <div style="background:#fff;border:1.5px solid var(--b1);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)">
+      <div style="font-family:var(--mono);font-size:13px;font-weight:900;color:var(--text);margin-bottom:14px">➕ เพิ่มรายการ CIP</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px">
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">วันที่</div>
+          <input id="cip-date" type="date" class="ci" style="width:100%" value="">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">วงจร/ไลน์</div>
+          <input id="cip-line" type="text" class="ci" placeholder="เช่น AFC Tank" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">กลุ่ม CIP</div>
+          <select id="cip-group" class="ci" style="width:100%">
+            <option value="">เลือก</option>
+            <option value="M">M</option>
+            <option value="B">B</option>
+            <option value="S">S</option>
+          </select>
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">วงจรโปรแกรม</div>
+          <select id="cip-program" class="ci" style="width:100%">
+            <option value="Hot water">Hot water</option>
+            <option value="Alkaline">Alkaline</option>
+            <option value="Acid">Acid</option>
+            <option value="Sanitize">Sanitize</option>
+          </select>
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">เวลาเริ่ม</div>
+          <input id="cip-start" type="time" class="ci" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">เวลาสิ้นสุด</div>
+          <input id="cip-end" type="time" class="ci" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">ความนำไฟฟ้า (mS)</div>
+          <input id="cip-conduct" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">อุณหภูมิ °C</div>
+          <input id="cip-temp" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">Flow (m³/hr)</div>
+          <input id="cip-flow" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">pH</div>
+          <input id="cip-ph" type="number" step="0.1" class="ci" placeholder="0.0" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">ผู้ปฏิบัติ</div>
+          <input id="cip-operator" type="text" class="ci" placeholder="ชื่อ" style="width:100%">
+        </div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px">Remark</div>
+          <input id="cip-remark" type="text" class="ci" placeholder="-" style="width:100%">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">
+          <input type="checkbox" id="cip-done" style="width:16px;height:16px;accent-color:#15803d"> หมด CIP ✓
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">
+          <input type="checkbox" id="cip-san-done" style="width:16px;height:16px;accent-color:#0891b2"> หมด San ✓
+        </label>
+        <div style="flex:1"></div>
+        <button onclick="window.saveCipLog()" style="padding:9px 24px;background:#1d4ed8;color:#fff;border:none;border-radius:10px;font-family:var(--mono);font-size:13px;font-weight:900;cursor:pointer">💾 บันทึก</button>
+      </div>
+    </div>
+    <!-- ตาราง -->
+    <div style="background:#fff;border:1.5px solid var(--b1);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="font-family:var(--mono);font-size:13px;font-weight:900;color:var(--text)">📋 ประวัติ CIP</div>
+        <input id="ciplog-date" type="date" class="ci" style="width:150px" onchange="window.renderCipLog()" value="">
+        <button onclick="window.exportCipLog()" style="padding:7px 14px;background:#15803d;color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:900;cursor:pointer">📥 Export</button>
+        <span id="ciplog-count" style="font-family:var(--mono);font-size:11px;color:var(--t2)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono)">
+          <thead>
+            <tr style="background:#f8fafc">
+              <th style="padding:7px 8px;text-align:left;border-bottom:1.5px solid var(--b1);white-space:nowrap">No.</th>
+              <th style="padding:7px 8px;text-align:left;border-bottom:1.5px solid var(--b1);white-space:nowrap">วันที่</th>
+              <th style="padding:7px 8px;text-align:left;border-bottom:1.5px solid var(--b1);white-space:nowrap">วงจร/ไลน์</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">กลุ่ม</th>
+              <th style="padding:7px 8px;text-align:left;border-bottom:1.5px solid var(--b1);white-space:nowrap">โปรแกรม</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">เวลาเริ่ม</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">สิ้นสุด</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">Conduct.</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">Temp °C</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">Flow</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">pH</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">หมด CIP</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1.5px solid var(--b1);white-space:nowrap">หมด San</th>
+              <th style="padding:7px 8px;text-align:left;border-bottom:1.5px solid var(--b1);white-space:nowrap">ผู้ปฏิบัติ</th>
+              <th style="padding:7px 8px;text-align:left;border-bottom:1.5px solid var(--b1);white-space:nowrap">Remark</th>
+              <th style="padding:7px 8px;border-bottom:1.5px solid var(--b1)"></th>
+            </tr>
+          </thead>
+          <tbody id="ciplog-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script type="module">
+function renderTempAlert(){
+  const el=document.getElementById('temp-alert-bar');
+  if(!el)return;
+  const SHELF={'Ice Cream':[96,96,96,96,92,76,62,51,43,37,32],'Water Ice':[96,96,96,96,96,96,96,93,81,71,63]};
+  // helper: หา max_temp จากทั้ง ts.temps{} และ root field temps.xxx
+  function getMaxTemp(ts){
+    const vals=[];
+    if(ts.max_temp!=null) vals.push(+ts.max_temp);
+    // อ่าน nested temps object
+    if(ts.temps&&typeof ts.temps==='object'){
+      Object.values(ts.temps).forEach(v=>{if(v!=null&&!isNaN(+v))vals.push(+v);});
+    }
+    // อ่าน root field ที่ชื่อขึ้นต้นด้วย temps. หรือมี _ (legacy dot-notation bug)
+    Object.keys(ts).forEach(k=>{
+      if(k.startsWith('temps.')&&!isNaN(+ts[k]))vals.push(+ts[k]);
+    });
+    return vals.length?Math.max(...vals):null;
+  }
+  const warned=Object.values(tankStates).filter(ts=>{
+    const maxT=getMaxTemp(ts);
+    if(maxT==null)return false;
+    const pt=(window._pmMap&&ts.mix_code&&window._pmMap[ts.mix_code])||ts.product_type||'';
+    if(pt==='Jelly') return maxT<37||maxT>42;
+    if(pt==='Ice Cream'||pt==='Water Ice') return maxT>5;
+    return false;
+  });
+  if(!warned.length){el.innerHTML='';if(window._alertTimer){clearInterval(window._alertTimer);window._alertTimer=null;}return;}
+  function buildChips(){
+    const now=Date.now();
+    return warned.map(ts=>{
+      const pt=(window._pmMap&&ts.mix_code&&window._pmMap[ts.mix_code])||ts.product_type||'Ice Cream';
+      const maxT=+(ts.max_temp||0);
+      const shelfHr=ts.shelf_hr||SHELF[pt]?.[Math.max(0,Math.min(10,Math.round(maxT)))]||96;
+      let expireStr='—',remainStr='—',urgentColor='#fbbf24';
+      if(ts.expire_at){
+        const exp=new Date(ts.expire_at);
+        const remMs=Math.max(0,exp-now);
+        const remHr=Math.floor(remMs/3600000);
+        const remMin=Math.floor((remMs%3600000)/60000);
+        const d=exp.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+        const t=exp.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+        expireStr=d+' '+t;
+        remainStr=remHr+'h '+String(remMin).padStart(2,'0')+'m';
+        urgentColor=remHr<12?'#ff4444':'#fbbf24';
+      }
+      return '<div style="background:rgba(239,68,68,0.2);border:2px solid #ef4444;border-radius:10px;padding:8px 12px;animation:cipTempBlink 3s ease-in-out infinite">'
+        +'<div style="font-family:monospace;font-size:12px;color:#fca5a5;font-weight:700">'+ts.id+' · '+maxT+'°C</div>'
+        +'<div style="font-family:monospace;font-size:11px;color:#fff;font-weight:800;margin:3px 0 2px">'+expireStr+'</div>'
+        +'<div style="font-family:monospace;font-size:30px;color:'+urgentColor+';font-weight:900;line-height:1.1">'+remainStr+'</div>'
+        +'<div style="font-size:10px;color:#fca5a5">เหลือก่อนหมดอายุ</div>'
+        +'</div>';
+    }).join('');
+  }
+  el.innerHTML='<div style="background:#7f1d1d;border:2px solid #ef4444;border-radius:14px;padding:10px 14px;animation:cipTempPulse 3s ease-in-out infinite">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<span style="font-size:18px;animation:cipTempBlink 3s ease-in-out infinite">🚨</span>'
+    +'<div style="color:#fca5a5;font-size:12px;font-weight:800">⚠️ เฝ้าระวัง — อุณหภูมิเกินกำหนด</div></div>'
+    +'<div id="alert-chips-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">'+buildChips()+'</div></div>';
+  if(window._alertTimer) clearInterval(window._alertTimer);
+  window._alertTimer=setInterval(()=>{const g=document.getElementById('alert-chips-grid');if(g)g.innerHTML=buildChips();},60000);
+}
+
+
+let _pendingAct = null;
+
+window._signSkip = function(){
+  document.getElementById('sign-modal-overlay').classList.remove('show');
+  if(_pendingAct) _doActReal(_pendingAct.tid, _pendingAct.act);
+  _pendingAct = null;
+};
+
+window._signConfirm = function(){
+  document.getElementById('sign-modal-overlay').classList.remove('show');
+  if(_pendingAct) _doActReal(_pendingAct.tid, _pendingAct.act);
+  _pendingAct = null;
+};
+
+async function _doActReal(tid, act){
+  const map={start_cip:'cip',stop_cip:'cip_done',start_san:'san',stop_san:'san_done'};
+  const newSt=map[act];if(!newSt)return;
+  const n=nowHMS();
+  const upd={status:newSt,updated_at:new Date().toISOString()};
+  if(act==='start_cip'){
+    upd.cip_start_time=n;
+    upd.cip_date=new Date().toISOString().split('T')[0];
+    // ดึง mix_code/mix_name จาก cip_mixing_records record ล่าสุดของถังนี้
+    try{
+      const _q=query(collection(db,'cip_mixing_records'),
+        where('tank','==',tid),where('type','==','san'),
+        orderBy('created_at','desc'),limit(1));
+      const _snap=await getDocs(_q);
+      if(!_snap.empty){
+        const _lr=_snap.docs[0].data();
+        upd.last_mix_code=_lr.mix_code||'—';
+        upd.last_mix_name=_lr.mix_name||'—';
+      } else {
+        // fallback จาก aging_tank_states
+        const _ts=tankStates[tid]||{};
+        if(_ts.mix_code) upd.last_mix_code=_ts.mix_code;
+        if(_ts.mix_name) upd.last_mix_name=_ts.mix_name;
+      }
+    }catch{
+      const _ts=tankStates[tid]||{};
+      if(_ts.mix_code) upd.last_mix_code=_ts.mix_code;
+      if(_ts.mix_name) upd.last_mix_name=_ts.mix_name;
+    }
+  }
+  if(act==='stop_cip'){
+    upd.cip_stop_time=n;
+    // บันทึกลง cip_mixing_records
+    const _ts2=tankStates[tid]||{};
+    addDoc(collection(db,'cip_mixing_records'),{
+      tank:tid, type:'cip',
+      start_time:_ts2.cip_start_time||n, stop_time:n,
+      mix_code:_ts2.last_mix_code||'—', mix_name:_ts2.last_mix_name||'—',
+      group:_ts2.cip_group||'—',
+      date:new Date().toISOString().split('T')[0],
+      created_at:new Date().toISOString()
+    }).catch(()=>{});
+  }
+  if(act==='start_san'){
+    upd.san_start_time=n;
+    upd.san_date=new Date().toISOString().split('T')[0];
+    // ดึง mix_code/mix_name จาก production_plans batch ถัดไปที่ leadman สั่ง
+    const _next=_getNextPlanForTank(tid);
+    if(_next.mix_code) upd.next_mix_code=_next.mix_code;
+    if(_next.mix_name) upd.next_mix_name=_next.mix_name;
+    if(_next.vol) upd.next_vol=_next.vol;
+  }
+  if(act==='stop_san'){
+    upd.san_stop_time=n;
+    // คำนวณ expire_at จาก product_type + อุณหภูมิล่าสุด
+    const _ts3=tankStates[tid]||{};
+    const _pt=_ts3.product_type||'';
+    const _SHELF={'Ice Cream':[96,96,96,96,92,76,62,51,43,37,32],'Water Ice':[96,96,96,96,96,96,96,93,81,71,63],'Jelly':[24,24,24,24,24,24,24,24,24,24,24]};
+    if(_pt&&_SHELF[_pt]){
+      const _temps=_ts3.temps||{};
+      const _vals=Object.values(_temps).filter(v=>v!=null&&!isNaN(+v)).map(v=>+v);
+      const _maxT=_vals.length?Math.max(..._vals):0;
+      const _shelfHr=_SHELF[_pt][Math.max(0,Math.min(10,Math.round(_maxT)))]||96;
+      // นับจาก past_end_time (เวลา pasteurize เสร็จ)
+      const _pastEnd=_ts3.past_end_time;
+      if(_pastEnd){
+        // past_end_time เป็น HH:MM หรือ ISO
+        const _baseDate=_pastEnd.length===5
+          ?new Date(new Date().toISOString().split('T')[0]+'T'+_pastEnd+':00')
+          :new Date(_pastEnd);
+        const _expDate=new Date(_baseDate.getTime()+_shelfHr*3600000);
+        upd.expire_at=_expDate.toISOString();
+        upd.shelf_hr=_shelfHr;
+      }
+    }
+    // บันทึกลง cip_mixing_records
+    addDoc(collection(db,'cip_mixing_records'),{
+      tank:tid, type:'san',
+      start_time:_ts3.san_start_time||n, stop_time:n,
+      mix_code:_ts3.next_mix_code||'—', mix_name:_ts3.next_mix_name||'—',
+      vol:_ts3.next_vol||0,
+      group:_ts3.cip_group||'—',
+      date:new Date().toISOString().split('T')[0],
+      created_at:new Date().toISOString()
+    }).catch(()=>{});
+  }
+  // บันทึกลายเซ็นพร้อมกับ stamp
+  const _sig=sessionStorage.getItem('emp_sig')||'';
+  const _empName=sessionStorage.getItem('emp_name')||'';
+  if(_sig){
+    upd['sig_'+act]=_sig;
+    upd['sig_'+act+'_name']=_empName;
+  }
+  try{
+    await setDoc(doc(db,'aging_tank_states',tid),upd,{merge:true});
+    const lb={start_cip:'▶ CIP เริ่ม',stop_cip:'✅ CIP เสร็จ',start_san:'▶ San เริ่ม',stop_san:'✅ San เสร็จ'};
+    toast(lb[act]+' ถัง '+tid,'green');
+  }catch(e){toast('Error: '+e.message,'red');}
+}
+
+
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getAuth,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,query,where,orderBy,limit,getDocs,onSnapshot,doc,setDoc,addDoc,deleteDoc,FieldPath}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyC3f6jMuhugE6BNfRfkpOA9BMrIKWR9YgQ",authDomain:"production-filling.firebaseapp.com",projectId:"production-filling",storageBucket:"production-filling.firebasestorage.app",messagingSenderId:"89098393458",appId:"1:89098393458:web:b723f2886e8a341935afeb"});
+const auth=getAuth(app);const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const nowHMS=()=>{const d=new Date();return[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>x.toString().padStart(2,'0')).join(':');};
+window.tankStates={};window.planRows={m1:[],m2:[]};const tankStates=window.tankStates;const planRows=window.planRows;let linesData=[],curTab='m1',unsubSt=null;
+const TEMP_TIMES=['02:00','06:00','10:00','14:00','18:00','22:00'];
+$('inp-date').value=today();
+const en=sessionStorage.getItem('emp_name')||'';if(en) $('emp-name').textContent='👤 '+en;
+onAuthStateChanged(auth,u=>{if(!u){location.href='index.html';return;}$('nav-user').textContent=u.email.replace('@filling.local','');initSt();loadAll();});
+function initSt(){if(unsubSt)unsubSt();unsubSt=onSnapshot(collection(db,'aging_tank_states'),snap=>{snap.docs.forEach(d=>{tankStates[d.id]={id:d.id,...d.data()};});injectProductTypes();if(planRows.m1.length||planRows.m2.length)renderAll();});}
+// re-render ทุก 5 วินาที ให้ vol อัปเดต real-time
+setInterval(()=>{if(planRows.m1.length||planRows.m2.length)renderAll();},5000);
+function injectProductTypes(){if(!window._pmMap)return;Object.values(tankStates).forEach(ts=>{if(ts.mix_code&&window._pmMap[ts.mix_code])ts.product_type=window._pmMap[ts.mix_code];});}
+window.loadAll=async()=>{
+  const d=$('inp-date').value||today();
+  const[lSnap,s1,s2,pmSnap]=await Promise.all([
+    getDocs(collection(db,'lines')),
+    getDocs(query(collection(db,'production_plans'),where('date','==',d))),
+    getDocs(query(collection(db,'production_plans_m2'),where('date','==',d))),
+    getDocs(collection(db,'products'))
+  ]);
+  linesData=lSnap.docs.map(d=>({id:d.id,...d.data()}));
+  // map mix_code -> product_type จาก products collection
+  const pmMap={};window._pmMap=pmMap;
+  pmSnap.docs.forEach(d=>{const pd=d.data();const _ptype=pd.product_type||'';if(pd.mix_code)pmMap[pd.mix_code]=_ptype;});
+  planRows.m1=s1.docs.map(d=>({...d.data(),id:d.id,_col:'production_plans'})).sort((a,b)=>(a.seq||0)-(b.seq||0));
+  planRows.m2=s2.docs.map(d=>({...d.data(),id:d.id,_col:'production_plans_m2'})).sort((a,b)=>(a.seq||0)-(b.seq||0));
+  // inject product_type เข้า tankStates โดยใช้ mix_code ที่มีอยู่ใน tankStates โดยตรง
+  Object.values(tankStates).forEach(ts=>{
+    if(ts.mix_code&&pmMap[ts.mix_code]){
+      ts.product_type=pmMap[ts.mix_code];
+    }
+  });
+  renderAll();renderTempAlert();toast('โหลดแล้ว','green');
+  // re-render อีกครั้งหลัง 1.5 วินาที เผื่อ tankStates onSnapshot ยังไม่ครบ
+  setTimeout(()=>{renderAll();},1500);
+};
+const SHELF={'Ice Cream':[96,96,96,96,92,76,62,51,43,37,32],'Water Ice':[96,96,96,96,96,96,96,93,81,71,63],'Jelly':[24,24,24,24,24,24,24,24,24,24,24]};
+const ST={empty:{color:'#94a3b8',label:'ว่าง',pulse:false},cip:{color:'#3b82f6',label:'CIP',pulse:true},cip_done:{color:'#3b82f6',label:'CIP✓',pulse:false},san:{color:'#22c55e',label:'San.',pulse:true},san_done:{color:'#22c55e',label:'San.✓',pulse:false},busy:{color:'#ef4444',label:'มีของ',pulse:false},pasteurising:{color:'#ef4444',label:'Past.',pulse:true},ready:{color:'#22c55e',label:'พร้อม',pulse:false},filling:{color:'#f97316',label:'Fill.',pulse:true}};
+const LC={};
+function renderAll(){linesData.forEach(l=>{if(l.name)LC[l.name]=l.color||'#6b7280';});renderSummary();renderShiftSummary();renderPriorityCard();renderPlans('m1');renderPlans('m2');if(curTab==='temp')renderTemp();}
+window.renderAll=renderAll;
+window.renderPlans=renderPlans;
+function renderSummary(){const all=[...planRows.m1,...planRows.m2];if(!all.length){$('sum-row-top').innerHTML='';return;}const grps={};all.forEach(r=>{const g=tankStates[r.aging_tank]?.cip_group||'—';if(!grps[g])grps[g]=[];grps[g].push(r);});const GC={A:'#1d4ed8',B:'#0e7490',C:'#15803d',D:'#b45309',E:'#7c3aed'};const total=all.filter(r=>r.aging_tank).length;const inprog=all.filter(r=>{const s=tankStates[r.aging_tank]?.status;return s==='cip'||s==='san';}).length;const done=all.filter(r=>tankStates[r.aging_tank]?.status==='san_done').length;let h='<div class="sum-card"><div style="font-family:var(--mono);font-size:10px;color:var(--t2);font-weight:800;margin-bottom:6px">ภาพรวม</div><div style="font-family:var(--mono);font-size:22px;font-weight:900">'+total+'</div><div style="font-size:11px;color:var(--t2);margin-top:2px">ถังทั้งหมด</div><div style="display:flex;gap:6px;margin-top:8px"><span class="badge badge-blue">กำลัง:'+inprog+'</span><span class="badge badge-green">เสร็จ:'+done+'</span></div></div>';['A','B','C','D','E'].forEach(g=>{const rows=grps[g]||[];if(!rows.length)return;const gc=GC[g]||'#6b7280';const w=rows.filter(r=>!tankStates[r.aging_tank]?.status||tankStates[r.aging_tank]?.status==='empty').length;const a=rows.filter(r=>{const s=tankStates[r.aging_tank]?.status;return s==='cip'||s==='san';}).length;const cd=rows.filter(r=>tankStates[r.aging_tank]?.status==='cip_done').length;const sd=rows.filter(r=>tankStates[r.aging_tank]?.status==='san_done').length;const pct=rows.length>0?Math.round((sd/rows.length)*100):0;h+='<div class="sum-card" style="border-left:4px solid '+gc+'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:26px;height:26px;border-radius:50%;background:'+gc+';display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:900;color:#fff">'+g+'</div><div><div style="font-family:var(--mono);font-size:12px;font-weight:900">Group '+g+'</div><div style="font-size:11px;color:var(--t2)">'+rows.length+' ถัง</div></div></div><div style="background:var(--s2);border-radius:4px;height:6px;margin-bottom:8px;overflow:hidden"><div style="height:6px;border-radius:4px;background:'+gc+';width:'+pct+'%"></div></div><div style="display:flex;gap:4px;flex-wrap:wrap">'+(w>0?'<span class="badge" style="background:var(--s2);color:var(--t2);border:1px solid var(--b1)">ว่าง:'+w+'</span>':'')+(a>0?'<span class="badge badge-blue">กำลัง:'+a+'</span>':'')+(cd>0?'<span class="badge badge-cyan">CIP✓:'+cd+'</span>':'')+(sd>0?'<span class="badge badge-green">พร้อม:'+sd+'</span>':'')+'</div></div>';});$('sum-row-top').innerHTML=h;}
+function renderPlans(m){const tb=$(m+'-tbody');if(!planRows[m].length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--t3)">ไม่มีงาน — กด 🔄 โหลดก่อน</td></tr>';return;}const seen=new Set();tb.innerHTML=planRows[m].map((row,idx)=>{
+    // ข้าม row ที่ไม่มี mix_code (row ว่าง)
+    if(!row.mix_code)return'';
+    const tid=row.aging_tank||'';const dk=tid?(row.process_order?row.process_order+'_'+tid:tid):('r-'+row.id);if(seen.has(dk))return'';seen.add(dk);
+    // รวม volume ของทุก batch ใน process_order + aging_tank เดียวกัน
+    const totalVol=tid&&row.process_order?planRows[m].filter(r=>r.process_order===row.process_order&&r.aging_tank===tid).reduce((sum,r)=>sum+(+(r.volume_liter||0)),0):(+(row.volume_liter||0));
+    // lookup tankStates ด้วย key หลายรูปแบบ: ตรงๆ, uppercase, lowercase, trim
+    const _tidClean=(tid||'').trim();
+    const ts=tankStates[_tidClean]||tankStates[_tidClean.toUpperCase()]||tankStates[_tidClean.toLowerCase()]||{};
+    const st=ts.status||'empty';const sc=ST[st]||ST.empty;const grp=ts.cip_group||'';const lc=LC[row.filling_line]||'#6b7280';const _ti=function(f,v,col,bc){return '<input type="time" value="'+v+'" style="font-family:DM Mono,monospace;font-size:11px;border:1px solid '+bc+';border-radius:4px;padding:1px 4px;color:'+col+';width:82px" onchange="_editTime(\'' +f[0]+ '\',\'' +f[1]+ '\',this.value)">';};
+let tsH='';
+// แสดง last_mix ตอน CIP และ next_mix ตอน Sanitize
+if(ts.last_mix_code||ts.last_mix_name)tsH+='<div style="font-size:10px;color:#3b82f6;font-weight:700;margin-bottom:2px">🧹 CIP: '+(ts.last_mix_code||'')+(ts.last_mix_name?' '+ts.last_mix_name:'')+'</div>';
+if(ts.next_mix_code||ts.next_mix_name)tsH+='<div style="font-size:10px;color:#15803d;font-weight:700;margin-bottom:2px">🧴 San: '+(ts.next_mix_code||'')+(ts.next_mix_name?' '+ts.next_mix_name:'')+(ts.next_vol?' '+ts.next_vol+'L':'')+'</div>';
+if(ts.cip_start_time||ts.cip_stop_time)tsH+='<div class="ts" style="color:#1d4ed8;display:flex;align-items:center;gap:4px">CIP: '+_ti([tid,'cip_start_time'],ts.cip_start_time||'','#1d4ed8','#93c5fd')+' → '+_ti([tid,'cip_stop_time'],ts.cip_stop_time||'','#1d4ed8','#93c5fd')+'<span title="ลายเซ็นพนักงาน" style="font-size:14px;cursor:pointer;opacity:.5">✏️</span></div>';
+if(ts.san_start_time||ts.san_stop_time)tsH+='<div class="ts" style="color:#15803d;display:flex;align-items:center;gap:4px">San: '+_ti([tid,'san_start_time'],ts.san_start_time||'','#15803d','#86efac')+' → '+_ti([tid,'san_stop_time'],ts.san_stop_time||'','#15803d','#86efac')+(ts.sig_stop_san?'<img src="'+ts.sig_stop_san+'" style="height:24px;max-width:60px;object-fit:contain;border:1px solid #86efac;border-radius:4px" title="'+( ts.sig_stop_san_name||'')+'">':('<span title="ยังไม่มีลายเซ็น" style="font-size:14px;opacity:.4">✍️</span>'))+'</div>';let btn='';if(!tid)btn='<span style="font-family:var(--mono);font-size:10px;color:#b45309;background:rgba(180,83,9,.1);border:1px solid rgba(180,83,9,.3);padding:2px 8px;border-radius:8px">⚠️ ยังไม่กำหนดถัง</span>';else if(st==='empty')btn='<button class="btn btn-blue" onclick="doAct(\''+tid+'\',\'start_cip\')">▶ Start CIP</button>';else if(st==='cip')btn='<button class="btn btn-red" onclick="doAct(\''+tid+'\',\'stop_cip\')">⏹ CIP เสร็จ</button>';else if(st==='cip_done')btn='<button class="btn btn-green" onclick="doAct(\''+tid+'\',\'start_san\')">▶ Start Sanitize</button>';else if(st==='san')btn='<button class="btn btn-red" onclick="doAct(\''+tid+'\',\'stop_san\')">⏹ San. เสร็จ</button>';else if(st==='san_done')btn='<span class="badge badge-green">✅ พร้อมใช้</span>';else btn='<span style="font-family:var(--mono);font-size:10px;color:var(--t2)">'+sc.label+'</span>';return'<tr><td style="font-family:var(--mono);color:var(--t3);text-align:center">'+(row.seq||idx+1)+'</td><td><span class="badge badge-cyan">'+(row.mix_code||'—')+'</span></td><td style="font-weight:700">'+(row.mix_name||'—')+'</td><td style="font-family:var(--mono)">'+(row.batch_no||'—')+'</td><td style="font-family:var(--mono)">'+(totalVol>0?totalVol.toLocaleString()+' L':'—')+'</td>'+(()=>{const _cv=+(ts.current_vol||0);const _pct=totalVol>0?(_cv/totalVol)*100:0;const _c=_pct>50?'#15803d':_pct>20?'#b45309':'#b91c1c';const _volTxt=Math.round(_cv).toLocaleString()+' L';const _bar='<div style="width:100%;background:#e2e8f0;border-radius:3px;height:4px;margin-top:3px;overflow:hidden"><div style="height:4px;border-radius:3px;background:'+_c+';width:'+Math.min(100,_pct).toFixed(1)+'%"></div></div>';return '<td style="font-family:var(--mono);'+(_cv>0?'font-weight:900;color:'+_c:'color:#94a3b8')+'">'+(_cv>0?_volTxt+_bar:'—')+'</td>';})()+'<td><span style="font-family:var(--mono);font-weight:800;color:'+lc+'">'+(row.filling_line||'—')+'</span></td><td><div style="display:flex;align-items:center;gap:6px"><div class="st-circle '+(sc.pulse?'pulse':'')+'" style="background:'+sc.color+'">'+sc.label+'</div><span style="font-family:var(--mono);font-weight:900;color:'+lc+'">'+(tid||'—')+'</span></div></td><td>'+(tid?'<select class="grp-sel" data-tid="'+tid+'" onchange="setGroup(this.dataset.tid,this.value)"><option value="">Grp...</option>'+['A','B','C','D','E'].map(g=>'<option value="'+g+'"'+(grp===g?' selected':'')+'>'+g+'</option>').join('')+'</select>':'—')+'</td><td style="font-family:var(--mono);font-size:11px;color:var(--t2);white-space:nowrap">'+(ts.past_start_time?((ts.date||'—')+' '+ts.past_start_time.slice(0,5)):'—')+'</td><td>'+tsH+'</td><td><div style="display:flex;flex-direction:column;gap:5px">'+btn+'</div></td></tr>';}).join('');}
+
+window._editTime=async(tid,field,val)=>{
+  if(!tid||!val) return;
+  try{
+    await setDoc(doc(db,'aging_tank_states',tid),{[field]:val, updated_at:new Date().toISOString()},{merge:true});
+    toast('✅ แก้ไข '+field+' ถัง '+tid+' → '+val,'green');
+  }catch(e){toast('Error: '+e.message,'red');}
+};
+
+window.doAct=(tid,act)=>{
+  // เปิด modal ลายเซ็นก่อนทุกครั้ง
+  const labels={start_cip:'Start CIP',stop_cip:'Stop CIP',start_san:'Start Sanitize',stop_san:'Stop Sanitize'};
+  _pendingAct={tid,act};
+  document.getElementById('sign-modal-title').textContent=(labels[act]||act)+' — ถัง '+tid;
+  document.getElementById('sign-modal-overlay').classList.add('show');
+};
+window.setGroup=async(tid,val)=>{try{await setDoc(doc(db,'aging_tank_states',tid),{cip_group:val,updated_at:new Date().toISOString()},{merge:true});}catch(e){console.warn(e);}};
+
+function getShift(timeStr){
+  if(!timeStr) return null;
+  const h = parseInt(timeStr.split(':')[0])||0;
+  if(h>=6&&h<14) return 'morning';
+  if(h>=14&&h<22) return 'afternoon';
+  return 'night';
+}
+function renderPriorityCard(){
+  const el=document.getElementById('priority-list');
+  if(!el)return;
+  const items=[];
+  Object.values(tankStates).forEach(ts=>{
+    if(!ts.id)return;
+    const cv=+(ts.current_vol||0);
+    const total=+(ts.volume_liter||0);
+    if(cv<=0)return; // ถังว่างแล้ว ไม่แสดง
+    // หา line ที่กำลังใช้ถังนี้อยู่และ running
+    const lineEntry=Object.values(lineStatesForRec||{}).find(ls=>
+      (ls.aging_tank||'')===(ts.id||'') && ls.is_running
+    );
+    if(!lineEntry)return; // ถังนี้ไม่มี line เดินอยู่ ข้าม
+    const fr=+(lineEntry.flow_rate||300);
+    if(fr<=0)return;
+    // เวลาที่เหลือ = current_vol / flow_rate * 60 (นาที)
+    const remMin=Math.round((cv/fr)*60);
+    const pct=total>0?Math.min(100,(cv/total)*100):0;
+    items.push({id:ts.id,pct,cv,total,mix_code:ts.mix_code||'—',mix_name:ts.mix_name||'—',remMin,fr,lineId:lineEntry.id||'—'});
+  });
+  items.sort((a,b)=>a.remMin-b.remMin);
+  const top5=items.slice(0,5);
+  if(!top5.length){
+    el.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--t3);text-align:center;padding:16px 0">✅ ไม่มีถังที่กำลังจะว่าง</div>';
+    return;
+  }
+  el.innerHTML=top5.map((t,i)=>{
+    const isRed=t.remMin<30;
+    const isYellow=t.remMin>=30&&t.remMin<90;
+    const cls=isRed?'prio-item-red':isYellow?'prio-item-yellow':'';
+    const pctColor=isRed?'#ef4444':isYellow?'#ca8a04':'#15803d';
+    const timeStr=t.remMin>=60
+      ?`${Math.floor(t.remMin/60)}ชม.${t.remMin%60?Math.round(t.remMin%60)+'น.':''}`
+      :`${t.remMin} นาที`;
+    return`<div class="${cls}" style="${!cls?'padding:7px 10px;margin-bottom:5px;border-radius:8px;border:1px solid var(--b1)':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0">
+          <span style="font-family:var(--mono);font-size:10px;font-weight:900;color:#6b7280;flex-shrink:0">${i+1}</span>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:900;color:#111827;flex-shrink:0">${t.id}</span>
+          <span style="font-size:11px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.mix_name}</span>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--mono);font-size:13px;font-weight:900;color:${pctColor}">~${timeStr}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:#6b7280">${Math.round(t.cv).toLocaleString()} L · ${t.fr} L/hr</div>
+        </div>
+      </div>
+      <div style="width:100%;background:#e5e7eb;border-radius:3px;height:4px;margin-top:5px;overflow:hidden">
+        <div style="height:4px;border-radius:3px;background:${pctColor};width:${t.pct.toFixed(1)}%;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderShiftSummary(){
+  const counts={morning:{cip:0,san:0},afternoon:{cip:0,san:0},night:{cip:0,san:0}};
+  const today2=today();
+  Object.values(tankStates).forEach(ts=>{
+    // CIP
+    if(ts.cip_start_time&&(ts.cip_date===today2||!ts.cip_date)){
+      const sh=getShift(ts.cip_start_time);
+      if(sh) counts[sh].cip++;
+    }
+    // Sanitize
+    if(ts.san_start_time&&(ts.san_date===today2||!ts.san_date)){
+      const sh=getShift(ts.san_start_time);
+      if(sh) counts[sh].san++;
+    }
+  });
+  ['morning','afternoon','night'].forEach(sh=>{
+    const c2=counts[sh].cip, s2=counts[sh].san;
+    const cipEl=document.getElementById('cip-'+sh);
+    const sanEl=document.getElementById('san-'+sh);
+    const totEl=document.getElementById('total-'+sh);
+    if(cipEl) cipEl.textContent=c2;
+    if(sanEl) sanEl.textContent=s2;
+    if(totEl) totEl.textContent=c2+s2;
+  });
+}
+
+function getNowRound(){const h=new Date().getHours();const r=[2,6,10,14,18,22];for(let i=r.length-1;i>=0;i--){if(h>=r[i])return String(r[i]).padStart(2,'0')+':00';}return'22:00';}
+function getNextRound(cur){const i=TEMP_TIMES.indexOf(cur);return i>=0&&i<TEMP_TIMES.length-1?TEMP_TIMES[i+1]:'02:00 (พรุ่งนี้)';}
+function getDays(){const d=[];for(let i=4;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);d.push(dt.toISOString().slice(0,10));}return d;}
+function fmtDay(d,idx){return 'วันที่ '+(idx+1);}
+function renderTemp(){
+  if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  const cr=getNowRound(),days=getDays(),td=today();
+  $('cur-round').textContent='รอบปัจจุบัน: '+cr;
+  const active=Object.values(tankStates).filter(t=>t.status&&!['empty','san_done'].includes(t.status));
+  $('tank-count').textContent='มีของ: '+active.length+' ถัง';
+  if(!active.length){$('temp-table').innerHTML='<tr><td colspan="99" style="text-align:center;padding:30px;color:var(--t3)">ไม่มีถังที่มีของ</td></tr>';return;}
+  const rows=[];
+  active.sort((a,b)=>a.id.localeCompare(b.id)).forEach(function(tank){
+    const sc=ST[tank.status]||ST.empty;
+    let row=[];
+    row.push('<td style="position:sticky;left:0;z-index:2;background:#fff;padding:5px 8px"><span style="font-family:var(--mono);font-weight:900;color:'+sc.color+'">'+tank.id+'</span><button onclick="clearTankRow(\''+tank.id+'\')" style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:12px;color:#94a3b8;padding:0" title="ลบแถว">🗑</button></td>');
+    row.push('<td style="position:sticky;left:52px;z-index:2;background:#fff;padding:5px 5px"><span class="badge badge-cyan" style="font-size:10px">'+(tank.mix_code||'—')+'</span></td>');
+    row.push('<td style="position:sticky;left:108px;z-index:2;background:#fff;padding:5px 8px;font-size:11px;color:var(--t2)">'+(tank.mix_name||'—').slice(0,10)+'</td>');
+    // Vol ในถัง real-time
+    const _cv=+(tank.current_vol||0);
+    const _volLiter=+(tank.volume_liter||0);
+    const _pct=_volLiter>0?Math.min(100,(_cv/_volLiter)*100):0;
+    const _vc=_pct>50?'#15803d':_pct>20?'#b45309':'#b91c1c';
+    row.push('<td style="position:sticky;left:188px;z-index:2;background:#fff;padding:5px 8px;border-right:2px solid var(--b1);text-align:right">'+
+      (_cv>0
+        ?'<span style="font-family:var(--mono);font-size:12px;font-weight:900;color:'+_vc+'">'+Math.round(_cv).toLocaleString()+'</span><span style="font-family:var(--mono);font-size:10px;color:var(--t2)"> L</span>'+
+         '<div style="width:52px;background:#e2e8f0;border-radius:3px;height:4px;margin-top:2px;overflow:hidden"><div style="height:4px;border-radius:3px;background:'+_vc+';width:'+_pct.toFixed(1)+'%"></div></div>'
+        :'<span style="color:var(--t3);font-size:11px">—</span>')
+    +'</td>');
+    days.forEach(function(d,di){
+      TEMP_TIMES.forEach(function(t){
+        const isN=d===td&&t===cr;
+        const isPast=d<td||(d===td&&t<=cr);
+        const key=(d+'_'+t.replace(':','')).replace(/-/g,'');
+        const rawVal=tank.temps&&tank.temps[key]!=null?tank.temps[key]:'';
+        const filled=rawVal!=='';
+        const _mc=tank.mix_code||tank.next_mix_code||tank.last_mix_code||'';
+        const _tankPt=(window._pmMap&&_mc&&window._pmMap[_mc])||tank.product_type||'';
+        const isHot=filled&&(_tankPt==='Jelly'?(+rawVal<38||+rawVal>42):(+rawVal<0||+rawVal>4));
+        const bg=isHot?'background:#fee2e2':isN?'background:rgba(29,78,216,.04)':'';
+        const bdr=isHot?'#ef4444':filled?'#15803d':'#d1d5db';
+        const inputBg=isHot?'#fee2e2':filled?'#f0fdf4':'#fff';
+        if(isPast){
+          row.push('<td style="padding:2px;text-align:center;'+bg+'"><input type="number" min="0" max="50" step="0.1"'+(filled?' value="'+rawVal+'"':'')+' data-tid="'+tank.id+'" data-key="'+key+'" style="width:40px;text-align:center;font-family:var(--mono);font-size:13px;font-weight:700;border:1px solid '+bdr+';border-radius:4px;padding:2px 1px;background:'+inputBg+';" onchange="window.setTempVal(this.dataset.tid,this.dataset.key,this.value)"></td>');
+        } else {
+          row.push('<td style="padding:2px;text-align:center"><span style="color:var(--b1);font-size:11px">—</span></td>');
+        }
+      });
+      if(di<days.length-1)row.push('<td style="width:3px;background:var(--s2)"></td>');
+    });
+    rows.push('<tr>'+row.join('')+'</tr>');
+  });
+  let h='<thead><tr><th style="position:sticky;left:0;z-index:4;background:var(--s2);padding:8px 10px">ถัง</th><th style="position:sticky;left:52px;z-index:4;background:var(--s2);padding:8px 6px">Code</th><th style="position:sticky;left:108px;z-index:4;background:var(--s2);padding:8px 8px">Mix</th><th style="position:sticky;left:188px;z-index:4;background:var(--s2);padding:8px 8px;border-right:2px solid var(--b1);text-align:right;white-space:nowrap">Vol (L)</th>';
+  days.forEach(function(d,di){
+    const isT=d===td;
+    TEMP_TIMES.forEach(function(t){
+      const isN=isT&&t===cr;
+      h+='<th style="padding:5px 3px;text-align:center;font-size:10px;min-width:48px;'+(isN?'background:rgba(29,78,216,.1);font-weight:900;':'')+(isT?'font-weight:700;':'')+'">';
+      h+=t+(isN?' ★':'')+'</th>';
+    });
+    if(di<days.length-1)h+='<th style="width:3px;background:var(--s2)"></th>';
+  });
+  // row ลายเซ็นด้านล่าง
+  let sigRow='<tr style="border-top:2px solid var(--b1)">';
+  sigRow+='<td colspan="4" style="position:sticky;left:0;z-index:2;background:#f8fafc;padding:5px 8px;font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap">ลายเซ็น</td>';
+  days.forEach(function(d,di){
+    TEMP_TIMES.forEach(function(t){
+      var sigKey='sig_'+(d+'_'+t.replace(':','')).replace(/-/g,'');
+      var existSig=null;
+      // หาลายเซ็นจาก tankStates ถังแรกที่มี
+      var anyTank=active[0];
+      if(anyTank&&anyTank.signatures&&anyTank.signatures[sigKey]) existSig=anyTank.signatures[sigKey];
+      if(existSig){
+        sigRow+='<td style="padding:2px;text-align:center;background:#f8fafc"><img src="'+existSig+'" style="height:28px;width:44px;object-fit:contain"></td>';
+      } else {
+        sigRow+='<td style="padding:2px;text-align:center;background:#f8fafc"><button onclick="window.stampSig(\''+sigKey+'\')" style="background:none;border:1px dashed #94a3b8;border-radius:4px;width:44px;height:28px;cursor:pointer;font-size:14px" title="เซ็นชื่อ">✍️</button></td>';
+      }
+    });
+    if(di<days.length-1)sigRow+='<td style="width:3px;background:var(--s2)"></td>';
+  });
+  sigRow+='</tr>';
+  h+='</tr></thead><tbody>'+rows.join('')+sigRow+'</tbody>';
+  $('temp-table').innerHTML=h;
+}
+window.stampSig=async function(sigKey){
+  var sig=sessionStorage.getItem('emp_sig')||'';
+  var empName=sessionStorage.getItem('emp_name')||'';
+  if(!sig){toast('ไม่พบลายเซ็น กรุณา login ใหม่','red');return;}
+  // บันทึกลงทุกถังที่ active
+  var actTanks=Object.values(tankStates).filter(t=>t.status&&!['empty','san_done'].includes(t.status));
+  var upd={};upd['signatures.'+sigKey]=sig;upd['sig_name.'+sigKey]=empName;upd.updated_at=new Date().toISOString();
+  try{
+    await Promise.all(actTanks.map(t=>setDoc(doc(db,'aging_tank_states',t.id),upd,{merge:true})));
+    actTanks.forEach(t=>{if(!tankStates[t.id].signatures)tankStates[t.id].signatures={};tankStates[t.id].signatures[sigKey]=sig;});
+    toast('✅ บันทึกลายเซ็นแล้ว','green');
+    renderTemp();
+  }catch(e){toast('❌ '+e.message,'red');}
+};
+window.setTempVal=async function(tid,key,val){
+  if(val===''||val===null||val===undefined||isNaN(+val))return;
+  var newTemp=+val;
+  var ts=tankStates[tid]||{};
+  // ── เช็ค range อุณหภูมิตาม product_type ──
+  var _mc2=ts.mix_code||ts.next_mix_code||ts.last_mix_code||'';
+  var _pt=(window._pmMap&&_mc2&&window._pmMap[_mc2])||ts.product_type||'';
+  var _inRange=true;
+  var _rangeMsg='';
+  if(_pt==='Jelly'){
+    if(newTemp<38||newTemp>42){_inRange=false;_rangeMsg='⚠️ อุณหภูมิ Jelly ควรอยู่ที่ 38-42°C (ค่าที่กรอก: '+newTemp+'°C)';}
+  } else {
+    // Ice Cream, Water Ice และอื่นๆ
+    if(newTemp<0||newTemp>4){_inRange=false;_rangeMsg='⚠️ อุณหภูมิควรอยู่ที่ 0-4°C (ค่าที่กรอก: '+newTemp+'°C)';}
+  }
+  if(!_inRange){
+    toast(_rangeMsg,'red');
+    if(!window.confirm(_rangeMsg+'\n\nยืนยันบันทึกต่อไหม?'))return;
+  }
+  try{
+    // ใช้ object ซ้อน temps แทน dot-notation เพราะ key มี - และตัวเลข
+    var tempsUpdate={};
+    var existing=ts.temps||{};
+    tempsUpdate=Object.assign({},existing,{[key]:newTemp});
+    var upd={temps:tempsUpdate,updated_at:new Date().toISOString()};
+    if(ts.max_temp==null||newTemp>+ts.max_temp)upd.max_temp=newTemp;
+    await setDoc(doc(db,'aging_tank_states',tid),upd,{merge:true});
+    if(!tankStates[tid])tankStates[tid]={id:tid};
+    if(!tankStates[tid].temps)tankStates[tid].temps={};
+    tankStates[tid].temps[key]=newTemp;
+    if(upd.max_temp!=null)tankStates[tid].max_temp=newTemp;
+    toast('✅ บันทึก '+tid+' = '+newTemp+'°C','green');
+    // recalculate expire_at ถ้ามี product_type และ san_stop_time
+    const _ts2=tankStates[tid]||{};
+    const _pt2=_ts2.product_type||'';
+    const _SHELF2={'Ice Cream':[96,96,96,96,92,76,62,51,43,37,32],'Water Ice':[96,96,96,96,96,96,96,93,81,71,63],'Jelly':[24,24,24,24,24,24,24,24,24,24,24]};
+    if(_pt2&&_SHELF2[_pt2]&&_ts2.past_end_time){
+      const _temps2=tankStates[tid].temps||{};
+      const _vals2=Object.values(_temps2).filter(v=>v!=null&&!isNaN(+v)).map(v=>+v);
+      const _maxT2=_vals2.length?Math.max(..._vals2):0;
+      const _shelfHr2=_SHELF2[_pt2][Math.max(0,Math.min(10,Math.round(_maxT2)))]||96;
+      // นับจาก past_end_time
+      const _pastEnd2=_ts2.past_end_time;
+      const _baseDate2=_pastEnd2.length===5
+        ?new Date(new Date().toISOString().split('T')[0]+'T'+_pastEnd2+':00')
+        :new Date(_pastEnd2);
+      const _newExp=new Date(_baseDate2.getTime()+_shelfHr2*3600000);
+      const _expUpd={expire_at:_newExp.toISOString(),shelf_hr:_shelfHr2,updated_at:new Date().toISOString()};
+      await setDoc(doc(db,'aging_tank_states',tid),_expUpd,{merge:true});
+      tankStates[tid].expire_at=_newExp.toISOString();
+      tankStates[tid].shelf_hr=_shelfHr2;
+    }
+    renderTempAlert();
+  }catch(e){console.warn('setTempVal error:',e);toast('❌ '+e.message,'red');}
+};
+window.saveTemp=async()=>{};
+window.clearTankRow=async(tid)=>{
+  if(!confirm('ลบถัง '+tid+' ออกจากตารางไหม?\nข้อมูลใน Firebase จะถูกลบ'))return;
+  try{
+    await deleteDoc(doc(db,'aging_tank_states',tid));
+    toast('ลบถัง '+tid+' แล้ว','green');
+  }catch(e){toast('ลบไม่สำเร็จ: '+e.message,'red');}
+};
+
+// ── CIP RECORDS ────────────────────────────────────────────────────
+let _recData = [];
+let _cipMixRecords = [];
+onSnapshot(query(collection(db,'cip_mixing_records'),orderBy('created_at','desc'),limit(200)),snap=>{
+  _cipMixRecords=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(document.getElementById('rec-body')) renderRecords();
+});
+let _recFilter = 'all';
+
+function _buildRecords(){
+  _recData = _cipMixRecords.map(r=>({
+    id: r.id,
+    type: r.type||'cip',
+    tank: r.tank||'—',
+    start: r.start_time||'—',
+    stop: r.stop_time||null,
+    mix_code: r.mix_code||'—',
+    mix_name: r.mix_name||'—',
+    vol: r.vol||0,
+    line: r.line||'—',
+    src: r.type==='cip'?'cipman':'leadman',
+    group: r.group||'—',
+    sign: r.sign||null,
+    sort_key: r.created_at||'',
+  }));
+}
+
+function _getLineInfoForTank(tid, type){
+  // หาจาก cip_line_states ที่มี aging_tank ตรงกัน
+  const lineState = Object.values(lineStatesForRec||{}).find(ls=>ls.aging_tank===tid||ls.last_aging_tank===tid);
+  if(lineState) return {
+    mix_code: lineState.mix_code||lineState.last_mix_code||'—',
+    mix_name: lineState.mix_name||lineState.last_mix_name||'—',
+    vol: +(lineState.start_vol||lineState.last_vol||0),
+    line: lineState.line_name||lineState.id||'—',
+  };
+  return {};
+}
+
+function _getNextPlanForTank(tid){
+  // หาจาก production_plans ที่ aging_tank ตรงกันและยังรอผลิต
+  const allRows = [...(planRows.m1||[]),...(planRows.m2||[])];
+  const next = allRows.find(r=>r.aging_tank===tid&&(r.status==='pending'||r.status==='ready'));
+  if(next) return {
+    mix_code: next.mix_code||'—',
+    mix_name: next.mix_name||'—',
+    vol: +(next.volume_liter||0),
+    line: next.filling_line||'—',
+  };
+  return {};
+}
+
+let lineStatesForRec = {};
+onSnapshot(collection(db,'cip_line_states'),snap=>{
+  lineStatesForRec={};
+  snap.docs.forEach(d=>{lineStatesForRec[d.id]={id:d.id,...d.data()};});
+  if(curTab==='rec') renderRecords();
+});
+
+function renderRecords(){
+  _buildRecords();
+  const filtered = _recFilter==='all' ? _recData : _recData.filter(r=>r.type===_recFilter);
+  document.getElementById('rec-count').textContent = filtered.length + ' records';
+  document.getElementById('rec-body').innerHTML = filtered.map(r=>{
+    const typeBadge = r.type==='cip'
+      ? '<span style="font-family:var(--mono);font-size:10px;font-weight:900;padding:3px 10px;border-radius:6px;background:rgba(29,78,216,.1);color:#1d4ed8;border:1px solid rgba(29,78,216,.25)">CIP</span>'
+      : '<span style="font-family:var(--mono);font-size:10px;font-weight:900;padding:3px 10px;border-radius:6px;background:rgba(21,128,61,.1);color:#15803d;border:1px solid rgba(21,128,61,.25)">Sanitize</span>';
+    const srcTag = r.src==='cipman'
+      ? '<span style="font-family:var(--mono);font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:rgba(14,116,144,.1);color:#0e7490">cipman</span>'
+      : '<span style="font-family:var(--mono);font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;background:rgba(180,83,9,.1);color:#b45309">leadman</span>';
+    const stopCell = r.stop||'<span style="font-size:10px;color:var(--orange)">กำลังทำ...</span>';
+    const signCell = r.sign
+      ? '<span style="font-family:var(--mono);font-size:12px;font-weight:800;color:#15803d">✅ '+r.sign+'</span>'
+      : '<button style="font-size:16px;cursor:pointer;opacity:.45;background:none;border:none;padding:2px 4px" title="ยังไม่เปิดใช้">✏️</button>';
+    return '<tr style="border-bottom:1px solid var(--s2)">'
+      +'<td style="padding:9px 12px;white-space:nowrap;color:var(--t2)">'+r.start+'</td>'
+      +'<td style="padding:9px 12px;white-space:nowrap;color:var(--t2)">'+stopCell+'</td>'
+      +'<td style="padding:9px 12px">'+typeBadge+'</td>'
+      +'<td style="padding:9px 12px;font-weight:900;color:var(--blue2,#1d4ed8)">'+(r.group&&r.group!=='—'?'<span style="font-family:var(--mono);font-size:12px;font-weight:900;padding:2px 10px;border-radius:6px;background:rgba(29,78,216,.1);color:#1d4ed8;border:1px solid rgba(29,78,216,.2)">'+r.group+'</span>':'—')+'</td>'
+      +'<td style="padding:9px 12px;font-weight:900">'+r.tank+'</td>'
+      +'<td style="padding:9px 12px;font-weight:900;color:#0e7490">'+r.mix_code+'</td>'
+      +'<td style="padding:9px 12px;color:var(--t2)">'+r.mix_name+'</td>'
+      +'<td style="padding:9px 12px;font-weight:900;color:#0e7490">'+(r.vol>0?r.vol.toLocaleString()+' L':'—')+'</td>'
+      +'<td style="padding:9px 12px;font-weight:800;color:#c2410c">'+r.line+'</td>'
+      +'<td style="padding:9px 12px">'+srcTag+'</td>'
+      +'<td style="padding:9px 12px">'+signCell+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+window._recFilter = function(f, btn){
+  _recFilter = f;
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderRecords();
+};
+
+// ── CIP LOG ──────────────────────────────────────────────────────────
+window._cipLogRows=[];
+
+window.saveCipLog=async function(){
+  var d=document.getElementById('cip-date').value;
+  var line=document.getElementById('cip-line').value.trim();
+  if(!d||!line){toast('กรุณากรอกวันที่และวงจร/ไลน์','red');return;}
+  var rec={
+    date:d,
+    line:line,
+    cip_group:document.getElementById('cip-group').value,
+    program:document.getElementById('cip-program').value,
+    start_time:document.getElementById('cip-start').value,
+    end_time:document.getElementById('cip-end').value,
+    conductivity:+(document.getElementById('cip-conduct').value)||0,
+    temperature:+(document.getElementById('cip-temp').value)||0,
+    flow:+(document.getElementById('cip-flow').value)||0,
+    ph:+(document.getElementById('cip-ph').value)||0,
+    operator:document.getElementById('cip-operator').value.trim(),
+    remark:document.getElementById('cip-remark').value.trim(),
+    cip_done:document.getElementById('cip-done').checked,
+    san_done:document.getElementById('cip-san-done').checked,
+    created_at:new Date().toISOString()
+  };
+  try{
+    await addDoc(collection(db,'cip_records'),rec);
+    toast('บันทึก CIP แล้ว','green');
+    // clear form (คงวันที่และไลน์)
+    ['cip-conduct','cip-temp','cip-flow','cip-ph','cip-operator','cip-remark','cip-start','cip-end'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('cip-done').checked=false;
+    document.getElementById('cip-san-done').checked=false;
+    window.renderCipLog();
+  }catch(e){toast('บันทึกไม่สำเร็จ: '+e.message,'red');}
+};
+
+window.renderCipLog=async function(){
+  var dateEl=document.getElementById('ciplog-date');
+  var d=dateEl?dateEl.value:'';
+  if(!d&&window._cipToday)d=window._cipToday;
+  if(!d){var now=new Date();d=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(dateEl)dateEl.value=d;}
+  try{
+    var q=query(collection(db,'cip_records'),where('date','==',d));
+    var snap=await getDocs(q);
+    var rows=snap.docs.map(function(doc){return Object.assign({id:doc.id},doc.data());});
+    window._cipLogRows=rows;
+    var tbody=document.getElementById('ciplog-tbody');
+    var cnt=document.getElementById('ciplog-count');
+    if(cnt)cnt.textContent=rows.length+' รายการ';
+    if(!tbody)return;
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="16" style="text-align:center;padding:20px;color:var(--t3)">ไม่มีข้อมูลวันนี้</td></tr>';return;}
+    tbody.innerHTML=rows.map(function(r,i){
+      return '<tr style="border-bottom:1px solid var(--b1);'+((i%2===0)?'background:#fafbfc':'')+'">'+
+        '<td style="padding:6px 8px;text-align:center;font-weight:700">'+(i+1)+'</td>'+
+        '<td style="padding:6px 8px">'+r.date+'</td>'+
+        '<td style="padding:6px 8px;font-weight:700">'+r.line+'</td>'+
+        '<td style="padding:6px 8px;text-align:center"><span style="background:#dbeafe;color:#1e40af;border-radius:6px;padding:2px 8px;font-weight:700">'+(r.cip_group||'—')+'</span></td>'+
+        '<td style="padding:6px 8px">'+r.program+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.start_time||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.end_time||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.conductivity||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.temperature||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.flow||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.ph||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.cip_done?'<span style="color:#15803d;font-size:16px">✓</span>':'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center">'+(r.san_done?'<span style="color:#0891b2;font-size:16px">✓</span>':'—')+'</td>'+
+        '<td style="padding:6px 8px">'+(r.operator||'—')+'</td>'+
+        '<td style="padding:6px 8px;color:var(--t3)">'+(r.remark||'—')+'</td>'+
+        '<td style="padding:6px 8px;text-align:center"><button onclick="window.deleteCipLog(''+r.id+'')" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:14px">🗑</button></td>'+
+      '</tr>';
+    }).join('');
+  }catch(e){console.warn('renderCipLog error:',e);}
+};
+
+window.deleteCipLog=async function(id){
+  if(!confirm('ลบรายการนี้ไหม?'))return;
+  try{
+    await deleteDoc(doc(db,'cip_records',id));
+    toast('ลบแล้ว','green');
+    window.renderCipLog();
+  }catch(e){toast('ลบไม่สำเร็จ','red');}
+};
+
+window.exportCipLog=function(){
+  var rows=window._cipLogRows||[];
+  if(!rows.length){alert('ไม่มีข้อมูล');return;}
+  var headers=['No.','วันที่','วงจร/ไลน์','กลุ่ม CIP','โปรแกรม','เวลาเริ่ม','สิ้นสุด','Conductivity','Temp','Flow','pH','หมด CIP','หมด San','ผู้ปฏิบัติ','Remark'];
+  var esc=function(v){return '"'+(String(v||'').replace(/"/g,'""'))+'"';};
+  var csv=[headers.map(esc).join(',')].concat(rows.map(function(r,i){return [i+1,r.date,r.line,r.cip_group||'',r.program,r.start_time||'',r.end_time||'',r.conductivity||'',r.temperature||'',r.flow||'',r.ph||'',r.cip_done?'✓':'',r.san_done?'✓':'',r.operator||'',r.remark||''].map(esc).join(',')})).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='cip_records_'+rows[0].date+'.csv';
+  a.click();URL.revokeObjectURL(url);
+};
+
+// set default date inline
+(function(){
+  var now=new Date();
+  var d=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  window._cipToday=d;
+})();
+
+window.showTab=(id,btn)=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('page-'+id).classList.add('on');curTab=id;if(id==='m1')renderPlans('m1');else if(id==='m2')renderPlans('m2');else if(id==='temp')renderTemp();else if(id==='rec')renderRecords();else if(id==='ciplog')window.renderCipLog();};
+function toast(msg,col='blue'){const el=$('toast');el.textContent=msg;el.style.background=col==='green'?'#15803d':col==='red'?'#991b1b':'#1d4ed8';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+window.doLogout=async()=>{await signOut(auth);location.href='index.html';};
+</script>
+
+<div class="page" id="page-rec">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <button class="f-btn on" id="rbf-all" onclick="_recFilter('all',this)">ทั้งหมด</button>
+    <button class="f-btn" id="rbf-cip" onclick="_recFilter('cip',this)">CIP เท่านั้น</button>
+    <button class="f-btn" id="rbf-san" onclick="_recFilter('san',this)">Sanitize เท่านั้น</button>
+    <span id="rec-count" style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-left:auto"></span>
+  </div>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px" id="rec-table">
+      <thead>
+        <tr>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Start</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Stop</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">ประเภท</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Group</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">ถัง</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Mix Code</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Mix Name</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Volume</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">Line</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">แหล่งข้อมูล</th>
+          <th style="background:var(--s2);padding:10px 12px;text-align:left;font-weight:800;font-size:11px;color:var(--t2);border-bottom:2px solid var(--b1);white-space:nowrap">✏️ ลายเซ็น</th>
+        </tr>
+      </thead>
+      <tbody id="rec-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="sign-modal-overlay" id="sign-modal-overlay">
+  <div class="sign-modal">
+    <div class="sign-modal-icon">✏️</div>
+    <div class="sign-modal-title" id="sign-modal-title">ลายเซ็นพนักงาน</div>
+    <div class="sign-modal-sub">ระบบลายเซ็นจะเปิดใช้เมื่อ Interlock พร้อม</div>
+    <div class="sign-modal-btns">
+      <button class="sign-modal-btn sign-modal-skip" onclick="_signSkip()">ข้าม</button>
+      <button class="sign-modal-btn sign-modal-confirm" onclick="_signConfirm()">✅ ยืนยัน</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
