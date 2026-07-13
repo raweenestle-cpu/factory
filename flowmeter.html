@@ -1,0 +1,541 @@
+<!-- build:20260710-1520 -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Flowmeter Verify — PROD.SYS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#eef1f6;--s1:#ffffff;--s2:#f4f7fb;--s3:#eaeff6;--b1:#c7cedb;--b2:#a7b1c4;
+  --text:#0a1020;--t2:#48546b;--t3:#7c8aa3;
+  --blue:#1d5fd6;--blue2:#3b82f6;--green:#0f7a3d;--yellow:#a9720b;
+  --red:#c31d1d;--cyan:#0a7f96;--orange:#c2540c;--purple:#7c3aed;
+  --mono:'DM Mono',monospace;--sans:'Sarabun',sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+input[type="number"]{-moz-appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+nav{display:flex;align-items:center;height:64px;background:var(--s1);border-bottom:2px solid var(--b1);
+  position:sticky;top:0;z-index:200;padding:0 20px;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.nav-logo{font-family:var(--mono);font-size:18px;font-weight:700;flex-shrink:0}
+.nav-logo b{color:var(--blue)}.nav-logo span{color:var(--t2)}
+.ntab{font-size:15px;font-weight:700;padding:9px 16px;border-radius:8px;border:none;
+  background:none;color:var(--t2);cursor:pointer;white-space:nowrap}
+.ntab.on{color:#fff;background:var(--cyan)}
+.nav-r{display:flex;align-items:center;gap:8px;margin-left:auto}
+.nbtn{font-size:14px;padding:7px 14px;border-radius:7px;border:1.5px solid var(--b2);
+  background:var(--s2);color:var(--t2);cursor:pointer;text-decoration:none;font-family:var(--mono);font-weight:600}
+
+.page{display:none;padding:22px}
+.page.on{display:block}
+
+/* VERIFY FORM */
+.vcard{background:var(--s1);border:2px solid var(--b1);border-radius:16px;padding:26px;margin-bottom:20px;box-shadow:0 3px 12px rgba(0,0,0,.06)}
+.vcard-title{font-family:var(--mono);font-size:19px;font-weight:800;color:var(--text);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px}
+
+/* MATERIAL SELECTOR */
+.mat-sel{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.mat-btn{font-family:var(--mono);font-size:15px;font-weight:700;padding:11px 22px;border-radius:9px;
+  border:2px solid var(--b2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .2s}
+.mat-btn.on.glc{border-color:#16a34a;color:#0f7a3d;background:rgba(22,163,74,.12)}
+.mat-btn.on.sgr{border-color:#0891b2;color:#0a7f96;background:rgba(8,145,178,.12)}
+.mat-btn.on.plm{border-color:#ea580c;color:#c2540c;background:rgba(234,88,12,.12)}
+
+/* RANGE TABLE */
+.rtable{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:10px}
+.rtable th{background:var(--s3);padding:11px 12px;text-align:center;font-family:var(--mono);
+  font-size:13px;color:var(--t2);border:1.5px solid var(--b1);white-space:nowrap;font-weight:700}
+.rtable td{padding:9px 10px;border:1.5px solid var(--b1);text-align:center;vertical-align:middle}
+.rtable tr.range-row td:first-child{font-family:var(--mono);font-size:17px;font-weight:800;
+  color:var(--cyan);background:rgba(10,127,150,.06)}
+
+/* ACTUAL INPUT */
+.act-in{width:100px;text-align:center;font-family:var(--mono);font-size:16px;font-weight:700;
+  background:var(--s1);border:1.5px solid var(--b2);border-radius:7px;color:var(--text);
+  padding:8px 10px;outline:none}
+.act-in:focus{border-color:var(--cyan)}
+
+/* DEVIATION */
+.dev-cell{font-family:var(--mono);font-size:15px;font-weight:800}
+.dev-pass{color:var(--green)}
+.dev-fail{color:var(--red)}
+.dev-na{color:var(--t3)}
+
+/* RESULT ROW */
+.avg-row td{background:var(--s3)!important;font-weight:800}
+.result-badge{font-family:var(--mono);font-size:14px;font-weight:800;padding:6px 16px;
+  border-radius:99px;display:inline-block}
+
+/* BUTTONS */
+.btn{font-size:15px;padding:11px 20px;border-radius:9px;border:1.5px solid var(--b2);
+  background:var(--s2);color:var(--text);cursor:pointer;font-family:var(--sans);font-weight:700}
+.btn-b{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-b:hover{background:#1a4fb8}
+.btn-g{background:rgba(15,122,61,.12);border-color:rgba(15,122,61,.4);color:var(--green)}
+.ci{background:var(--s1);border:1.5px solid var(--b2);border-radius:8px;color:var(--text);
+  font-family:var(--mono);font-size:15px;font-weight:600;padding:8px 12px;outline:none}
+
+/* HISTORY */
+.hist-card{background:var(--s1);border:2px solid var(--b1);border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.hist-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.hist-mat{font-family:var(--mono);font-size:17px;font-weight:800}
+.hist-date{font-family:var(--mono);font-size:14px;color:var(--t2);font-weight:600}
+.hist-by{font-family:var(--mono);font-size:13px;color:var(--t3)}
+.overall-pass{color:var(--green);background:rgba(15,122,61,.1);border:1.5px solid rgba(15,122,61,.3);
+  padding:5px 14px;border-radius:99px;font-family:var(--mono);font-size:14px;font-weight:800}
+.overall-fail{color:var(--red);background:rgba(195,29,29,.1);border:1.5px solid rgba(195,29,29,.3);
+  padding:5px 14px;border-radius:99px;font-family:var(--mono);font-size:14px;font-weight:800}
+
+/* NEXT DUE */
+.due-badge{font-family:var(--mono);font-size:14px;font-weight:700;padding:6px 14px;border-radius:8px;
+  border:1.5px solid var(--b2);background:var(--s2)}
+.due-warn{border-color:rgba(195,29,29,.4);color:var(--red);background:rgba(195,29,29,.07)}
+.due-ok{border-color:rgba(15,122,61,.35);color:var(--green);background:rgba(15,122,61,.07)}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  padding:13px 26px;border-radius:12px;font-size:16px;font-weight:700;opacity:0;transition:all .3s;
+  z-index:9999;pointer-events:none;font-family:var(--mono);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:768px){
+  nav{padding:0 12px;gap:6px}
+  .nav-logo{font-size:15px}
+  .ntab{font-size:13px;padding:7px 10px}
+  .page{padding:14px}
+  .rtable{font-size:13px}
+  .act-in{width:80px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">PROD<b>.</b>SYS <span>/ FLOWMETER</span></div>
+  <button class="ntab on" onclick="showPage('verify',this)">🔬 Verify</button>
+  <button class="ntab" onclick="showPage('history',this);loadHistory()">📋 ประวัติ</button>
+  <div class="nav-r">
+    <a href="index.html" class="nbtn">🏠</a>
+    <button class="nbtn" onclick="doLogout()">ออก</button>
+  </div>
+</nav>
+
+<!-- VERIFY PAGE -->
+<div class="page on" id="page-verify">
+  <div class="vcard">
+    <div class="vcard-title">🔬 Verify Flow Meter</div>
+
+    <!-- MIXING UNIT SELECTOR -->
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-bottom:8px;font-weight:700">เลือกชุด Mixing</div>
+      <div style="display:flex;gap:8px">
+        <button class="mat-btn on" id="unit-m1" onclick="selectUnit('m1',this)"
+          style="border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.1)">
+          🔵 Mixing 1
+        </button>
+        <button class="mat-btn" id="unit-m2" onclick="selectUnit('m2',this)">
+          🟢 Mixing 2
+        </button>
+      </div>
+    </div>
+
+    <!-- DATE + INTERVAL -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <div>
+        <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-bottom:5px;font-weight:700">วันที่ทดสอบ</div>
+        <input type="date" id="verify-date" class="ci" style="width:150px">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-bottom:5px;font-weight:700">รอบถัดไป</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn" id="int-15" onclick="setInterval(15)">15 วัน</button>
+          <button class="btn" id="int-30" onclick="setInterval(30)">1 เดือน</button>
+        </div>
+      </div>
+      <div id="due-info" style="margin-top:18px"></div>
+    </div>
+
+    <!-- MATERIAL SELECTOR -->
+    <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-bottom:8px;font-weight:700">เลือกวัตถุดิบ</div>
+    <div class="mat-sel">
+      <button class="mat-btn on glc" onclick="selectMat('glc',this)">🍬 Glucose</button>
+      <button class="mat-btn" onclick="selectMat('sgr',this)">🧂 Sugar</button>
+      <button class="mat-btn" onclick="selectMat('plm',this)">🌴 Palm Oil</button>
+    </div>
+
+    <!-- SET POINT EDITOR -->
+    <div style="margin-bottom:14px">
+      <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-bottom:8px;font-weight:700">Set Point (kg) — แก้ไขได้</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-family:var(--mono);font-size:14px;color:var(--t2);font-weight:600">จุดที่ 1:</span>
+          <input id="sp1" type="number" class="ci" style="width:80px;text-align:center;font-family:var(--mono);font-weight:700" value="50" min="1" onchange="updateRanges()">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-family:var(--mono);font-size:14px;color:var(--t2);font-weight:600">จุดที่ 2:</span>
+          <input id="sp2" type="number" class="ci" style="width:80px;text-align:center;font-family:var(--mono);font-weight:700" value="100" min="1" onchange="updateRanges()">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-family:var(--mono);font-size:14px;color:var(--t2);font-weight:600">จุดที่ 3:</span>
+          <input id="sp3" type="number" class="ci" style="width:80px;text-align:center;font-family:var(--mono);font-weight:700" value="150" min="1" onchange="updateRanges()">
+        </div>
+        <span style="font-family:var(--mono);font-size:13px;color:var(--t3)">หน่วย: kg</span>
+      </div>
+    </div>
+
+    <!-- VERIFY TABLE -->
+    <div style="overflow-x:auto">
+      <table class="rtable" id="verify-table">
+        <thead>
+          <tr>
+            <th rowspan="3">Set Point (kg)</th>
+            <th colspan="2" style="color:var(--cyan);border-bottom:1px solid var(--b2)">ครั้งที่ 1</th>
+            <th colspan="2" style="color:var(--cyan);border-bottom:1px solid var(--b2)">ครั้งที่ 2</th>
+            <th colspan="2" style="color:var(--cyan);border-bottom:1px solid var(--b2)">ครั้งที่ 3</th>
+            <th rowspan="3" style="color:var(--yellow)">Dev 1%</th>
+            <th rowspan="3" style="color:var(--yellow)">Dev 2%</th>
+            <th rowspan="3" style="color:var(--yellow)">Dev 3%</th>
+            <th rowspan="3" style="color:var(--orange)">Avg Dev%</th>
+            <th rowspan="3">ผล</th>
+          </tr>
+          <tr>
+            <th style="color:#0a7f96;font-size:13px;font-weight:700">Actual</th>
+            <th style="color:#7c3aed;font-size:13px;font-weight:700">SCADA</th>
+            <th style="color:#0a7f96;font-size:13px;font-weight:700">Actual</th>
+            <th style="color:#7c3aed;font-size:13px;font-weight:700">SCADA</th>
+            <th style="color:#0a7f96;font-size:13px;font-weight:700">Actual</th>
+            <th style="color:#7c3aed;font-size:13px;font-weight:700">SCADA</th>
+          </tr>
+          <tr>
+            <th style="font-size:12px;color:var(--t3);font-weight:600">(kg)</th>
+            <th style="font-size:12px;color:var(--t3);font-weight:600">(kg)</th>
+            <th style="font-size:12px;color:var(--t3);font-weight:600">(kg)</th>
+            <th style="font-size:12px;color:var(--t3);font-weight:600">(kg)</th>
+            <th style="font-size:12px;color:var(--t3);font-weight:600">(kg)</th>
+            <th style="font-size:12px;color:var(--t3);font-weight:600">(kg)</th>
+          </tr>
+        </thead>
+        <tbody id="verify-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- OVERALL RESULT -->
+    <div id="overall-result" style="margin-top:14px;text-align:center"></div>
+
+    <!-- NOTE -->
+    <div style="margin-top:14px">
+      <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-bottom:5px;font-weight:700">หมายเหตุ</div>
+      <input id="verify-note" class="ci" style="width:100%" placeholder="หมายเหตุ (ถ้ามี)">
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="saveVerify()">💾 บันทึกผล</button>
+      <button class="btn" onclick="resetForm()">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="font-family:var(--mono);font-size:14px;color:var(--t3);font-weight:700">ชุด</div>
+    <select id="hist-unit" class="ci" onchange="loadHistory()">
+      <option value="">ทั้งหมด</option>
+      <option value="m1">🔵 Mixing 1</option>
+      <option value="m2">🟢 Mixing 2</option>
+    </select>
+    <div style="font-family:var(--mono);font-size:14px;color:var(--t3);font-weight:700">วัตถุดิบ</div>
+    <select id="hist-mat" class="ci" onchange="loadHistory()">
+      <option value="">ทั้งหมด</option>
+      <option value="glc">🍬 Glucose</option>
+      <option value="sgr">🧂 Sugar</option>
+      <option value="plm">🌴 Palm Oil</option>
+    </select>
+    <button class="btn btn-b" onclick="loadHistory()">โหลด</button>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getAuth,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,query,where,orderBy,addDoc,getDocs,doc,getDoc,limit}
+  from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app=initializeApp({apiKey:"AIzaSyC3f6jMuhugE6BNfRfkpOA9BMrIKWR9YgQ",authDomain:"production-filling.firebaseapp.com",projectId:"production-filling",storageBucket:"production-filling.firebasestorage.app",messagingSenderId:"89098393458",appId:"1:89098393458:web:b723f2886e8a341935afeb"});
+const auth=getAuth(app),db=getFirestore(app);
+let ME=null,curMat='glc',curInterval=15,curUnit='m1';
+let RANGES=[50,100,150];
+let scadaVals={};
+const MAT={glc:{name:'Glucose',color:'#86efac',emoji:'🍬'},sgr:{name:'Sugar',color:'#67e8f9',emoji:'🧂'},plm:{name:'Palm Oil',color:'#fdba74',emoji:'🌴'}};
+const today=()=>new Date().toISOString().slice(0,10);
+const $=id=>document.getElementById(id);
+function toast(msg,t='blue'){const el=$('toast');el.textContent=msg;el.style.background=t==='green'?'#15803d':t==='red'?'#991b1b':'#1d4ed8';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+
+// State — actual values
+let vals={};
+RANGES.forEach(r=>{vals[r]=[null,null,null];});
+
+onAuthStateChanged(auth,async user=>{
+  if(!user){location.href='index.html';return;}
+  ME=user;
+  $('verify-date').value=today();
+  renderTable();
+  await loadDueInfo();
+  setInterval(curInterval);
+});
+window.doLogout=async()=>{await signOut(auth);location.href='index.html';};
+
+window.showPage=(p,btn)=>{
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(el=>el.classList.remove('on'));
+  $(`page-${p}`).classList.add('on');btn.classList.add('on');
+};
+
+window.selectUnit=(unit,btn)=>{
+  curUnit=unit;
+  document.querySelectorAll('#unit-m1,#unit-m2').forEach(b=>{
+    b.classList.remove('on');
+    b.style.borderColor='';b.style.color='';b.style.background='';
+  });
+  btn.classList.add('on');
+  btn.style.borderColor='var(--purple)';
+  btn.style.color='var(--purple)';
+  btn.style.background='rgba(168,85,247,.1)';
+  resetVals();renderTable();loadDueInfo();
+};
+
+window.updateRanges=()=>{
+  const s1=+document.getElementById('sp1').value||50;
+  const s2=+document.getElementById('sp2').value||100;
+  const s3=+document.getElementById('sp3').value||150;
+  RANGES=[s1,s2,s3];
+  // reset vals ตาม ranges ใหม่
+  vals={};
+  RANGES.forEach(r=>{vals[r]=[null,null,null];});
+  renderTable();
+};
+
+window.selectMat=(mat,btn)=>{
+  curMat=mat;
+  document.querySelectorAll('.mat-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  resetVals();renderTable();
+  loadDueInfo();
+};
+
+window.setInterval=(days)=>{
+  curInterval=days;
+  $('int-15').style.background=days===15?'rgba(6,182,212,.15)':'';
+  $('int-15').style.borderColor=days===15?'var(--cyan)':'';
+  $('int-15').style.color=days===15?'var(--cyan)':'';
+  $('int-30').style.background=days===30?'rgba(6,182,212,.15)':'';
+  $('int-30').style.borderColor=days===30?'var(--cyan)':'';
+  $('int-30').style.color=days===30?'var(--cyan)':'';
+};
+
+function resetVals(){vals={};scadaVals={};RANGES.forEach(r=>{vals[r]=[null,null,null];scadaVals[r]=[null,null,null];});}
+
+window.resetForm=()=>{
+  resetVals();renderTable();
+  $('verify-note').value='';
+  $('overall-result').innerHTML='';
+};
+
+function calcDev(set,actual){
+  if(actual===null||actual===''||isNaN(+actual))return null;
+  return ((+actual-set)/set)*100;
+}
+
+function devHTML(dev){
+  if(dev===null)return`<span class="dev-na">—</span>`;
+  const pass=Math.abs(dev)<=2;
+  return`<span class="dev-cell ${pass?'dev-pass':'dev-fail'}">${dev>0?'+':''}${dev.toFixed(2)}%</span>`;
+}
+
+function renderTable(){
+  const tbody=$('verify-tbody');
+  const mat=MAT[curMat];
+  tbody.innerHTML='';
+  let allPass=true,hasData=false;
+
+  RANGES.forEach(set=>{
+    const devs=vals[set].map(a=>calcDev(set,a));
+    const validDevs=devs.filter(d=>d!==null);
+    const avg=validDevs.length?validDevs.reduce((s,d)=>s+d,0)/validDevs.length:null;
+    const rowPass=validDevs.length===3&&validDevs.every(d=>Math.abs(d)<=2);
+    if(validDevs.length>0)hasData=true;
+    if(validDevs.length===3&&!rowPass)allPass=false;
+
+    const tr=document.createElement('tr');
+    tr.className='range-row';
+    // สร้าง 3 คู่คอลัมน์ actual+scada
+    const pairCols=[0,1,2].map(i=>`
+      <td>
+        <input class="act-in" type="number" step="0.01" value="${vals[set][i]??''}"
+          style="border-color:${vals[set][i]!==null?mat.color+'88':'var(--b2)'};width:80px"
+          placeholder="0.00"
+          onchange="updateVal(${set},${i},this.value)">
+      </td>
+      <td>
+        <input class="act-in" type="number" step="0.01" value="${(scadaVals[set]||[])[i]??''}"
+          style="border-color:${(scadaVals[set]||[])[i]!=null?'rgba(167,139,250,.6)':'var(--b2)'};width:80px;background:rgba(167,139,250,.05)"
+          placeholder="0.00"
+          onchange="updateScada(${set},${i},this.value)">
+      </td>`).join('');
+    tr.innerHTML=`
+      <td style="color:${mat.color};font-size:14px;font-weight:800">${set} kg</td>
+      ${pairCols}
+      ${devs.map(d=>devHTML(d)).map(h=>`<td>${h}</td>`).join('')}
+      <td>${avg!==null?devHTML(avg):'<span class="dev-na">—</span>'}</td>
+      <td>${validDevs.length===3
+        ?`<span class="result-badge" style="color:${rowPass?'var(--green)':'var(--red)'};background:${rowPass?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};border:1px solid ${rowPass?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'}">${rowPass?'✅ Pass':'🔴 Fail'}</span>`
+        :'<span style="font-family:var(--mono);font-size:13px;color:var(--t3)">รอข้อมูล</span>'
+      }</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Overall
+  const allFilled=RANGES.every(r=>vals[r].every(v=>v!==null));
+  if(allFilled){
+    $('overall-result').innerHTML=`<div style="padding:12px;background:${allPass?'rgba(34,197,94,.08)':'rgba(239,68,68,.08)'};border:1.5px solid ${allPass?'rgba(34,197,94,.35)':'rgba(239,68,68,.35)'};border-radius:10px;display:inline-block;min-width:200px">
+      <div style="font-family:var(--mono);font-size:14px;color:var(--t2);margin-bottom:6px;font-weight:700">ผลรวม ${mat.emoji} ${mat.name}</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${allPass?'var(--green)':'var(--red)'}">${allPass?'✅ PASS':'🔴 FAIL'}</div>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--t3);margin-top:6px">${allPass?'อยู่ในเกณฑ์ ±2%':'เกินเกณฑ์ ±2% — ต้องปรับ Flow Meter'}</div>
+    </div>`;
+  } else {
+    $('overall-result').innerHTML='';
+  }
+}
+
+window.updateScada=(set,idx,val)=>{
+  if(!scadaVals[set])scadaVals[set]=[null,null,null];
+  scadaVals[set][idx]=val===''?null:+val;
+};
+
+window.updateVal=(set,idx,val)=>{
+  vals[set][idx]=val===''?null:+val;
+  renderTable();
+};
+
+window.saveVerify=async()=>{
+  const allFilled=RANGES.every(r=>vals[r].every(v=>v!==null));
+  if(!allFilled){toast('กรุณากรอกค่าจริงให้ครบทุกช่อง','red');return;}
+  const date=$('verify-date').value||today();
+  const note=$('verify-note').value;
+  const mat=MAT[curMat];
+
+  const results={};
+  let allPass=true;
+  RANGES.forEach(set=>{
+    const devs=vals[set].map(a=>calcDev(set,a));
+    const avg=devs.reduce((s,d)=>s+d,0)/3;
+    const pass=devs.every(d=>Math.abs(d)<=2);
+    if(!pass)allPass=false;
+    results[set]={actuals:vals[set],devs,avg,pass};
+  });
+
+  try{
+    await addDoc(collection(db,'flowmeter_verify'),{
+      date,material:curMat,material_name:mat.name,
+      mixing_unit:curUnit,
+      scada_vals:scadaVals,
+      interval_days:curInterval,results,overall_pass:allPass,
+      note,created_by:ME?.email||'—',created_at:new Date().toISOString()
+    });
+    toast(`บันทึก ${mat.name} แล้ว — ${allPass?'✅ Pass':'🔴 Fail'}`,'green');
+    resetForm();
+    loadDueInfo();
+  }catch(e){toast('บันทึกไม่สำเร็จ: '+e.message,'red');}
+};
+
+async function loadDueInfo(){
+  try{
+    // เดิม query ด้วย where(material)+where(mixing_unit)+orderBy(date) พร้อมกัน ต้องมี Firestore composite index ที่ยังไม่ได้สร้าง ทำให้ query fail เงียบๆ
+    // แก้เป็น where() เงื่อนไขเดียว แล้ว filter + sort ด้วย JavaScript แทน
+    const snap=await getDocs(query(collection(db,'flowmeter_verify'),where('material','==',curMat)));
+    const matches=snap.docs.map(d=>d.data()).filter(r=>r.mixing_unit===curUnit).sort((a,b)=>b.date.localeCompare(a.date));
+    const info=$('due-info');
+    if(!matches.length){info.innerHTML=`<span class="due-badge due-warn">⚠️ ยังไม่เคย Verify</span>`;return;}
+    const last=matches[0];
+    const lastDate=new Date(last.date);
+    const dueDate=new Date(lastDate);dueDate.setDate(dueDate.getDate()+last.interval_days);
+    const now=new Date();
+    const daysLeft=Math.ceil((dueDate-now)/86400000);
+    const isWarn=daysLeft<=3;
+    info.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">
+      <span class="due-badge ${isWarn?'due-warn':'due-ok'}">${isWarn?'⚠️':'✅'} ครั้งต่อไป: ${dueDate.toLocaleDateString('th-TH')} (${daysLeft>0?`อีก ${daysLeft} วัน`:'เกินกำหนดแล้ว'})</span>
+      <span style="font-family:var(--mono);font-size:13px;color:var(--t3)">ครั้งล่าสุด: ${last.date} — ${last.overall_pass?'✅ Pass':'🔴 Fail'}</span>
+    </div>`;
+  }catch(e){console.warn(e);}
+}
+
+window.loadHistory=async()=>{
+  const mat=$('hist-mat').value;
+  const unit=$('hist-unit')?.value||'';
+  const list=$('history-list');
+  list.innerHTML=`<div style="color:var(--t3);font-family:var(--mono);padding:20px">⏳ กำลังโหลด...</div>`;
+  try{
+    // เดิม query ด้วย where หลายเงื่อนไข + orderBy พร้อมกัน ต้องมี Firestore composite index ที่ยังไม่ได้สร้าง ทำให้บันทึกแล้วประวัติไม่ขึ้น
+    // แก้เป็น where() เงื่อนไขเดียว (หรือไม่มีเลย) แล้ว filter + sort ด้วย JavaScript แทนทั้งหมด
+    let q;
+    if(mat){q=query(collection(db,'flowmeter_verify'),where('material','==',mat),limit(200));}
+    else if(unit){q=query(collection(db,'flowmeter_verify'),where('mixing_unit','==',unit),limit(200));}
+    else{q=query(collection(db,'flowmeter_verify'),limit(200));}
+    const snap=await getDocs(q);
+    let rows=snap.docs.map(d=>d.data());
+    if(mat&&unit)rows=rows.filter(r=>r.mixing_unit===unit);
+    rows=rows.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
+    if(!rows.length){list.innerHTML=`<div style="color:var(--t3);font-family:var(--mono);padding:30px;text-align:center">ไม่มีประวัติ</div>`;return;}
+
+    list.innerHTML=rows.map(r=>{
+      const m=MAT[r.material]||{name:r.material_name||r.material,color:'#60a5fa',emoji:'📊'};
+      const rows=RANGES.map(set=>{
+        const res=r.results?.[set];
+        if(!res)return'';
+        return`<tr>
+          <td style="font-family:var(--mono);font-size:15px;font-weight:800;color:${m.color}">${set} kg</td>
+          ${res.actuals.map(a=>`<td style="font-family:var(--mono);font-size:15px;font-weight:600">${a?.toFixed(2)||'—'}</td>`).join('')}
+          ${res.devs.map(dv=>{const pass=Math.abs(dv)<=2;return`<td style="font-family:var(--mono);font-size:14px;color:${pass?'var(--green)':'var(--red)'};font-weight:700">${dv>0?'+':''}${dv.toFixed(2)}%</td>`}).join('')}
+          <td style="font-family:var(--mono);font-size:15px;font-weight:700;color:${res.pass?'var(--green)':'var(--red)'}">${res.pass?'✅':'🔴'}</td>
+        </tr>`;
+      }).join('');
+
+      return`<div class="hist-card">
+        <div class="hist-head">
+          <span class="hist-mat" style="color:${m.color}">${m.emoji} ${m.name}</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,58,237,.1);color:var(--purple);border:1.5px solid rgba(124,58,237,.3)">${r.mixing_unit==='m2'?'🟢 M2':'🔵 M1'}</span>
+          <span class="hist-date">📅 ${r.date}</span>
+          <span class="${r.overall_pass?'overall-pass':'overall-fail'}">${r.overall_pass?'✅ Pass':'🔴 Fail'}</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:600;padding:4px 10px;border-radius:6px;background:var(--s3);color:var(--t2)">ทุก ${r.interval_days||15} วัน</span>
+          <span class="hist-by">${r.created_by||'—'}</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead><tr>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--t2);font-size:13px;font-weight:700">Set</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--t2);font-size:13px;font-weight:700">ครั้ง 1</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--t2);font-size:13px;font-weight:700">ครั้ง 2</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--t2);font-size:13px;font-weight:700">ครั้ง 3</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--yellow);font-size:13px;font-weight:700">Dev 1</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--yellow);font-size:13px;font-weight:700">Dev 2</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--yellow);font-size:13px;font-weight:700">Dev 3</th>
+              <th style="padding:9px 10px;background:var(--s3);border:1.5px solid var(--b1);font-family:var(--mono);color:var(--t2);font-size:13px;font-weight:700">ผล</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${r.note?`<div style="margin-top:10px;font-size:14px;color:var(--t2);font-family:var(--mono)">📝 ${r.note}</div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-family:var(--mono);padding:20px">${e.message}</div>`;}
+};
+</script>
+</body>
+</html>
